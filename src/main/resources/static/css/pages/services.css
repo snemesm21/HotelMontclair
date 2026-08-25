@@ -1,0 +1,220 @@
+﻿/* =========================================
+   SERVICES PAGE STYLES
+   ========================================= */
+
+.services-hero {
+    background-color: var(--mirage);
+    color: white;
+    padding: 80px 24px 64px 24px;
+    position: relative;
+    text-align: center;
+}
+
+.services-hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.services-hero-subtitle {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--twine);
+    text-transform: uppercase;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.services-hero-title {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    color: white;
+}
+
+@media (min-width: 640px) {
+    .services-hero-title {
+        font-size: 48px;
+    }
+}
+
+@media (min-width: 768px) {
+    .services-hero-title {
+        font-size: 54px;
+    }
+}
+
+.services-hero-description {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: #C2C9D1;
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 670px;
+    margin: 0 auto 32px auto;
+}
+
+@media (min-width: 768px) {
+    .services-hero-description {
+        font-size: 13px;
+    }
+}
+
+.diamond-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.line-sm {
+    height: 1px;
+    width: 56px;
+    background-color: rgba(191, 146, 90, 0.4); /* twine/40 */
+}
+
+.diamond {
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+    border: 1px solid var(--twine);
+}
+
+.diamond-solid {
+    background-color: var(--twine);
+}
+
+.services-cards-section {
+    background-color: #F5F1EB;
+    padding: 64px 24px;
+    flex-grow: 1;
+}
+
+.services-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1152px;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .services-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .services-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.service-item-card {
+    background-color: white;
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #E3DDD4;
+    transition: box-shadow 0.3s;
+}
+
+.service-item-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.service-img-container {
+    width: 100%;
+    height: 256px;
+    overflow: hidden;
+    background-color: rgba(20, 30, 38, 0.05);
+    position: relative;
+}
+
+.service-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.service-item-card:hover .service-img-container img {
+    transform: scale(1.05);
+}
+
+.service-card-body {
+    padding: 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: center;
+}
+
+.service-tag {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--twine);
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.service-title {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    color: var(--woodsmoke);
+    font-weight: normal;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+}
+
+.service-desc {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: #5C646D;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    flex-grow: 1;
+    max-width: 280px;
+    font-weight: 300;
+}
+
+@media (min-width: 768px) {
+    .service-desc {
+        font-size: 12px;
+    }
+}
+
+.service-badges {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.service-badge {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    color: #6A737D;
+    border: 1px solid #DDD6CC;
+    background-color: #FAFAF8;
+    padding: 4px 12px;
+    border-radius: 2px;
+}
+
+.service-action {
+    width: 100%;
+    padding-top: 4px;
+}
+
