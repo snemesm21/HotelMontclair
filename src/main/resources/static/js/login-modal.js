@@ -1,6 +1,5 @@
 // Toggle + validación del modal de login.
-// Se referencia igual en cualquier página que tenga el modal
-// #modal-login en html
+// Se referencia igual en cualquier página que tenga el modal #modal-login en html
 document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("modal-login");
   const btnAbrir = document.getElementById("btn-abrir-login");
@@ -12,7 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.target === modal) modal.classList.add("hidden");
   });
 
-  // TEMPORAL: todavía no existe el controller de POST /login
   const formLogin = document.getElementById("form-login");
   const emailInput = document.getElementById("login-email");
   const passwordInput = document.getElementById("login-password");
@@ -22,30 +20,33 @@ document.addEventListener("DOMContentLoaded", function () {
   );
 
   formLogin?.addEventListener("submit", (e) => {
-    e.preventDefault();
-
     let esValido = true;
-    [emailInput, passwordInput].forEach((input) =>
-      input.classList.remove("input-error"),
-    );
-    [errorEmail, errorPassword].forEach((msg) => msg.classList.add("hidden"));
+    [emailInput, passwordInput].forEach((input) => {
+      if (input) input.classList.remove("input-error");
+    });
+    [errorEmail, errorPassword].forEach((msg) => {
+      if (msg) msg.classList.add("hidden");
+    });
 
-    if (!emailInput.value.trim() || !emailInput.checkValidity()) {
-      emailInput.classList.add("input-error");
-      errorEmail.classList.remove("hidden");
+    if (!emailInput?.value.trim()) {
+      e.preventDefault();
+      emailInput?.classList.add("input-error");
+      errorEmail?.classList.remove("hidden");
       esValido = false;
     }
-    if (!passwordInput.value.trim()) {
-      passwordInput.classList.add("input-error");
-      errorPassword.classList.remove("hidden");
+    if (!passwordInput?.value.trim()) {
+      e.preventDefault();
+      passwordInput?.classList.add("input-error");
+      errorPassword?.classList.remove("hidden");
       esValido = false;
     }
 
-    if (!esValido) return;
+    if (!esValido) {
+      e.preventDefault();
+      return;
+    }
 
-    console.log(
-      "Login visual listo. Falta conectar POST /login en el backend.",
-    );
+    // Si es válido, se envía el formulario al backend (POST /login)
   });
 
   // Limpia el error apenas el usuario empieza a corregir
@@ -55,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
   ].forEach(([input, msg]) => {
     input?.addEventListener("input", () => {
       input.classList.remove("input-error");
-      msg.classList.add("hidden");
+      msg?.classList.add("hidden");
     });
   });
 });

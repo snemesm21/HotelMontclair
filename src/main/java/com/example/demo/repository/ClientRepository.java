@@ -26,10 +26,20 @@ public class ClientRepository {
         return c;
     }
     public void delete(Long id) { store.remove(id); }
+
     public Optional<Client> findByUsername(String username) {
+        if (username == null) return Optional.empty();
         return store.values().stream()
-                .filter(c -> c.getUsername().equals(username))
+                .filter(c -> username.equals(c.getUsername()))
+                .findFirst();
+    }
+
+    public Optional<Client> findByUsernameOrEmail(String identifier) {
+        if (identifier == null) return Optional.empty();
+        String trimmed = identifier.trim();
+        return store.values().stream()
+                .filter(c -> (c.getUsername() != null && c.getUsername().equalsIgnoreCase(trimmed))
+                        || (c.getEmail() != null && c.getEmail().equalsIgnoreCase(trimmed)))
                 .findFirst();
     }
 }
-

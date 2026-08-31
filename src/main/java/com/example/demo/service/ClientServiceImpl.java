@@ -34,10 +34,10 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Client login(String username, String password) {
-        return repository.findByUsername(username)
-                .filter(c -> c.getPassword().equals(password))
+    public Client login(String usernameOrEmail, String password) {
+        if (usernameOrEmail == null || password == null) return null;
+        return repository.findByUsernameOrEmail(usernameOrEmail)
+                .filter(c -> password.equals(c.getPassword()))
                 .orElse(null);
     }
 }
-
