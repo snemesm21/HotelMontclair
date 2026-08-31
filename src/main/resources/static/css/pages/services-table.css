@@ -1,206 +1,147 @@
 /* =========================================
-   SERVICES TABLE PAGE STYLES
+   SERVICES TABLE PAGE STYLES (Bootstrap version) corrigiendo los colores por defecto
    ========================================= */
 
 .table-page-body {
-    background-color: #F2EEEB;
-    padding: 24px;
-    min-height: 100vh;
+  background-color: #f2eeeb;
+  padding: 24px;
+  min-height: 100vh;
 }
 
 @media (min-width: 1024px) {
-    .table-page-body {
-        padding: 48px;
-    }
-}
-
-.table-container {
-    max-width: 1152px;
-    margin: 0 auto;
-    background-color: white;
-    border: 1px solid rgba(202, 198, 198, 0.8);
-    border-radius: 4px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+  .table-page-body {
+    padding: 48px;
+  }
 }
 
 .table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px 32px;
-    background-color: var(--mirage);
-    color: white;
-    border-bottom: 2px solid var(--twine);
+  background-color: var(--mirage);
+  color: white;
+  border-bottom: 2px solid var(--twine);
+  padding: 24px 32px;
 }
 
 .table-title h2 {
-    font-family: var(--font-serif);
-    font-size: 24px;
-    font-weight: normal;
-    letter-spacing: 2px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: normal;
+  letter-spacing: 2px;
 }
 
 .table-title p {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    color: #C2C9D1;
-    margin-top: 4px;
-}
-
-.services-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.services-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: #c2c9d1;
 }
 
 .services-table thead {
-    background-color: #FAFAF8;
-    border-bottom: 1px solid #E3DDD4;
+  background-color: #fafaf8;
+  border-bottom: 1px solid #e3ddd4;
 }
 
 .services-table th {
-    padding: 16px 24px;
-    font-family: var(--font-sans);
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #6A737D;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #6a737d;
+  padding: 15px 8px;
 }
 
-.services-table tbody tr {
-    border-bottom: 1px solid rgba(202, 198, 198, 0.4);
-    transition: background-color 0.2s;
+.table-hover.services-table > tbody > tr:hover > * {
+  --bs-table-accent-bg: rgba(242, 238, 235, 0.5);
+  background-color: rgba(242, 238, 235, 0.5);
 }
 
-.services-table tbody tr:hover {
-    background-color: rgba(242, 238, 235, 0.5);
-}
-
-.services-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.services-table td {
-    padding: 20px 24px;
-    vertical-align: middle;
-}
-
-/* Specific Columns */
-.col-id {
-    font-family: monospace;
-    font-size: 11px;
-    color: var(--twine);
-    font-weight: bold;
-    width: 60px;
+.services-table td.col-id {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--twine);
+  font-weight: bold;
+  width: 60px;
 }
 
 .col-image img {
-    width: 64px;
-    height: 48px;
-    object-fit: cover;
-    border-radius: 2px;
-    border: 1px solid #E3DDD4;
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border: 1px solid #e3ddd4;
 }
 
 .col-info {
-    min-width: 250px;
+  min-width: 250px;
 }
 
 .td-title {
-    font-family: var(--font-serif);
-    font-size: 16px;
-    color: var(--woodsmoke);
-    margin-bottom: 4px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--woodsmoke);
 }
 
 .td-desc {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    color: #5C646D;
-    line-height: 1.5;
-    max-width: 300px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: #5c646d;
+  line-height: 1.5;
+  max-width: 300px;
 }
 
 .col-meta {
-    min-width: 150px;
+  min-width: 150px;
 }
 
 .td-tag {
-    display: inline-block;
-    font-family: var(--font-sans);
-    font-size: 9px;
-    background-color: #F0EBE3;
-    color: #8C8275;
-    padding: 4px 8px;
-    border-radius: 2px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    font-weight: bold;
-    letter-spacing: 1px;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  background-color: #f0ebe3 !important;
+  color: #8c8275 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.td-label {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  text-transform: uppercase;
+  color: #8c8275;
 }
 
 .td-detail {
-    display: block;
-    font-family: var(--font-sans);
-    font-size: 11px;
-    color: var(--woodsmoke);
-    font-weight: 500;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--woodsmoke);
+  font-weight: 500;
 }
 
 .col-actions {
-    width: 140px;
-    text-align: right;
+  width: 140px;
 }
 
-.table-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
+.btn-header-action {
+  border: 1px solid #fafaf8;
 }
 
-.btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 2px;
-    font-size: 12px;
-    transition: all 0.2s;
-    background-color: transparent;
-    cursor: pointer;
-    text-decoration: none;
+.btn-header-action:hover,
+.btn-header-action:focus {
+  background-color: var(--twine);
+  border-color: var(--twine);
+  color: #fafaf8;
 }
 
 .btn-icon-view {
-    color: var(--twine);
-    border: 1px solid rgba(191, 146, 90, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--twine);
+  border-color: rgba(191, 146, 90, 0.4);
 }
 .btn-icon-view:hover {
-    background-color: var(--twine);
-    color: white;
-}
-
-.btn-icon-edit {
-    color: #4B5563;
-    border: 1px solid #D1D5DB;
-}
-.btn-icon-edit:hover {
-    background-color: #F3F4F6;
-}
-
-.btn-icon-delete {
-    color: #DC2626;
-    border: 1px solid #FCA5A5;
-}
-.btn-icon-delete:hover {
-    background-color: #FEF2F2;
+  background-color: var(--twine);
+  border-color: var(--twine);
+  color: white;
 }

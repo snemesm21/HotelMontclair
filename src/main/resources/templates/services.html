@@ -1,167 +1,460 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nuestros Servicios - Montclair Grand Hotel</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="/css/global.css">
-    <link rel="stylesheet" href="/css/pages/services.css">
-</head>
-<body>
 
-    <header class="header sticky-nav">
-        <div class="logo-container">
-            <a href="/#inicio" class="logo-link">
-                <div class="logo-img">
-                    <img src="/Images/Logo.jpg">
-                </div>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ===== Tailwind + config ===== -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              twine: "#BF925A",
+              "twine-hover": "#73503C",
+              mirage: "#141E26",
+              pampas: "#F2EEEB",
+              woodsmoke: "#111413",
+              silver: "#CAC6C6",
+            },
+            fontFamily: {
+              serif: ["Cinzel", "serif"],
+              sans: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/pages/services.css" />
+  </head>
+  <body>
+    <nav
+      class="bg-pampas sticky top-0 z-40 w-full border-b border-[rgba(202,198,198,0.5)] shadow-sm"
+    >
+      <div
+        class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto px-6 py-3 relative"
+      >
+        <!-- Logo -->
+        <a href="/#inicio" class="flex items-center">
+          <img
+            src="/Images/Logo.jpg"
+            class="h-[70px] w-[200px] object-cover"
+            alt="Montclair Grand Hotel"
+          />
+        </a>
+
+        <!-- Acciones a la derecha + botón hamburguesa -->
+        <div class="flex items-center space-x-3">
+          <!-- ESTADO: sin sesión iniciada -->
+          <div
+            th:if="${session.cliente == null}"
+            class="flex items-center space-x-3"
+          >
+            <button
+              id="btn-abrir-login"
+              type="button"
+              class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white"
+            >
+              Login
+            </button>
+            <a
+              href="/#habitaciones"
+              class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover"
+            >
+              Reservar Ahora
             </a>
-        </div>
-        
-        <nav class="nav-links">
-            <a href="/#inicio">Inicio</a>
-            <a href="/#habitaciones">Habitaciones</a>
-            <a href="/services" class="active">Servicios</a>
-            <a href="/#galeria">Galería</a>
-            <a href="/#ubicacion">Ubicación</a>
-            <a href="/#contacto">Contacto</a>
-        </nav>
+          </div>
 
-        <div class="nav-btn-container">
-            <a href="/#habitaciones" class="btn btn-primary">Reservar Ahora</a>
-        </div>
-    </header>
+          <!-- ESTADO: sesión iniciada ( ${session.cliente}) -->
+          <div th:if="${session.cliente != null}" class="relative">
+            <button
+              type="button"
+              class="flex text-sm rounded-full focus:ring-4 focus:ring-twine/30"
+              id="user-menu-button"
+              aria-expanded="false"
+              data-dropdown-toggle="user-dropdown"
+              data-dropdown-placement="bottom"
+            >
+              <span class="sr-only">Abrir menú de usuario</span>
+              <img
+                class="w-9 h-9 rounded-full object-cover border border-twine/40"
+                th:src="${session.cliente.fotoUrl} ?: '/Images/avatar-default.png'"
+                alt="Foto de perfil"
+              />
+            </button>
 
-    <section class="services-hero">
-        <div class="container services-hero-content">
-            <span class="services-hero-subtitle">MONTCLAIR GRAND HOTEL</span>
-            <h1 class="services-hero-title">Nuestros servicios</h1>
-            <p class="services-hero-description">
-                Experiencias cuidadosamente seleccionadas para acompañar una estancia
-                elegante en Mónaco, con el mismo lenguaje visual refinado, cálido y
-                mediterráneo de Montclair Grand Hotel.
-            </p>
-            <div class="diamond-divider">
-                <div class="line-sm"></div>
-                <div class="diamond"></div>
-                <div class="line-sm"></div>
+            <div
+              class="z-50 hidden absolute right-0 mt-2 bg-white border border-[#E3DDD4] rounded-sm shadow-lg w-44"
+              id="user-dropdown"
+            >
+              <div class="px-4 py-3 text-sm border-b border-[#E3DDD4]">
+                <span
+                  class="block font-serif text-woodsmoke"
+                  th:text="${session.cliente.nombre}"
+                  >Nombre Cliente</span
+                >
+                <span
+                  class="block text-[11px] text-[#6A737D] truncate"
+                  th:text="${session.cliente.email}"
+                  >cliente@correo.com</span
+                >
+              </div>
+              <ul
+                class="p-2 text-sm font-sans"
+                aria-labelledby="user-menu-button"
+              >
+                <li>
+                  <a
+                    href="/mi-cuenta"
+                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
+                    >Mi Cuenta</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="/mis-reservas"
+                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
+                    >Mis Reservas</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="/logout"
+                    class="block w-full px-3 py-2 rounded-sm text-[#DC2626] hover:bg-[#FEF2F2]"
+                    >Cerrar Sesión</a
+                  >
+                </li>
+              </ul>
             </div>
+          </div>
+
+          <!-- Botón hamburguesa(Nav bar comprimido): solo visible por debajo de md -->
+          <button
+            data-collapse-toggle="navbar-services"
+            type="button"
+            class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-woodsmoke rounded-sm md:hidden hover:bg-[#F0EBE3] focus:outline-none focus:ring-2 focus:ring-twine/30"
+            aria-controls="navbar-services"
+            aria-expanded="false"
+          >
+            <span class="sr-only">Abrir menú principal</span>
+            <svg
+              class="w-6 h-6"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-width="2"
+                d="M5 7h14M5 12h14M5 17h14"
+              />
+            </svg>
+          </button>
         </div>
+        <div
+          class="items-center justify-between hidden w-full md:flex md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2"
+          id="navbar-services"
+        >
+          <ul
+            class="flex flex-col p-4 md:p-0 mt-4 font-sans text-xs font-semibold uppercase tracking-widest border border-[#E3DDD4] rounded-sm bg-white md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-transparent"
+          >
+            <li>
+              <a
+                href="/#inicio"
+                class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0"
+                >Inicio</a
+              >
+            </li>
+            <li>
+              <a
+                href="/#habitaciones"
+                class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0"
+                >Habitaciones</a
+              >
+            </li>
+            <li>
+              <a
+                href="/services"
+                class="block py-2 px-3 text-twine rounded md:p-0 md:border-b-2 md:border-twine"
+                aria-current="page"
+                >Servicios</a
+              >
+            </li>
+            <li>
+              <a
+                href="/#galeria"
+                class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0"
+                >Galería</a
+              >
+            </li>
+            <li>
+              <a
+                href="/#ubicacion"
+                class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0"
+                >Ubicación</a
+              >
+            </li>
+            <li>
+              <a
+                href="/#contacto"
+                class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0"
+                >Contacto</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== HERO: convertido a Tailwind ===== -->
+    <section class="bg-mirage text-white text-center px-6 pt-20 pb-16">
+      <div class="max-w-[900px] mx-auto">
+        <span
+          class="block mb-4 font-sans text-[9px] tracking-[4px] uppercase font-bold text-twine"
+        >
+          MONTCLAIR GRAND HOTEL
+        </span>
+
+        <h1
+          class="font-serif font-normal text-white text-4xl sm:text-5xl md:text-[54px] tracking-[2px] leading-tight mb-5"
+        >
+          Nuestros servicios
+        </h1>
+
+        <p
+          class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-[670px] mx-auto mb-8"
+        >
+          Experiencias cuidadosamente seleccionadas para acompañar una estancia
+          elegante en Mónaco, con el mismo lenguaje visual refinado, cálido y
+          mediterráneo de Montclair Grand Hotel.
+        </p>
+
+        <div class="flex items-center justify-center gap-3">
+          <div class="h-px w-14 bg-twine/40"></div>
+          <div class="w-2 h-2 rotate-45 border border-twine"></div>
+          <div class="h-px w-14 bg-twine/40"></div>
+        </div>
+      </div>
     </section>
 
-    <main class="services-cards-section">
-        <div class="container">
-            <div class="services-cards-grid">
-                <article th:each="svc : ${services}" class="service-item-card">
-                    <div class="service-img-container">
-                        <img th:src="${svc.imageUrl}" th:alt="${svc.name}" />
-                    </div>
-                    <div class="service-card-body">
-                        <span class="service-tag" th:text="${svc.tag}">EXPERIENCIA 01</span>
-                        <h2 class="service-title" th:text="${svc.name}">Restaurante</h2>
-                        <p class="service-desc" th:text="${svc.description}">
-                            Gastronomía de autor con ingredientes frescos y locales,
-                            presentada en un ambiente elegante y sofisticado.
-                        </p>
-                        <div class="service-badges">
-                            <span class="service-badge" th:text="${svc.schedule}">6:30 AM - 11:30 PM</span>
-                            <span class="service-badge" th:text="${svc.priceLabel}">Desde € 40 EUR</span>
-                        </div>
-                        <div class="service-action">
-                            <a th:href="@{'/services/' + ${svc.id}}" class="btn btn-outline full-width text-center">VER MÁS</a>
-                        </div>
-                    </div>
-                </article>
+    <!-- ===== GRID DE TARJETAS: convertido a Tailwind ===== -->
+    <main class="bg-[#F5F1EB] py-16 px-6 flex-grow">
+      <div class="max-w-[1152px] mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <article
+            th:each="svc : ${services}"
+            class="group bg-white rounded-sm shadow-sm overflow-hidden flex flex-col border border-[#E3DDD4] transition-shadow duration-300 hover:shadow-md"
+          >
+            <div class="w-full h-64 overflow-hidden bg-mirage/5 relative">
+              <img
+                th:src="${svc.imageUrl}"
+                th:alt="${svc.name}"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
             </div>
+
+            <div class="p-8 text-center flex flex-col flex-grow items-center">
+              <span
+                class="font-sans text-[9px] tracking-[3px] uppercase font-bold text-twine mb-2.5"
+                th:text="${svc.tag}"
+                >EXPERIENCIA 01</span
+              >
+
+              <h2
+                class="font-serif text-2xl text-woodsmoke font-normal tracking-wide mb-3.5"
+                th:text="${svc.name}"
+              >
+                Restaurante
+              </h2>
+
+              <p
+                class="font-sans text-[11px] md:text-xs text-[#5C646D] leading-relaxed mb-6 flex-grow max-w-[280px] font-light"
+                th:text="${svc.description}"
+              >
+                Gastronomía de autor con ingredientes frescos y locales,
+                presentada en un ambiente elegante y sofisticado.
+              </p>
+
+              <div
+                class="flex items-center justify-center gap-2 mb-6 w-full flex-wrap"
+              >
+                <span
+                  class="font-sans text-[10px] text-[#6A737D] border border-[#DDD6CC] bg-[#FAFAF8] px-3 py-1 rounded-sm"
+                  th:text="${svc.schedule}"
+                  >6:30 AM - 11:30 PM</span
+                >
+                <span
+                  class="font-sans text-[10px] text-[#6A737D] border border-[#DDD6CC] bg-[#FAFAF8] px-3 py-1 rounded-sm"
+                  th:text="${svc.priceLabel}"
+                  >Desde € 40 EUR</span
+                >
+              </div>
+
+              <div class="w-full pt-1">
+                <a
+                  th:href="@{'/services/' + ${svc.id}}"
+                  class="w-full inline-block text-center border border-twine text-twine uppercase text-[13px] font-bold tracking-[1.5px] py-3.5 px-7 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white"
+                >
+                  VER MÁS
+                </a>
+              </div>
+            </div>
+          </article>
         </div>
+      </div>
     </main>
 
+    <!-- ===== FOOTER: sin cambios de framework (vanilla / global.css) ===== -->
     <footer id="contacto" class="main-footer">
-        <div class="container footer-grid">
-            
-            <div class="footer-logo-col">
-                <a href="/#inicio" class="logo-link">
-                    <span class="logo-title">Montclair</span>
-                    <div class="logo-subtitle-box">
-                        <div class="line"></div>
-                        <span class="logo-subtitle">Grand Hotel</span>
-                        <div class="line"></div>
-                    </div>
-                    <div class="logo-ornament">
-                        <div class="line long"></div>
-                        <div class="dot"></div>
-                        <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="ornament-img">
-                        <div class="dot"></div>
-                        <div class="line long"></div>
-                    </div>
-                </a>
-                <p class="slogan">Lujo atemporal. Hospitalidad excepcional</p>
+      <div class="container footer-grid">
+        <div class="footer-logo-col">
+          <a href="/#inicio" class="logo-link">
+            <span class="logo-title">Montclair</span>
+            <div class="logo-subtitle-box">
+              <div class="line"></div>
+              <span class="logo-subtitle">Grand Hotel</span>
+              <div class="line"></div>
             </div>
-
-            <div class="footer-col">
-                <h4>Enlaces Rápidos</h4>
-                <ul>
-                    <li><a href="/#inicio">Inicio</a></li>
-                    <li><a href="/#habitaciones">Habitaciones</a></li>
-                    <li><a href="/services">Servicios</a></li>
-                    <li><a href="/#galeria">Galería</a></li>
-                    <li><a href="/#ubicacion">Ubicación</a></li>
-                    <li><a href="/#contacto">Contacto</a></li>
-                </ul>
+            <div class="logo-ornament">
+              <div class="line long"></div>
+              <div class="dot"></div>
+              <img
+                src="/Images/Flor de liz info principal.png"
+                alt="Ornamento"
+                class="ornament-img"
+              />
+              <div class="dot"></div>
+              <div class="line long"></div>
             </div>
-
-            <div class="footer-col">
-                <h4>Servicios</h4>
-                <ul>
-                    <li>Restaurante</li>
-                    <li>Spa & Bienestar</li>
-                    <li>Gimnasio</li>
-                    <li>Salones de eventos</li>
-                    <li>Piscina</li>
-                    <li>Room Service</li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4>Contacto</h4>
-                <ul class="contact-list">
-                    <li>
-                        <img src="/Images/Ubicacion del hotel.png" alt="Ubicación">
-                        <span>Monaco</span>
-                    </li>
-                    <li>
-                        <img src="/Images/Numero de contacto.png" alt="Teléfono">
-                        <span>+377 93 12 34 56</span>
-                    </li>
-                    <li>
-                        <img src="/Images/Correo electronico.png" alt="Email">
-                        <span>reservas@montclairhotel.com</span>
-                    </li>
-                    <li>
-                        <img src="/Images/Horario de atencion.png" alt="Horario">
-                        <span>Lunes - Domingo: 24 horas</span>
-                    </li>
-                </ul>
-            </div>
-
+          </a>
+          <p class="slogan">Lujo atemporal. Hospitalidad excepcional</p>
         </div>
+
+        <div class="footer-col">
+          <h4>Enlaces Rápidos</h4>
+          <ul>
+            <li><a href="/#inicio">Inicio</a></li>
+            <li><a href="/#habitaciones">Habitaciones</a></li>
+            <li><a href="/services">Servicios</a></li>
+            <li><a href="/#galeria">Galería</a></li>
+            <li><a href="/#ubicacion">Ubicación</a></li>
+            <li><a href="/#contacto">Contacto</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servicios</h4>
+          <ul>
+            <li>Restaurante</li>
+            <li>Spa & Bienestar</li>
+            <li>Gimnasio</li>
+            <li>Salones de eventos</li>
+            <li>Piscina</li>
+            <li>Room Service</li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Contacto</h4>
+          <ul class="contact-list">
+            <li>
+              <img src="/Images/Ubicacion del hotel.png" alt="Ubicación" />
+              <span>Monaco</span>
+            </li>
+            <li>
+              <img src="/Images/Numero de contacto.png" alt="Teléfono" />
+              <span>+377 93 12 34 56</span>
+            </li>
+            <li>
+              <img src="/Images/Correo electronico.png" alt="Email" />
+              <span>reservas@montclairhotel.com</span>
+            </li>
+            <li>
+              <img src="/Images/Horario de atencion.png" alt="Horario" />
+              <span>Lunes - Domingo: 24 horas</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </footer>
 
     <div class="copyright-bar">
-        <div class="container flex-between">
-            <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados</p>
-            <div class="legal-links">
-                <a href="#">Política de privacidad</a>
-                <a href="#">Términos y condiciones</a>
-            </div>
+      <div class="container flex-between">
+        <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados</p>
+        <div class="legal-links">
+          <a href="#">Política de privacidad</a>
+          <a href="#">Términos y condiciones</a>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL DE LOGIN ===== -->
+    <div id="modal-login" class="modal-overlay hidden">
+      <div class="modal-box">
+        <button id="btn-cerrar-login" type="button" class="close-btn">✕</button>
+
+        <div class="modal-header">
+          <span class="modal-subtitle">Acceso Clientes</span>
+          <h3>Iniciar Sesión</h3>
+        </div>
+
+        <!-- POST  -->
+        <form
+          id="form-login"
+          class="modal-form"
+          method="post"
+          action="/login"
+          novalidate
+        >
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <input
+              type="email"
+              id="login-email"
+              name="email"
+              placeholder="ejemplo@correo.com"
+            />
+            <p class="field-error hidden" data-error-for="login-email">
+              Ingresa un correo electrónico válido.
+            </p>
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              placeholder="••••••••"
+            />
+            <p class="field-error hidden" data-error-for="login-password">
+              Completa este campo.
+            </p>
+          </div>
+          <button type="submit" class="btn btn-primary full-width">
+            Iniciar Sesión
+          </button>
+        </form>
+      </div>
     </div>
 
     <script src="/js/app.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
+    <!-- Lógica del modal de login -->
+    <script src="/js/login-modal.js"></script>
+  </body>
 </html>
