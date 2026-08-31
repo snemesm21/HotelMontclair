@@ -1,0 +1,76 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Formulario Cliente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-6">
+    <h1
+      class="text-2xl font-bold mb-4"
+      th:text="${client.id} == null ? 'Crear cliente' : 'Editar cliente'"
+    >
+      Formulario
+    </h1>
+    <form
+      th:action="${client.id} == null ? @{/clients/add} : @{'/clients/edit/' + ${client.id}}"
+      th:object="${client}"
+      method="post"
+      class="space-y-4 max-w-md"
+    >
+      <div>
+        <label class="block font-medium">Usuario</label>
+        <input
+          type="text"
+          th:field="*{username}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+      <div>
+        <label class="block font-medium">Contraseña</label>
+        <input
+          type="password"
+          th:field="*{password}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+      <div>
+        <label class="block font-medium">Email</label>
+        <input
+          type="email"
+          th:field="*{email}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+      <div>
+        <label class="block font-medium">Nombre</label>
+        <input
+          type="text"
+          th:field="*{firstName}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+      <div>
+        <label class="block font-medium">Apellido</label>
+        <input
+          type="text"
+          th:field="*{lastName}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+      <div class="flex space-x-2">
+        <button
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+        >
+          Guardar
+        </button>
+        <a
+          th:href="@{/clients}"
+          class="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
+          >Cancelar</a
+        >
+      </div>
+    </form>
+  </body>
+</html>

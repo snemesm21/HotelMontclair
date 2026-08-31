@@ -1,0 +1,52 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-6 flex items-center justify-center min-h-screen bg-gray-50">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-sm">
+      <h1 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h1>
+
+      <div
+        th:if="${error}"
+        class="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm"
+        th:text="${error}"
+      >
+        Error
+      </div>
+
+      <form th:action="@{/login}" method="post" class="space-y-4">
+        <div>
+          <label class="block font-medium">Usuario</label>
+          <input
+            type="text"
+            name="username"
+            class="border rounded w-full p-2"
+            required
+          />
+        </div>
+        <div>
+          <label class="block font-medium">Contraseña</label>
+          <input
+            type="password"
+            name="password"
+            class="border rounded w-full p-2"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full"
+        >
+          Entrar
+        </button>
+      </form>
+
+      <p class="text-xs text-gray-400 mt-4 text-center">
+        Demo: usuario <b>demo</b> / contraseña <b>demo</b>
+      </p>
+    </div>
+  </body>
+</html>
