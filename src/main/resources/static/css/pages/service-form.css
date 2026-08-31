@@ -1,0 +1,156 @@
+﻿/* =========================================
+   SERVICE FORM PAGE STYLES
+   ========================================= */
+
+.form-page-body {
+    background-color: #F2EEEB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100vh;
+}
+
+.form-page-container {
+    max-width: 600px;
+    width: 100%;
+}
+
+.form-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.nav-home-link {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    color: var(--woodsmoke);
+    transition: color 0.3s;
+}
+
+.nav-home-link:hover {
+    color: var(--twine);
+}
+
+.service-form-card {
+    background-color: white;
+    border: 1px solid rgba(202, 198, 198, 0.8);
+    border-radius: 3px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.form-subtitle-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.form-subtitle {
+    font-family: var(--font-sans);
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--twine);
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.form-title {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    color: var(--woodsmoke);
+}
+
+.form-desc {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: rgba(17, 20, 19, 0.7);
+    margin-top: 4px;
+}
+
+.service-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 640px) {
+    .form-row-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 640px) {
+    .form-row-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.form-group-sm label {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: bold;
+    color: var(--woodsmoke);
+    margin-bottom: 6px;
+}
+
+.form-group-sm input,
+.form-group-sm textarea {
+    width: 100%;
+    background-color: rgba(242, 238, 235, 0.4);
+    border: 1px solid var(--silver);
+    font-size: 12px;
+    color: var(--woodsmoke);
+    padding: 12px;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: var(--font-sans);
+}
+
+.form-group-sm input:focus,
+.form-group-sm textarea:focus {
+    border-color: var(--twine);
+}
+
+.form-hint {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    color: rgba(17, 20, 19, 0.6);
+    margin-top: 4px;
+}
+
+.form-actions {
+    padding-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+

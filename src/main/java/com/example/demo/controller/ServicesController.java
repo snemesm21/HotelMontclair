@@ -21,6 +21,13 @@ public class ServicesController {
         return "services";
     }
 
+    // http://localhost:8080/services/table
+    @GetMapping("/table")
+    public String tableView(Model model) {
+        model.addAttribute("services", serviceService.searchAll());
+        return "services-table";
+    }
+
     // http://localhost:8080/services/1
     @GetMapping("/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {

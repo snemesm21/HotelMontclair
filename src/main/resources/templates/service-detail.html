@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,205 +9,124 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        twine: {
-                            DEFAULT: '#C59B63',
-                            hover: '#A87C49',
-                            dark: '#73503C'
-                        },
-                        mirage: {
-                            DEFAULT: '#141E26',
-                            dark: '#0F161C'
-                        },
-                        pampas: '#FAF7F2',
-                        pampasAlt: '#F0EBE3',
-                        woodsmoke: '#111413',
-                        silver: '#CAC6C6'
-                    },
-                    fontFamily: {
-                        serif: ['"Cinzel"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/pages/services.css">
+    <link rel="stylesheet" href="/css/pages/service-detail.css">
 </head>
-<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+<body>
 
-    <!-- Header Navigation -->
-    <header class="bg-mirage border-b border-white/10 sticky top-0 z-40 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
-        <div class="flex-1">
-            <a href="/" class="inline-flex flex-col items-center">
-                <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
-                <div class="flex items-center gap-2 mt-1 mb-0.5">
-                    <div class="h-[1px] w-5 bg-twine"></div>
-                    <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
-                    <div class="h-[1px] w-5 bg-twine"></div>
+    <header class="header sticky-nav">
+        <div class="logo-container">
+            <a href="/#inicio" class="logo-link">
+                <div class="logo-img">
+                    <img src="/Images/Logo.jpg">
                 </div>
             </a>
         </div>
-
-        <nav class="hidden lg:flex flex-1 justify-center items-center gap-8 text-white/90">
-            <a href="/" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Inicio</a>
-            <a href="/#habitaciones" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Habitaciones</a>
-            <a href="/services" class="text-[9px] uppercase tracking-[2px] font-bold text-twine border-b border-twine pb-0.5 transition">Servicios</a>
-            <a href="/#galeria" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Galería</a>
-            <a href="/#contacto" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Contacto</a>
+        
+        <nav class="nav-links">
+            <a href="/#inicio">Inicio</a>
+            <a href="/#habitaciones">Habitaciones</a>
+            <a href="/services" class="active">Servicios</a>
+            <a href="/#galeria">Galería</a>
+            <a href="/#ubicacion">Ubicación</a>
+            <a href="/#contacto">Contacto</a>
         </nav>
 
-        <div class="flex-1 flex justify-end items-center gap-4">
-            <a href="/services" class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1">
-                ← Volver a Servicios
-            </a>
+        <div class="nav-btn-container">
+            <a href="/services" class="btn btn-outline" style="border:none;">← Volver a Servicios</a>
         </div>
     </header>
 
-    <!-- Dark Hero Header Section (Exact Replica of Screenshot 1) -->
-    <section class="bg-mirage text-white pt-20 pb-16 px-6 lg:px-12 relative">
-        <div class="max-w-4xl mx-auto text-center">
-            <!-- Tiny Subtitle -->
-            <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-4">
-                MONTCLAIR GRAND HOTEL
-            </span>
-
-            <!-- Main Title -->
-            <h1 class="font-serif text-4xl sm:text-5xl md:text-[54px] font-normal tracking-[2px] leading-tight mb-5 text-white" th:text="${service.name}">
-                Spa & Bienestar
-            </h1>
-
-            <!-- Descriptive Paragraph -->
-            <p class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-2xl mx-auto mb-8" th:text="${service.heroDescription}">
-                Un santuario privado concebido para quienes buscan silencio, exclusividad y bienestar absoluto. Rituales de autor, espacios de mármol y experiencias sensoriales diseñadas hasta el último detalle.
+    <section class="services-hero">
+        <div class="container services-hero-content">
+            <span class="services-hero-subtitle">MONTCLAIR GRAND HOTEL</span>
+            <h1 class="services-hero-title" th:text="${service.name}">Spa & Bienestar</h1>
+            <p class="services-hero-description" th:text="${service.heroDescription}">
+                Un santuario privado concebido para quienes buscan silencio, exclusividad y bienestar absoluto.
             </p>
-
-            <!-- Decorative Gold Diamond Divider -->
-            <div class="flex items-center justify-center gap-3">
-                <div class="h-[1px] w-14 bg-twine/40"></div>
-                <div class="w-2.5 h-2.5 rotate-45 border border-twine bg-twine"></div>
-                <div class="h-[1px] w-14 bg-twine/40"></div>
+            <div class="diamond-divider">
+                <div class="line-sm"></div>
+                <div class="diamond diamond-solid"></div>
+                <div class="line-sm"></div>
             </div>
         </div>
     </section>
 
-    <!-- Main Content Section: Left Photos + Right Content (Exact Replica of Screenshot 1 & 2) -->
-    <main class="bg-pampas py-16 px-6 lg:px-12">
-        <div class="max-w-6xl mx-auto">
-            
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+    <main class="service-detail-main">
+        <div class="container">
+            <div class="service-detail-grid">
                 
-                <!-- Left Column: Big Luxury Photos -->
-                <div class="lg:col-span-6 space-y-6">
-                    <!-- Main Spa/Pool Photo with Gold Accent Border Frame -->
-                    <div class="relative p-2 bg-transparent border border-twine/40 shadow-xl rounded-[2px] overflow-hidden">
-                        <img th:src="${service.imageUrl}" th:alt="${service.name}" class="w-full h-[400px] object-cover rounded-[1px]">
+                <div class="service-detail-photos">
+                    <div class="service-photo-frame">
+                        <img th:src="${service.imageUrl}" th:alt="${service.name}">
                     </div>
-
-                    <!-- Secondary Photo (Close-up detail) -->
-                    <div class="relative p-2 bg-transparent border border-twine/40 shadow-xl rounded-[2px] overflow-hidden">
-                        <img th:src="${service.secondaryImageUrl}" th:alt="${service.name}" class="w-full h-[320px] object-cover rounded-[1px]">
+                    <div class="service-photo-frame">
+                        <img th:src="${service.secondaryImageUrl}" th:alt="${service.name}">
                     </div>
                 </div>
 
-                <!-- Right Column: Content, Highlights & Info Box -->
-                <div class="lg:col-span-6 flex flex-col justify-between pt-2">
+                <div class="service-detail-content">
+                    <span class="service-tag" th:text="${service.tagline}">SIGNATURE SPA EXPERIENCE</span>
+                    <h2 class="service-headline" th:text="${service.headline}">Un oasis de tranquilidad para cuerpo y mente</h2>
                     
-                    <div>
-                        <!-- Small Tagline -->
-                        <span class="font-sans text-[9px] tracking-[3px] text-twine uppercase font-bold block mb-3" th:text="${service.tagline}">
-                            SIGNATURE SPA EXPERIENCE
-                        </span>
-
-                        <!-- Headline -->
-                        <h2 class="font-serif text-3xl sm:text-4xl text-woodsmoke font-normal leading-tight mb-4" th:text="${service.headline}">
-                            Un oasis de tranquilidad para cuerpo y mente
-                        </h2>
-
-                        <!-- Gold Divider -->
-                        <div class="flex items-center gap-2 mb-6">
-                            <div class="h-[1px] w-8 bg-twine"></div>
-                            <div class="w-1.5 h-1.5 rotate-45 border border-twine"></div>
-                            <div class="h-[1px] w-8 bg-twine"></div>
-                        </div>
-
-                        <!-- Full Description Paragraph -->
-                        <p class="font-sans text-xs md:text-[13px] text-[#555E66] font-light leading-relaxed mb-8" th:text="${service.fullDescription}">
-                            Sumérgete en una experiencia de bienestar reservada para quienes esperan algo excepcional. Nuestro spa combina arquitectura íntima, tratamientos de autor y rituales personalizados en un entorno diseñado para desconectarte del mundo exterior.
-                        </p>
-
-                        <!-- Highlights List with Gold Diamond Icons -->
-                        <div class="space-y-5 mb-8">
-                            <div th:each="h : ${service.highlights}" class="flex items-start gap-4">
-                                <!-- Diamond Icon -->
-                                <div class="mt-1 w-5 h-5 flex items-center justify-center flex-shrink-0">
-                                    <div class="w-2.5 h-2.5 rotate-45 border border-twine"></div>
-                                </div>
-                                <div>
-                                    <h4 class="font-sans text-xs font-bold text-woodsmoke" th:text="${h.title}">Masajes signature y terapéuticos</h4>
-                                    <p class="font-sans text-[11px] text-[#6A737D] font-light mt-0.5" th:text="${h.description}">Técnicas personalizadas y aceites premium seleccionados para ti.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Horizontal Schedule / Price Info Box (Exact Replica) -->
-                        <div class="bg-pampasAlt border border-[#DDD6CC] rounded-[2px] p-6 mb-6">
-                            <div class="grid grid-cols-2 divide-x divide-[#DDD6CC] text-center">
-                                
-                                <!-- Left Column: Horario -->
-                                <div class="pr-4">
-                                    <span class="block font-sans text-[8.5px] uppercase tracking-[2px] font-bold text-[#8C8275] mb-1">HORARIO</span>
-                                    <span class="block font-sans text-sm md:text-base font-bold text-woodsmoke mb-0.5" th:text="${service.schedule}">8:00 AM - 10:00 PM</span>
-                                    <span class="block font-sans text-[10px] text-[#7A838E] font-light" th:text="${service.scheduleNote}">Todos los días</span>
-                                </div>
-
-                                <!-- Right Column: Experiencias -->
-                                <div class="pl-4">
-                                    <span class="block font-sans text-[8.5px] uppercase tracking-[2px] font-bold text-[#8C8275] mb-1">EXPERIENCIAS</span>
-                                    <span class="block font-sans text-sm md:text-base font-bold text-woodsmoke mb-0.5" th:text="${service.priceLabel}">Desde €100 EUR</span>
-                                    <span class="block font-sans text-[10px] text-[#7A838E] font-light" th:text="${service.priceNote}">Por persona · reserva previa</span>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <!-- Action Button (Solid Gold Rectangle) -->
-                        <div>
-                            <a href="/#contacto" class="block w-full sm:w-auto sm:inline-block bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-4 px-10 rounded-[2px] shadow-sm transition text-center">
-                                RESERVAR EXPERIENCIA
-                            </a>
-                        </div>
-
+                    <div class="detail-divider">
+                        <div class="line-mini"></div>
+                        <div class="diamond-mini"></div>
+                        <div class="line-mini"></div>
                     </div>
 
+                    <p class="service-full-desc" th:text="${service.fullDescription}">
+                        Sumérgete en una experiencia de bienestar reservada para quienes esperan algo excepcional.
+                    </p>
+
+                    <div class="service-highlights">
+                        <div th:each="h : ${service.highlights}" class="highlight-item">
+                            <div class="highlight-icon">
+                                <div class="diamond"></div>
+                            </div>
+                            <div class="highlight-text">
+                                <h4 th:text="${h.title}">Masajes signature y terapéuticos</h4>
+                                <p th:text="${h.description}">Técnicas personalizadas y aceites premium seleccionados para ti.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="service-info-box">
+                        <div class="info-col">
+                            <span class="info-label">HORARIO</span>
+                            <span class="info-val" th:text="${service.schedule}">8:00 AM - 10:00 PM</span>
+                            <span class="info-note" th:text="${service.scheduleNote}">Todos los días</span>
+                        </div>
+                        <div class="info-divider"></div>
+                        <div class="info-col">
+                            <span class="info-label">EXPERIENCIAS</span>
+                            <span class="info-val" th:text="${service.priceLabel}">Desde €100 EUR</span>
+                            <span class="info-note" th:text="${service.priceNote}">Por persona · reserva previa</span>
+                        </div>
+                    </div>
+
+                    <div class="service-detail-action">
+                        <a href="/#contacto" class="btn btn-primary full-width text-center">RESERVAR EXPERIENCIA</a>
+                    </div>
                 </div>
 
             </div>
 
-            <!-- Gallery Section (Exact Replica of Screenshot 2) -->
-            <section class="pt-24 border-t border-[#E3DDD4] mt-20">
-                <div class="text-center mb-12">
-                    <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-2">
-                        THE MONTCLAIR RITUAL
-                    </span>
-                    <h3 class="font-serif text-2xl md:text-3xl text-woodsmoke tracking-[4px] uppercase mb-4">
-                        GALERÍA
-                    </h3>
-                    <div class="flex items-center justify-center gap-3">
-                        <div class="h-[1px] w-12 bg-twine/40"></div>
-                        <div class="w-1.5 h-1.5 rotate-45 border border-twine"></div>
-                        <div class="h-[1px] w-12 bg-twine/40"></div>
+            <section class="service-gallery-section">
+                <div class="gallery-header">
+                    <span class="gallery-tag">THE MONTCLAIR RITUAL</span>
+                    <h3 class="gallery-title">GALERÍA</h3>
+                    <div class="diamond-divider">
+                        <div class="line-sm"></div>
+                        <div class="diamond"></div>
+                        <div class="line-sm"></div>
                     </div>
                 </div>
 
-                <!-- 3 Gallery Photos Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div th:each="imgUrl : ${service.galleryImages}" class="h-64 rounded-[2px] overflow-hidden shadow-sm hover:shadow-md transition duration-300 border border-[#E3DDD4]">
-                        <img th:src="${imgUrl}" alt="Galería Montclair" class="w-full h-full object-cover transition duration-500 hover:scale-105">
+                <div class="service-gallery-grid">
+                    <div th:each="imgUrl : ${service.galleryImages}" class="gallery-img-wrapper">
+                        <img th:src="${imgUrl}" alt="Galería Montclair">
                     </div>
                 </div>
             </section>
@@ -215,23 +134,87 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-mirage text-pampas/80 pt-12 pb-8 px-6 lg:px-12 border-t border-white/10">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between text-xs gap-6">
-            <div class="flex items-center gap-3">
-                <span class="font-serif tracking-[2px] text-white uppercase">Montclair Grand Hotel</span>
-                <span class="text-white/30">|</span>
-                <span class="text-[11px]">24 Rue Grimaldi, Monaco</span>
+    <footer id="contacto" class="main-footer">
+        <div class="container footer-grid">
+            
+            <div class="footer-logo-col">
+                <a href="/#inicio" class="logo-link">
+                    <span class="logo-title">Montclair</span>
+                    <div class="logo-subtitle-box">
+                        <div class="line"></div>
+                        <span class="logo-subtitle">Grand Hotel</span>
+                        <div class="line"></div>
+                    </div>
+                    <div class="logo-ornament">
+                        <div class="line long"></div>
+                        <div class="dot"></div>
+                        <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="ornament-img">
+                        <div class="dot"></div>
+                        <div class="line long"></div>
+                    </div>
+                </a>
+                <p class="slogan">Lujo atemporal. Hospitalidad excepcional</p>
             </div>
-            <div class="flex items-center gap-6 text-[10px] uppercase tracking-[1.5px]">
-                <a href="/" class="hover:text-twine transition">Inicio</a>
-                <a href="/services" class="hover:text-twine transition text-twine">Servicios</a>
-                <a href="/#habitaciones" class="hover:text-twine transition">Habitaciones</a>
-                <a href="/#contacto" class="hover:text-twine transition">Contacto</a>
+
+            <div class="footer-col">
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a href="/#inicio">Inicio</a></li>
+                    <li><a href="/#habitaciones">Habitaciones</a></li>
+                    <li><a href="/services">Servicios</a></li>
+                    <li><a href="/#galeria">Galería</a></li>
+                    <li><a href="/#ubicacion">Ubicación</a></li>
+                    <li><a href="/#contacto">Contacto</a></li>
+                </ul>
             </div>
-            <p class="text-[10px] text-pampas/60">2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+
+            <div class="footer-col">
+                <h4>Servicios</h4>
+                <ul>
+                    <li>Restaurante</li>
+                    <li>Spa & Bienestar</li>
+                    <li>Gimnasio</li>
+                    <li>Salones de eventos</li>
+                    <li>Piscina</li>
+                    <li>Room Service</li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Contacto</h4>
+                <ul class="contact-list">
+                    <li>
+                        <img src="/Images/Ubicacion del hotel.png" alt="Ubicación">
+                        <span>Monaco</span>
+                    </li>
+                    <li>
+                        <img src="/Images/Numero de contacto.png" alt="Teléfono">
+                        <span>+377 93 12 34 56</span>
+                    </li>
+                    <li>
+                        <img src="/Images/Correo electronico.png" alt="Email">
+                        <span>reservas@montclairhotel.com</span>
+                    </li>
+                    <li>
+                        <img src="/Images/Horario de atencion.png" alt="Horario">
+                        <span>Lunes - Domingo: 24 horas</span>
+                    </li>
+                </ul>
+            </div>
+
         </div>
     </footer>
 
+    <div class="copyright-bar">
+        <div class="container flex-between">
+            <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados</p>
+            <div class="legal-links">
+                <a href="#">Política de privacidad</a>
+                <a href="#">Términos y condiciones</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
 </body>
 </html>

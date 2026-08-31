@@ -1,222 +1,86 @@
-<!doctype html>
-<html lang="es" class="scroll-smooth">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title th:text="${pageTitle} + ' - Montclair Grand Hotel'">
-      Formulario de Servicio
-    </title>
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - Montclair Grand Hotel'">Formulario de Servicio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/pages/service-form.css">
+</head>
+<body class="form-page-body">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              twine: {
-                DEFAULT: "#BF925A",
-                hover: "#73503C",
-              },
-              mirage: "#141E26",
-              pampas: "#F2EEEB",
-              woodsmoke: "#111413",
-              silver: "#CAC6C6",
-            },
-            fontFamily: {
-              serif: ['"Cinzel"', "serif"],
-              sans: ['"Inter"', "sans-serif"],
-            },
-          },
-        },
-      };
-    </script>
-  </head>
-  <body
-    class="bg-pampas text-woodsmoke font-sans antialiased min-h-screen p-6 lg:p-12 flex items-center justify-center"
-  >
-    <div class="max-w-xl w-full">
-      <!-- Back Navigation -->
-      <div class="mb-6 flex items-center justify-between">
-        <a
-          href="/services"
-          class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1"
-        >
-          ← Volver al Listado
-        </a>
-        <a
-          href="/"
-          class="text-xs uppercase tracking-[2px] font-semibold text-woodsmoke hover:text-twine transition"
-        >
-          Inicio ⚜
-        </a>
-      </div>
-
-      <!-- Form Card -->
-      <div class="bg-white border border-silver/80 rounded-[3px] shadow-lg p-8">
-        <div class="text-center mb-8">
-          <div class="flex items-center justify-center gap-2 mb-2">
-            <div class="h-[1px] w-6 bg-twine"></div>
-            <span
-              class="font-sans text-[8px] tracking-[3px] text-twine uppercase font-bold"
-              >Gestión Montclair</span
-            >
-            <div class="h-[1px] w-6 bg-twine"></div>
-          </div>
-          <h1 class="font-serif text-2xl text-woodsmoke" th:text="${pageTitle}">
-            Servicio
-          </h1>
-          <p class="text-xs text-woodsmoke/70 mt-1">
-            Completa los campos para guardar la información
-          </p>
+    <div class="form-page-container">
+        <!-- Back Navigation -->
+        <div class="form-nav">
+            <a href="/services" class="btn btn-outline" style="border:none;">← Volver al Listado</a>
+            <a href="/" class="nav-home-link">Inicio ⚜</a>
         </div>
 
-        <form
-          th:action="@{/services/save}"
-          th:object="${service}"
-          method="post"
-          class="space-y-5"
-        >
-          <!-- Hidden ID for Updates -->
-          <input type="hidden" th:field="*{id}" />
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label
-                for="tag"
-                class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-                >Etiqueta / Badge</label
-              >
-              <input
-                type="text"
-                id="tag"
-                th:field="*{tag}"
-                placeholder="Ej. EXPERIENCIA 01"
-                class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-              />
+        <!-- Form Card -->
+        <div class="service-form-card">
+            <div class="form-header">
+                <div class="form-subtitle-box">
+                    <div class="line-mini"></div>
+                    <span class="form-subtitle">Gestión Montclair</span>
+                    <div class="line-mini"></div>
+                </div>
+                <h1 class="form-title" th:text="${pageTitle}">Servicio</h1>
+                <p class="form-desc">Completa los campos para guardar la información</p>
             </div>
-            <div>
-              <label
-                for="name"
-                class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-                >Nombre del Servicio *</label
-              >
-              <input
-                type="text"
-                id="name"
-                th:field="*{name}"
-                required
-                placeholder="Ej. Restaurante"
-                class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-              />
-            </div>
-          </div>
 
-          <div>
-            <label
-              for="description"
-              class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-              >Descripción *</label
-            >
-            <textarea
-              id="description"
-              th:field="*{description}"
-              rows="3"
-              required
-              placeholder="Describe brevemente la experiencia u oferta..."
-              class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-            ></textarea>
-          </div>
+            <form th:action="@{/services/save}" th:object="${service}" method="post" class="service-form">
+                <!-- Hidden ID for Updates -->
+                <input type="hidden" th:field="*{id}">
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label
-                for="schedule"
-                class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-                >Horario</label
-              >
-              <input
-                type="text"
-                id="schedule"
-                th:field="*{schedule}"
-                placeholder="Ej. 6:30 AM - 11:30 PM"
-                class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-              />
-            </div>
-            <div>
-              <label
-                for="price"
-                class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-                >Precio Numérico (€)</label
-              >
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                id="price"
-                th:field="*{price}"
-                placeholder="Ej. 40.00"
-                class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-              />
-            </div>
-            <div>
-              <label
-                for="priceLabel"
-                class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-                >Texto de Tarifa</label
-              >
-              <input
-                type="text"
-                id="priceLabel"
-                th:field="*{priceLabel}"
-                placeholder="Ej. Desde € 40 EUR o Incluido"
-                class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-              />
-            </div>
-          </div>
+                <div class="form-row-2">
+                    <div class="form-group-sm">
+                        <label for="tag">Etiqueta / Badge</label>
+                        <input type="text" id="tag" th:field="*{tag}" placeholder="Ej. EXPERIENCIA 01">
+                    </div>
+                    <div class="form-group-sm">
+                        <label for="name">Nombre del Servicio *</label>
+                        <input type="text" id="name" th:field="*{name}" required placeholder="Ej. Restaurante">
+                    </div>
+                </div>
 
-          <div>
-            <label
-              for="imageUrl"
-              class="block text-[9px] uppercase tracking-[1.5px] font-bold text-woodsmoke mb-1.5"
-              >URL de la Imagen *</label
-            >
-            <input
-              type="text"
-              id="imageUrl"
-              th:field="*{imageUrl}"
-              required
-              placeholder="Ej. https://... o /Images/..."
-              class="w-full bg-pampas/40 border border-silver text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition"
-            />
-            <p class="text-[9px] text-woodsmoke/60 mt-1">
-              Puedes pegar un link directo a cualquier imagen o una ruta local
-              en /Images/...
-            </p>
-          </div>
+                <div class="form-group-sm">
+                    <label for="description">Descripción *</label>
+                    <textarea id="description" th:field="*{description}" rows="3" required placeholder="Describe brevemente la experiencia u oferta..."></textarea>
+                </div>
 
-          <div class="pt-4 flex items-center gap-3">
-            <a
-              href="/services"
-              class="w-1/3 bg-pampas hover:bg-silver/40 text-woodsmoke text-[10px] uppercase tracking-[1.5px] font-bold py-3 rounded-[2px] transition text-center"
-            >
-              Cancelar
-            </a>
-            <button
-              type="submit"
-              class="w-2/3 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[1.5px] font-bold py-3 rounded-[2px] transition text-center shadow-md"
-            >
-              Guardar Servicio
-            </button>
-          </div>
-        </form>
-      </div>
+                <div class="form-row-3">
+                    <div class="form-group-sm">
+                        <label for="schedule">Horario</label>
+                        <input type="text" id="schedule" th:field="*{schedule}" placeholder="Ej. 6:30 AM - 11:30 PM">
+                    </div>
+                    <div class="form-group-sm">
+                        <label for="price">Precio Numérico (€)</label>
+                        <input type="number" step="0.01" min="0" id="price" th:field="*{price}" placeholder="Ej. 40.00">
+                    </div>
+                    <div class="form-group-sm">
+                        <label for="priceLabel">Texto de Tarifa</label>
+                        <input type="text" id="priceLabel" th:field="*{priceLabel}" placeholder="Ej. Desde € 40 EUR o Incluido">
+                    </div>
+                </div>
+
+                <div class="form-group-sm">
+                    <label for="imageUrl">URL de la Imagen *</label>
+                    <input type="text" id="imageUrl" th:field="*{imageUrl}" required placeholder="Ej. https://... o /Images/...">
+                    <p class="form-hint">Puedes pegar un link directo a cualquier imagen o una ruta local en /Images/...</p>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/services" class="btn btn-outline" style="flex:1; text-align:center;">Cancelar</a>
+                    <button type="submit" class="btn btn-primary" style="flex:2; text-align:center;">Guardar Servicio</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </body>
+
+</body>
 </html>

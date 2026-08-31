@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,305 +9,269 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        twine: {
-                            DEFAULT: '#BF925A',
-                            hover: '#73503C'
-                        },
-                        mirage: '#141E26',
-                        pampas: '#F2EEEB',
-                        woodsmoke: '#111413',
-                        silver: '#CAC6C6'
-                    },
-                    fontFamily: {
-                        serif: ['"Cinzel"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/pages/index.css">
 </head>
-<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white">
+<body>
 
-    <header class="bg-pampas border-b border-silver/50 sticky top-0 z-40 px-6 lg:px-12 py-3 flex items-center justify-between shadow-sm">
-        
-        <div class="flex-1">
-            <a href="#inicio" class="inline-flex flex-col items-center">
-                <span class="font-serif text-xl tracking-[4px] text-woodsmoke font-normal uppercase leading-none">Montclair</span>
-                
-                <div class="flex items-center gap-2 mt-1.5 mb-1">
-                    <div class="h-[1px] w-6 bg-twine"></div>
-                    <span class="font-sans text-[7px] tracking-[3px] text-twine uppercase font-semibold">Grand Hotel</span>
-                    <div class="h-[1px] w-6 bg-twine"></div>
-                </div>
-                
-                <div class="flex items-center gap-1.5">
-                    <div class="h-[1px] w-8 bg-twine"></div>
-                    <div class="w-[2px] h-[2px] rounded-full bg-twine"></div>
-                    <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="h-2.5 w-auto object-contain">
-                    <div class="w-[2px] h-[2px] rounded-full bg-twine"></div>
-                    <div class="h-[1px] w-8 bg-twine"></div>
+    <header class="header sticky-nav">
+        <div class="logo-container">
+            <a href="/#inicio" class="logo-link">
+                <div class="logo-img">
+                    <img src="/Images/Logo.jpg">
                 </div>
             </a>
         </div>
         
-        <nav class="hidden lg:flex flex-1 justify-center items-center gap-8">
-            <a href="#inicio" class="text-[9px] uppercase tracking-[2px] font-bold text-twine border-b border-twine pb-1 transition">Inicio</a>
-            <a href="#habitaciones" class="text-[9px] uppercase tracking-[2px] font-semibold text-woodsmoke hover:text-twine transition">Habitaciones</a>
-            <a href="/services" class="text-[9px] uppercase tracking-[2px] font-semibold text-woodsmoke hover:text-twine transition">Servicios</a>
-            <a href="#galeria" class="text-[9px] uppercase tracking-[2px] font-semibold text-woodsmoke hover:text-twine transition">Galería</a>
-            <a href="#ubicacion" class="text-[9px] uppercase tracking-[2px] font-semibold text-woodsmoke hover:text-twine transition">Ubicación</a>
-            <a href="#contacto" class="text-[9px] uppercase tracking-[2px] font-semibold text-woodsmoke hover:text-twine transition">Contacto</a>
+        <nav class="nav-links">
+            <a href="/#inicio" class="active">Inicio</a>
+            <a href="/#habitaciones">Habitaciones</a>
+            <a href="/services">Servicios</a>
+            <a href="/#galeria">Galería</a>
+            <a href="/#ubicacion">Ubicación</a>
+            <a href="/#contacto">Contacto</a>
         </nav>
 
-        <div class="flex-1 flex justify-end">
-            <a href="#habitaciones" class="bg-twine hover:bg-twine-hover text-white text-[9px] uppercase tracking-[1.5px] font-bold px-7 py-3 rounded-[2px] transition shadow-sm">
-                Reservar Ahora
-            </a>
+        <div class="nav-btn-container">
+            <a href="/#habitaciones" class="btn btn-primary">Reservar Ahora</a>
         </div>
     </header>
 
-    <section id="inicio" class="relative w-full h-[600px] bg-cover bg-center flex items-center" style="background-image: url('/Images/Hotel Atardecer.jpg');">
-        <div class="absolute inset-0 bg-mirage/30 bg-gradient-to-r from-mirage/90 via-mirage/50 to-transparent"></div>
-        
-        <div class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 flex justify-start">
-            <div class="text-center text-white max-w-md mt-10">
-                <div class="flex items-center justify-center gap-3 mb-4">
-                    <div class="h-[1px] w-10 bg-twine"></div>
-                    <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold">Bienvenido a</span>
-                    <div class="h-[1px] w-10 bg-twine"></div>
+    <section id="inicio" class="hero" style="background-image: url('/Images/Hotel Atardecer.jpg');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content container">
+            <div class="hero-text-box">
+                <div class="hero-subtitle">
+                    <div class="line"></div>
+                    <span>Bienvenido a</span>
+                    <div class="line"></div>
                 </div>
                 
-                <h1 class="font-serif text-5xl md:text-[54px] tracking-[4px] leading-tight font-normal mb-4">
-                    MONTCLAIR<br>GRAND HOTEL
-                </h1>
+                <h1 class="hero-title">MONTCLAIR<br>GRAND HOTEL</h1>
                 
-                <div class="flex justify-center mb-6">
-                    <img src="/Images/Flor de liz info principal.png" alt="Flor de Lis" class="h-7 w-auto object-contain">
+                <div class="hero-icon">
+                    <img src="/Images/Flor de liz info principal.png" alt="Flor de Lis">
                 </div>
                 
-                <p class="font-sans text-[11px] text-pampas font-light leading-relaxed mx-auto mb-8 max-w-[320px]">
+                <p class="hero-description">
                     Donde el lujo atemporal se encuentra con la hospitalidad excepcional. Vive momentos inolvidables en un entorno único
                 </p>
                 
-                <a href="#habitaciones" class="inline-block bg-twine hover:bg-twine-hover text-white text-[9px] uppercase tracking-[2px] font-bold px-8 py-3.5 rounded-[2px] transition shadow-md">
-                    Descubrir Más
-                </a>
+                <a href="#habitaciones" class="btn btn-primary lg">Descubrir Más</a>
             </div>
         </div>
     </section>
 
-    <section class="max-w-[900px] mx-auto px-4 -mt-10 relative z-20">
-        <form id="form-disponibilidad" class="font-sans bg-mirage rounded-[3px] shadow-2xl p-4 md:px-8 md:py-5 flex flex-col md:flex-row items-center justify-between gap-6 text-white">
+    <section class="booking-section">
+        <form id="form-disponibilidad" class="booking-bar">
             
-            <div class="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 flex-1">
-                <div class="flex items-center gap-3">
-                    <img src="/Images/Calendario.png" alt="Calendario" class="h-5 w-auto object-contain">
-                    <div class="flex flex-col">
-                        <label for="check-in-bar" class="text-[8px] tracking-[2px] text-pampas/80 font-bold uppercase mb-0.5">Check-In</label>
-                        <input type="text" id="check-in-bar" value="24 Mayo 2027" readonly class="bg-transparent text-[11px] font-bold text-white outline-none border-none cursor-pointer w-24">
+            <div class="booking-group">
+                <div class="booking-item">
+                    <img src="/Images/Calendario.png" alt="Calendario" class="icon">
+                    <div class="booking-info">
+                        <label>Check-In</label>
+                        <input type="text" value="24 Mayo 2027" readonly>
                     </div>
                 </div>
-                <span class="text-twine text-xs hidden md:block">v</span>
+                <span class="arrow-down">v</span>
             </div>
 
-            <div class="hidden md:block w-px h-8 bg-silver/20"></div>
+            <div class="divider"></div>
 
-            <div class="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 flex-1">
-                <div class="flex items-center gap-3">
-                    <img src="/Images/Calendario.png" alt="Calendario" class="h-5 w-auto object-contain">
-                    <div class="flex flex-col">
-                        <label for="check-out-bar" class="text-[8px] tracking-[2px] text-pampas/80 font-bold uppercase mb-0.5">Check-Out</label>
-                        <input type="text" id="check-out-bar" value="26 Mayo 2027" readonly class="bg-transparent text-[11px] font-bold text-white outline-none border-none cursor-pointer w-24">
+            <div class="booking-group">
+                <div class="booking-item">
+                    <img src="/Images/Calendario.png" alt="Calendario" class="icon">
+                    <div class="booking-info">
+                        <label>Check-Out</label>
+                        <input type="text" value="26 Mayo 2027" readonly>
                     </div>
                 </div>
-                <span class="text-twine text-xs hidden md:block">v</span>
+                <span class="arrow-down">v</span>
             </div>
 
-            <div class="hidden md:block w-px h-8 bg-silver/20"></div>
+            <div class="divider"></div>
 
-            <div class="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 flex-1">
-                <div class="flex items-center gap-3">
-                    <img src="/Images/Num Persona.png" alt="Huéspedes" class="h-5 w-auto object-contain">
-                    <div class="flex flex-col">
-                        <label for="huespedes-bar" class="text-[8px] tracking-[2px] text-pampas/80 font-bold uppercase mb-0.5">Huéspedes</label>
-                        <select id="huespedes-bar" class="bg-mirage text-[11px] font-bold text-white outline-none border-none cursor-pointer appearance-none">
+            <div class="booking-group">
+                <div class="booking-item">
+                    <img src="/Images/Num Persona.png" alt="Huéspedes" class="icon">
+                    <div class="booking-info">
+                        <label>Huéspedes</label>
+                        <select>
                             <option value="2 Adultos, 1 Niño" selected>2 Adultos, 1 Niño</option>
                             <option value="2 Adultos">2 Adultos</option>
                         </select>
                     </div>
                 </div>
-                <span class="text-twine text-xs hidden md:block">v</span>
+                <span class="arrow-down">v</span>
             </div>
 
-            <button type="submit" class="w-full md:w-auto bg-twine hover:bg-twine-hover text-white text-[9px] uppercase tracking-[1.5px] font-bold px-8 py-3.5 rounded-[2px] transition shadow-sm">
-                Ver Disponibilidad
-            </button>
+            <button type="submit" class="btn btn-primary submit-btn">Ver Disponibilidad</button>
         </form>
     </section>
 
-    <section id="servicios" class="max-w-6xl mx-auto py-20 px-6 lg:px-12">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <div class="flex flex-col items-center p-2">
-                <img src="/Images/Campana de servicio.png" alt="Servicio Personalizado" class="h-14 w-auto mb-4 object-contain">
-                <h3 class="font-serif text-[11px] uppercase tracking-[1.5px] text-woodsmoke font-bold mb-2">Servicio Personalizado</h3>
-                <p class="font-sans text-[10px] leading-relaxed text-woodsmoke max-w-[200px]">Atención 24/7 dedicada a hacer de tu estancia una experiencia perfecta.</p>
+    <section id="servicios" class="services-section">
+        <div class="container services-grid">
+            <div class="service-card">
+                <img src="/Images/Campana de servicio.png" alt="Servicio">
+                <h3>Servicio Personalizado</h3>
+                <p>Atención 24/7 dedicada a hacer de tu estancia una experiencia perfecta.</p>
             </div>
-            <div class="flex flex-col items-center p-2">
-                <img src="/Images/Servicio Habitaciones.png" alt="Habitaciones de Lujo" class="h-14 w-auto mb-4 object-contain">
-                <h3 class="font-serif text-[11px] uppercase tracking-[1.5px] text-woodsmoke font-bold mb-2">Habitaciones de Lujo</h3>
-                <p class="font-sans text-[10px] leading-relaxed text-woodsmoke max-w-[200px]">Espacios elegantes diseñados para tu confort y descanso incomparable.</p>
+            <div class="service-card">
+                <img src="/Images/Servicio Habitaciones.png" alt="Habitaciones">
+                <h3>Habitaciones de Lujo</h3>
+                <p>Espacios elegantes diseñados para tu confort y descanso incomparable.</p>
             </div>
-            <div class="flex flex-col items-center p-2">
-                <img src="/Images/Flor de loto Spa.png" alt="Spa & Bienestar" class="h-14 w-auto mb-4 object-contain">
-                <h3 class="font-serif text-[11px] uppercase tracking-[1.5px] text-woodsmoke font-bold mb-2">Spa & Bienestar</h3>
-                <p class="font-sans text-[10px] leading-relaxed text-woodsmoke max-w-[200px]">Relájate y rejuvenece en nuestro spa con tratamientos exclusivos y de primera clase.</p>
+            <div class="service-card">
+                <img src="/Images/Flor de loto Spa.png" alt="Spa">
+                <h3>Spa & Bienestar</h3>
+                <p>Relájate y rejuvenece en nuestro spa con tratamientos exclusivos y de primera clase.</p>
             </div>
-            <div class="flex flex-col items-center p-2">
-                <img src="/Images/Cloche gastromonia exclusiva.png" alt="Gastronomía Exclusiva" class="h-14 w-auto mb-4 object-contain">
-                <h3 class="font-serif text-[11px] uppercase tracking-[1.5px] text-woodsmoke font-bold mb-2">Gastronomía Exclusiva</h3>
-                <p class="font-sans text-[10px] leading-relaxed text-woodsmoke max-w-[200px]">Sabores excepcionales en restaurantes que deleitan tus sentidos.</p>
+            <div class="service-card">
+                <img src="/Images/Cloche gastromonia exclusiva.png" alt="Gastronomía">
+                <h3>Gastronomía Exclusiva</h3>
+                <p>Sabores excepcionales en restaurantes que deleitan tus sentidos.</p>
             </div>
         </div>
     </section>
 
-    <section id="habitaciones" class="max-w-7xl mx-auto pb-20 px-6 lg:px-12">
-        <div class="flex flex-col lg:flex-row gap-10 items-start">
+    <section id="habitaciones" class="rooms-section">
+        <div class="container rooms-layout">
             
-            <div class="w-full lg:w-[28%] pt-6">
-                <div class="flex items-center gap-3 mb-3">
-                    <span class="font-sans text-[8px] tracking-[2px] text-twine uppercase font-bold">Descansa con estilo</span>
-                    <div class="h-[1px] w-8 bg-twine"></div>
+            <div class="rooms-intro">
+                <div class="section-subtitle">
+                    <span>Descansa con estilo</span>
+                    <div class="line"></div>
                 </div>
-                <h2 class="font-serif text-4xl text-woodsmoke leading-tight font-normal mb-5">Habitaciones que elevan tu experiencia</h2>
-                <p class="font-sans text-[10px] leading-relaxed text-woodsmoke mb-6 pr-4">
-                    Cada detalle ha sido cuidadosamente seleccionado para ofrecerte el máximo confort, elegancia y privacidad.
-                </p>
-                <a href="#habitaciones" class="inline-block bg-twine hover:bg-twine-hover text-white text-[9px] uppercase tracking-[1.5px] font-bold px-6 py-3 rounded-[2px] transition shadow-sm">
-                    Ver Todas las Habitaciones
-                </a>
+                <h2>Habitaciones que elevan tu experiencia</h2>
+                <p>Cada detalle ha sido cuidadosamente seleccionado para ofrecerte el máximo confort, elegancia y privacidad.</p>
+                <a href="#habitaciones" class="btn btn-primary">Ver Todas las Habitaciones</a>
             </div>
 
-            <div class="w-full lg:w-[72%] grid grid-cols-1 md:grid-cols-3 gap-6">
-                <article class="bg-pampas border border-silver rounded-[2px] overflow-hidden flex flex-col shadow-sm">
-                    <img src="/Images/Deluxe Room.png" alt="Deluxe Room" class="w-full h-40 object-cover">
-                    <div class="p-5 text-center flex flex-col flex-grow">
-                        <h3 class="font-serif text-[13px] font-bold tracking-[1.5px] text-woodsmoke uppercase mb-3">Deluxe Room</h3>
-                        <div class="font-sans flex items-center justify-center gap-3 text-[9px] text-woodsmoke border-b border-silver/50 pb-3 mb-4">
-                            <span class="flex items-center gap-1"><img src="/Images/Dimensiones habitacion.png" class="h-3 w-auto" alt="m2"> 30 m²</span>
-                            <span class="flex items-center gap-1"><img src="/Images/Servicio Habitaciones.png" class="h-3 w-auto" alt="Cama"> King Size</span>
-                            <span class="flex items-center gap-1"><img src="/Images/Personas por habitacion.png" class="h-3 w-auto" alt="Personas"> 2</span>
+            <div class="rooms-grid">
+                
+                <article class="room-card">
+                    <img src="/Images/Deluxe Room.png" alt="Deluxe Room" class="room-img">
+                    <div class="room-content">
+                        <h3>Deluxe Room</h3>
+                        <div class="room-features">
+                            <span><img src="/Images/Dimensiones habitacion.png" alt="m2"> 30 m²</span>
+                            <span><img src="/Images/Servicio Habitaciones.png" alt="Cama"> King Size</span>
+                            <span><img src="/Images/Personas por habitacion.png" alt="Personas"> 2</span>
                         </div>
-                        <p class="font-sans text-[10px] text-woodsmoke leading-relaxed mb-5 flex-grow">Elegancia y confort en un espacio acogedor con vistas inolvidables.</p>
-                        <span class="font-sans text-[10px] text-woodsmoke block mb-4">Desde <strong class="text-twine font-bold">$116,52 €</strong> / noche</span>
-                        <button onclick="abrirModalReserva('Deluxe Room', 116.52)" class="w-full border border-twine text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition">
-                            Reservar
-                        </button>
+                        <p>Elegancia y confort en un espacio acogedor con vistas inolvidables.</p>
+                        <div class="room-price">Desde <strong>$116,52 €</strong> / noche</div>
+                        <button onclick="abrirModalReserva('Deluxe Room', 116.52)" class="btn btn-outline">Reservar</button>
                     </div>
                 </article>
 
-                <article class="bg-pampas border border-silver rounded-[2px] overflow-hidden flex flex-col shadow-sm">
-                    <img src="/Images/Premium Suite.png" alt="Premium Suite" class="w-full h-40 object-cover">
-                    <div class="p-5 text-center flex flex-col flex-grow">
-                        <h3 class="font-serif text-[13px] font-bold tracking-[1.5px] text-woodsmoke uppercase mb-3">Premium Suite</h3>
-                        <div class="font-sans flex items-center justify-center gap-3 text-[9px] text-woodsmoke border-b border-silver/50 pb-3 mb-4">
-                            <span class="flex items-center gap-1"><img src="/Images/Dimensiones habitacion.png" class="h-3 w-auto" alt="m2"> 40 m²</span>
-                            <span class="flex items-center gap-1"><img src="/Images/Servicio Habitaciones.png" class="h-3 w-auto" alt="Cama"> King Size</span>
-                            <span class="flex items-center gap-1"><img src="/Images/Personas por habitacion.png" class="h-3 w-auto" alt="Personas"> 2</span>
+                <article class="room-card">
+                    <img src="/Images/Premium Suite.png" alt="Premium Suite" class="room-img">
+                    <div class="room-content">
+                        <h3>Premium Suite</h3>
+                        <div class="room-features">
+                            <span><img src="/Images/Dimensiones habitacion.png" alt="m2"> 40 m²</span>
+                            <span><img src="/Images/Servicio Habitaciones.png" alt="Cama"> King Size</span>
+                            <span><img src="/Images/Personas por habitacion.png" alt="Personas"> 2</span>
                         </div>
-                        <p class="font-sans text-[10px] text-woodsmoke leading-relaxed mb-5 flex-grow">Amplias suites con sala privada y balcón con vista panorámica.</p>
-                        <span class="font-sans text-[10px] text-woodsmoke block mb-4">Desde <strong class="text-twine font-bold">$172,01 €</strong> / noche</span>
-                        <button onclick="abrirModalReserva('Premium Suite', 172.01)" class="w-full border border-twine text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition">
-                            Reservar
-                        </button>
+                        <p>Amplias suites con sala privada y balcón con vista panorámica.</p>
+                        <div class="room-price">Desde <strong>$172,01 €</strong> / noche</div>
+                        <button onclick="abrirModalReserva('Premium Suite', 172.01)" class="btn btn-outline">Reservar</button>
                     </div>
                 </article>
 
-                <article class="bg-pampas border border-silver rounded-[2px] overflow-hidden flex flex-col shadow-sm">
-                    <img src="/Images/Grand Suite.png" alt="Grand Suite" class="w-full h-40 object-cover">
-                    <div class="p-5 text-center flex flex-col flex-grow">
-                        <h3 class="font-serif text-[13px] font-bold tracking-[1.5px] text-woodsmoke uppercase mb-3">Grand Suite</h3>
-                        <div class="font-sans flex items-center justify-center gap-3 text-[9px] text-woodsmoke border-b border-silver/50 pb-3 mb-4">
-                            <span class="flex items-center gap-1"><img src="/Images/Dimensiones habitacion.png" class="h-3 w-auto" alt="m2"> 60 m²</span>
-                            <span class="flex items-center gap-1"><img src="/Images/Servicio Habitaciones.png" class="h-3 w-auto" alt="Cama"> King Size</span>
-                            <span class="flex items-center gap-1"><img src="/Images/Personas por habitacion.png" class="h-3 w-auto" alt="Personas"> 4</span>
+                <article class="room-card">
+                    <img src="/Images/Grand Suite.png" alt="Grand Suite" class="room-img">
+                    <div class="room-content">
+                        <h3>Grand Suite</h3>
+                        <div class="room-features">
+                            <span><img src="/Images/Dimensiones habitacion.png" alt="m2"> 60 m²</span>
+                            <span><img src="/Images/Servicio Habitaciones.png" alt="Cama"> King Size</span>
+                            <span><img src="/Images/Personas por habitacion.png" alt="Personas"> 4</span>
                         </div>
-                        <p class="font-sans text-[10px] text-woodsmoke leading-relaxed mb-5 flex-grow">Lujo sofisticado con espacios exclusivos y servicios premium.</p>
-                        <span class="font-sans text-[10px] text-woodsmoke block mb-4">Desde <strong class="text-twine font-bold">$255,24 €</strong> / noche</span>
-                        <button onclick="abrirModalReserva('Grand Suite', 255.24)" class="w-full border border-twine text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition">
-                            Reservar
-                        </button>
+                        <p>Lujo sofisticado con espacios exclusivos y servicios premium.</p>
+                        <div class="room-price">Desde <strong>$255,24 €</strong> / noche</div>
+                        <button onclick="abrirModalReserva('Grand Suite', 255.24)" class="btn btn-outline">Reservar</button>
                     </div>
                 </article>
+
             </div>
         </div>
     </section>
 
-    <section id="galeria" class="relative w-full h-[400px] bg-cover bg-center flex items-center" style="background-image: url('/Images/Piscina.png');">
-        <div class="absolute inset-0 bg-mirage/30 bg-gradient-to-r from-mirage/90 via-mirage/40 to-transparent"></div>
-        
-        <div class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 flex justify-start">
-            <div class="text-left text-white max-w-sm">
-                <div class="flex items-center gap-3 mb-3">
-                    <span class="font-sans text-[8px] tracking-[3px] text-twine uppercase font-bold">Vive momentos inolvidables</span>
-                    <div class="h-[1px] w-8 bg-twine"></div>
+    <section id="galeria" class="gallery-banner" style="background-image: url('/Images/Piscina.png');">
+        <div class="gallery-overlay"></div>
+        <div class="container relative z-10">
+            <div class="gallery-content">
+                <div class="gallery-subtitle">
+                    <span>Vive momentos inolvidables</span>
+                    <div class="line"></div>
                 </div>
-                <h2 class="font-serif text-3xl font-normal leading-snug mb-4">Tu escape perfecto te espera</h2>
-                <p class="font-sans text-[10px] text-pampas leading-relaxed font-light mb-6">
-                    Ya sea por negocios o placer, en Montclair Grand Hotel encontrarás el equilibrio perfecto entre descanso, lujo y experiencias memorables.
-                </p>
-                <a href="#habitaciones" class="inline-block bg-twine hover:bg-twine-hover text-white text-[9px] uppercase tracking-[1.5px] font-bold px-7 py-3 rounded-[2px] transition shadow-sm">
-                    Reserva tu Estancia
-                </a>
+                <h2>Tu escape perfecto te espera</h2>
+                <p>Ya sea por negocios o placer, en Montclair Grand Hotel encontrarás el equilibrio perfecto entre descanso, lujo y experiencias memorables.</p>
+                <a href="#habitaciones" class="btn btn-primary">Reserva tu Estancia</a>
             </div>
         </div>
     </section>
 
-    <footer id="contacto" class="bg-pampas pt-14 pb-10 px-6 lg:px-12">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+    <section id="ubicacion" class="map-section">
+        <div class="container map-header">
+            <div class="section-subtitle justify-center">
+                <div class="line"></div>
+                <span>Encuéntranos</span>
+                <div class="line"></div>
+            </div>
+            <h2 class="map-title">Nuestra Ubicación</h2>
+        </div>
+        <div class="map-container">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d588.7490267069219!2d7.425328576067155!3d43.73877774329823!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sHoteles!5e0!3m2!1ses!2sco!4v1787082376222!5m2!1ses!2sco" 
+                width="100%" 
+                height="450" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+    </section>
+
+    <footer id="contacto" class="main-footer">
+        <div class="container footer-grid">
             
-            <div class="flex flex-col items-center text-center">
-                <a href="#inicio" class="inline-flex flex-col items-center mb-4">
-                    <span class="font-serif text-2xl tracking-[4px] text-woodsmoke font-normal uppercase leading-none">Montclair</span>
-                    <div class="flex items-center gap-2 mt-1.5 mb-1">
-                        <div class="h-[1px] w-6 bg-twine"></div>
-                        <span class="font-sans text-[7px] tracking-[3px] text-twine uppercase font-semibold">Grand Hotel</span>
-                        <div class="h-[1px] w-6 bg-twine"></div>
+            <div class="footer-logo-col">
+                <a href="#inicio" class="logo-link">
+                    <span class="logo-title">Montclair</span>
+                    <div class="logo-subtitle-box">
+                        <div class="line"></div>
+                        <span class="logo-subtitle">Grand Hotel</span>
+                        <div class="line"></div>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <div class="h-[1px] w-8 bg-twine"></div>
-                        <div class="w-[2px] h-[2px] rounded-full bg-twine"></div>
-                        <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="h-2.5 w-auto object-contain">
-                        <div class="w-[2px] h-[2px] rounded-full bg-twine"></div>
-                        <div class="h-[1px] w-8 bg-twine"></div>
+                    <div class="logo-ornament">
+                        <div class="line long"></div>
+                        <div class="dot"></div>
+                        <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="ornament-img">
+                        <div class="dot"></div>
+                        <div class="line long"></div>
                     </div>
                 </a>
-                <p class="font-sans text-[9px] text-woodsmoke">
-                    Lujo atemporal. Hospitalidad excepcional
-                </p>
+                <p class="slogan">Lujo atemporal. Hospitalidad excepcional</p>
             </div>
 
-            <div>
-                <h4 class="font-sans text-[10px] uppercase tracking-[1px] text-woodsmoke font-bold mb-4">Enlaces Rápidos</h4>
-                <ul class="font-sans space-y-2 text-[10px] text-woodsmoke">
-                    <li><a href="#inicio" class="hover:text-twine transition">Inicio</a></li>
-                    <li><a href="#habitaciones" class="hover:text-twine transition">Habitaciones</a></li>
-                    <li><a href="/services" class="hover:text-twine transition">Servicios</a></li>
-                    <li><a href="#galeria" class="hover:text-twine transition">Galería</a></li>
-                    <li><a href="#ubicacion" class="hover:text-twine transition">Ubicación</a></li>
-                    <li><a href="#contacto" class="hover:text-twine transition">Contacto</a></li>
+            <div class="footer-col">
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a href="/#inicio">Inicio</a></li>
+                    <li><a href="/#habitaciones">Habitaciones</a></li>
+                    <li><a href="/services">Servicios</a></li>
+                    <li><a href="/#galeria">Galería</a></li>
+                    <li><a href="/#ubicacion">Ubicación</a></li>
+                    <li><a href="/#contacto">Contacto</a></li>
                 </ul>
             </div>
 
-            <div>
-                <h4 class="font-sans text-[10px] uppercase tracking-[1px] text-woodsmoke font-bold mb-4">Servicios</h4>
-                <ul class="font-sans space-y-2 text-[10px] text-woodsmoke">
+            <div class="footer-col">
+                <h4>Servicios</h4>
+                <ul>
                     <li>Restaurante</li>
                     <li>Spa & Bienestar</li>
                     <li>Gimnasio</li>
@@ -317,23 +281,23 @@
                 </ul>
             </div>
 
-            <div>
-                <h4 class="font-sans text-[10px] uppercase tracking-[1px] text-woodsmoke font-bold mb-4">Contacto</h4>
-                <ul class="font-sans space-y-3 text-[10px] text-woodsmoke">
-                    <li class="flex items-start gap-2.5">
-                        <img src="/Images/Ubicacion del hotel.png" alt="Ubicación" class="h-3 w-auto mt-0.5">
-                        <span>24 Rue Grimaldi, Quartier de la<br>Condamine, Monaco</span>
+            <div class="footer-col">
+                <h4>Contacto</h4>
+                <ul class="contact-list">
+                    <li>
+                        <img src="/Images/Ubicacion del hotel.png" alt="Ubicación">
+                        <span>Monaco</span>
                     </li>
-                    <li class="flex items-center gap-2.5">
-                        <img src="/Images/Numero de contacto.png" alt="Teléfono" class="h-3 w-auto">
+                    <li>
+                        <img src="/Images/Numero de contacto.png" alt="Teléfono">
                         <span>+377 93 12 34 56</span>
                     </li>
-                    <li class="flex items-center gap-2.5">
-                        <img src="/Images/Correo electronico.png" alt="Email" class="h-3 w-auto">
+                    <li>
+                        <img src="/Images/Correo electronico.png" alt="Email">
                         <span>reservas@montclairhotel.com</span>
                     </li>
-                    <li class="flex items-center gap-2.5">
-                        <img src="/Images/Horario de atencion.png" alt="Horario" class="h-3 w-auto">
+                    <li>
+                        <img src="/Images/Horario de atencion.png" alt="Horario">
                         <span>Lunes - Domingo: 24 horas</span>
                     </li>
                 </ul>
@@ -342,46 +306,46 @@
         </div>
     </footer>
 
-    <div class="font-sans bg-mirage py-5 px-6 lg:px-12">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-[9px] text-pampas/80">
-            <p>2026&copy; Montclair Grand Hotel. Todos los derechos reservados</p>
-            <div class="flex gap-10 mt-2 md:mt-0">
-                <a href="#" class="hover:text-twine transition">Política de privacidad</a>
-                <a href="#" class="hover:text-twine transition">Términos y condiciones</a>
+    <div class="copyright-bar">
+        <div class="container flex-between">
+            <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados</p>
+            <div class="legal-links">
+                <a href="#">Política de privacidad</a>
+                <a href="#">Términos y condiciones</a>
             </div>
         </div>
     </div>
 
-    <div id="modal-reserva" class="fixed inset-0 bg-mirage/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-pampas border border-twine/40 rounded-[2px] shadow-2xl max-w-lg w-full p-8 relative">
-            <button id="btn-cerrar-modal" class="absolute top-5 right-5 text-woodsmoke hover:text-twine text-xl font-bold transition">✕</button>
-            <div class="text-center mb-6">
-                <span class="font-sans text-[9px] tracking-[2px] text-twine uppercase font-bold block mb-1">Confirmación de Estancia</span>
-                <h3 id="modal-titulo-habitacion" class="font-serif text-3xl text-woodsmoke font-normal">Deluxe Room</h3>
-                <p id="modal-precio-noche" class="font-sans text-xs text-twine font-bold mt-2">Tarifa: $116,52 € / noche</p>
+    <div id="modal-reserva" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button id="btn-cerrar-modal" class="close-btn">✕</button>
+            
+            <div class="modal-header">
+                <span class="modal-subtitle">Confirmación de Estancia</span>
+                <h3 id="modal-titulo-habitacion">Deluxe Room</h3>
+                <p id="modal-precio-noche">Tarifa: $116,52 € / noche</p>
             </div>
-            <form id="form-completar-reserva" class="font-sans space-y-4">
-                <div>
-                    <label for="nombre-huesped" class="text-[9px] tracking-[2px] text-woodsmoke font-bold uppercase block mb-1.5">Nombre Completo</label>
-                    <input type="text" id="nombre-huesped" required placeholder="Ej. Juan Pérez" class="w-full bg-white border border-silver/80 text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition">
+            
+            <form id="form-completar-reserva" class="modal-form">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="nombre-huesped" required placeholder="Ej. Juan Pérez">
                 </div>
-                <div>
-                    <label for="correo-huesped" class="text-[9px] tracking-[2px] text-woodsmoke font-bold uppercase block mb-1.5">Correo Electrónico</label>
-                    <input type="email" id="correo-huesped" required placeholder="ejemplo@correo.com" class="w-full bg-white border border-silver/80 text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition">
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="correo-huesped" required placeholder="ejemplo@correo.com">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="modal-check-in" class="text-[9px] tracking-[2px] text-woodsmoke font-bold uppercase block mb-1.5">Check-In</label>
-                        <input type="date" id="modal-check-in" required class="w-full bg-white border border-silver/80 text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Check-In</label>
+                        <input type="date" id="modal-check-in" required>
                     </div>
-                    <div>
-                        <label for="modal-check-out" class="text-[9px] tracking-[2px] text-woodsmoke font-bold uppercase block mb-1.5">Check-Out</label>
-                        <input type="date" id="modal-check-out" required class="w-full bg-white border border-silver/80 text-xs text-woodsmoke p-3 rounded-[2px] outline-none focus:border-twine transition">
+                    <div class="form-group">
+                        <label>Check-Out</label>
+                        <input type="date" id="modal-check-out" required>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-twine hover:bg-twine-hover text-white text-[11px] uppercase tracking-[2px] font-bold py-3.5 rounded-[2px] transition shadow-md mt-4">
-                    Confirmar y Guardar Reserva
-                </button>
+                <button type="submit" class="btn btn-primary full-width">Confirmar y Guardar Reserva</button>
             </form>
         </div>
     </div>
