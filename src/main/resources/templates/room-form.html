@@ -1,0 +1,77 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Formulario de Habitación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-6">
+    <h1
+      class="text-2xl font-bold mb-4"
+      th:text="${room.id} == null ? 'Crear habitación' : 'Editar habitación'"
+    >
+      Formulario
+    </h1>
+
+    <form
+      th:action="@{/rooms/save}"
+      th:object="${room}"
+      method="post"
+      class="space-y-4 max-w-md"
+    >
+      <input type="hidden" th:field="*{id}" />
+
+      <div>
+        <label class="block font-medium">Número</label>
+        <input
+          type="text"
+          th:field="*{number}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+
+      <div>
+        <label class="block font-medium">Piso</label>
+        <input
+          type="number"
+          th:field="*{floor}"
+          class="border rounded w-full p-2"
+        />
+      </div>
+
+      <div>
+        <label class="block font-medium">Tipo</label>
+        <select th:field="*{typeId}" class="border rounded w-full p-2">
+          <option
+            th:each="type : ${roomTypes}"
+            th:value="${type.id}"
+            th:text="${type.name}"
+          ></option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-medium">Estado</label>
+        <select th:field="*{status}" class="border rounded w-full p-2">
+          <option value="AVAILABLE">Disponible</option>
+          <option value="OCCUPIED">Ocupada</option>
+        </select>
+      </div>
+
+      <div class="flex space-x-2">
+        <button
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+        >
+          Guardar
+        </button>
+        <a
+          th:href="@{/rooms}"
+          class="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
+        >
+          Cancelar
+        </a>
+      </div>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Habitaciones - Montclair Grand Hotel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        twine: { DEFAULT: '#C59B63', hover: '#A87C49', dark: '#73503C', light: '#D4B07A' },
+                        mirage: { DEFAULT: '#141E26', dark: '#0F161C', light: '#1C2A35' },
+                        pampas: '#FAF7F2',
+                        pampasAlt: '#F0EBE3',
+                        woodsmoke: '#111413',
+                        silver: '#CAC6C6',
+                        ivory: '#FDFBF7'
+                    },
+                    fontFamily: {
+                        serif: ['"Cinzel"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        display: ['"Cormorant Garamond"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <header class="bg-mirage border-b border-white/10 sticky top-0 z-40 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
+        <div class="flex-1">
+            <a href="/" class="inline-flex flex-col items-center">
+                <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
+                <div class="flex items-center gap-2 mt-1 mb-0.5">
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                    <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                </div>
+            </a>
+        </div>
+        <nav class="hidden lg:flex flex-1 justify-center items-center gap-8 text-white/90">
+            <a href="/" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Inicio</a>
+            <a href="/rooms/cards" class="text-[9px] uppercase tracking-[2px] font-bold text-twine border-b border-twine pb-0.5 transition">Habitaciones</a>
+            <a href="/services" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Servicios</a>
+            <a href="/#galeria" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Galería</a>
+            <a href="/#contacto" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Contacto</a>
+        </nav>
+        <div class="flex-1 flex justify-end">
+            <a href="/#contacto" class="bg-twine hover:bg-twine-hover text-white text-[9px] uppercase tracking-[2px] font-bold px-5 py-2.5 rounded-[2px] transition shadow-sm hidden sm:inline-block">
+                Reservar Ahora
+            </a>
+        </div>
+    </header>
+
+    <!-- Dark Hero -->
+    <section class="bg-mirage text-white pt-20 pb-16 px-6 lg:px-12 relative">
+        <div class="max-w-4xl mx-auto text-center">
+            <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-4">MONTCLAIR GRAND HOTEL</span>
+            <h1 class="font-serif text-4xl sm:text-5xl md:text-[54px] font-normal tracking-[2px] leading-tight mb-5">Habitaciones</h1>
+            <p class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-2xl mx-auto mb-8">
+                Espacios donde el diseño de vanguardia se encuentra con la calidez del hogar. Cada rincón ha sido pensado para cautivar tus sentidos.
+            </p>
+            <div class="flex items-center justify-center gap-3">
+                <div class="h-[1px] w-14 bg-twine/40"></div>
+                <div class="w-2.5 h-2.5 rotate-45 border border-twine bg-twine"></div>
+                <div class="h-[1px] w-14 bg-twine/40"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Intro Section -->
+    <section class="bg-ivory py-16 px-6 lg:px-12 border-b border-[#E8E2DA]">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="font-display text-3xl md:text-4xl text-woodsmoke tracking-[1px] mb-6 italic font-medium">
+                Nuestras habitaciones
+            </h2>
+            <div class="flex items-center justify-center gap-3 mb-8">
+                <div class="h-[1px] w-10 bg-twine/40"></div>
+                <div class="w-2 h-2 rotate-45 border border-twine/60"></div>
+                <div class="h-[1px] w-10 bg-twine/40"></div>
+            </div>
+            <p class="font-sans text-xs md:text-[13px] text-[#555E66] font-light leading-relaxed max-w-3xl mx-auto">
+                Te abrimos las puertas de nuestras habitaciones y suites, espacios donde el diseño de vanguardia se encuentra con la calidez del hogar. Nuestro equipo ha seleccionado materiales nobles, texturas suaves y una iluminación inteligente para crear atmósferas que se adaptan a tu estado de ánimo. Estamos listos para que vivas una estancia donde la elegancia y el descanso profundo van siempre de la mano.
+            </p>
+        </div>
+    </section>
+
+    <!-- Room Cards Grid -->
+    <main class="bg-pampas py-14 px-6 lg:px-12">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+
+                <article th:each="room : ${rooms}"
+                         class="group bg-white rounded-[4px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col border border-[#E8E2DA]/80">
+
+                    <!-- Image with hover zoom -->
+                    <a th:href="@{'/rooms/' + ${room.id}}" class="block relative h-52 overflow-hidden">
+                        <img th:src="${room.imageUrl}" th:alt="${room.name}"
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <!-- Gradient overlay on hover -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </a>
+
+                    <!-- Card Body -->
+                    <div class="p-5 flex flex-col flex-grow">
+                        <!-- Room Name -->
+                        <a th:href="@{'/rooms/' + ${room.id}}" class="block mb-3">
+                            <h3 class="font-serif text-sm font-bold text-woodsmoke tracking-[2px] uppercase group-hover:text-twine transition-colors duration-300"
+                                th:text="${room.name}">Deluxe Room</h3>
+                        </a>
+
+                        <!-- Specs Row -->
+                        <div class="flex items-center gap-1.5 text-[9px] text-woodsmoke/60 font-medium mb-3 flex-wrap">
+                            <span class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1">
+                                <span th:text="${room.area} + ' m²'">30 m²</span>
+                            </span>
+                            <span class="text-twine/40">|</span>
+                            <span class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1">
+                                <span th:text="${room.bedType}">King Size</span>
+                            </span>
+                            <span class="text-twine/40">|</span>
+                            <span class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1">
+                                <span>👤</span>
+                                <span th:text="${room.capacity}">2</span>
+                            </span>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-[11px] text-woodsmoke/70 leading-relaxed mb-4 flex-grow"
+                           th:text="${room.description}">Descripción.</p>
+
+                        <!-- Price -->
+                        <p class="text-[13px] font-bold text-woodsmoke mb-4">
+                            <span class="text-twine-dark">Desde</span>
+                            <span th:text="'$' + ${#numbers.formatDecimal(room.pricePerNight, 1, 2)}">$116.52</span>
+                            <span class="text-twine-dark font-normal text-[11px]">€ / noche</span>
+                        </p>
+
+                        <!-- CTA Button -->
+                        <div class="pt-3 border-t border-[#E8E2DA]">
+                            <a th:href="@{'/rooms/' + ${room.id}}"
+                               class="block text-center border border-twine/70 text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition-all duration-300">
+                                Reservar
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- CTA Section with image -->
+    <section class="bg-mirage relative overflow-hidden">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 min-h-[320px]">
+            <!-- Left: Room image -->
+            <div class="hidden lg:block relative">
+                <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80"
+                     alt="Suite de lujo" class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent to-mirage/70"></div>
+            </div>
+            <!-- Right: CTA text -->
+            <div class="flex flex-col justify-center px-8 lg:px-16 py-16 text-white">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="h-[1px] w-8 bg-twine"></div>
+                    <span class="font-sans text-[9px] tracking-[3px] text-twine uppercase font-bold">EL ARTE DE DESCANSAR</span>
+                </div>
+                <h2 class="font-display text-3xl md:text-4xl font-medium italic leading-tight mb-4">
+                    Tu descanso merece un entorno excepcional
+                </h2>
+                <p class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-md mb-8">
+                    Desconecta del mundo en nuestras suites de diseño. Disfruta de sábanas premium, menú de almohadas y un servicio impecable pensado para tu bienestar absoluto.
+                </p>
+                <div>
+                    <a href="/#contacto" class="inline-block border border-white/60 hover:bg-twine hover:border-twine text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-8 rounded-[2px] transition-all duration-300">
+                        RESERVA TU ESTANCIA
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-mirage-dark text-pampas/80 pt-12 pb-8 px-6 lg:px-12 border-t border-white/5">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
+            <div>
+                <a href="/" class="inline-flex flex-col items-start mb-3">
+                    <span class="font-serif text-base tracking-[3px] text-white uppercase">Montclair</span>
+                    <span class="font-sans text-[7px] tracking-[2px] text-twine uppercase font-semibold mt-0.5">Grand Hotel</span>
+                </a>
+                <p class="text-[11px] text-pampas/50 italic">Lujo atemporal. Hospitalidad excepcional.</p>
+            </div>
+            <div>
+                <h4 class="text-[9px] uppercase tracking-[2px] font-bold text-white mb-3">Enlaces Rápidos</h4>
+                <ul class="space-y-1.5 text-[11px]">
+                    <li><a href="/" class="hover:text-twine transition">Inicio</a></li>
+                    <li><a href="/rooms/cards" class="text-twine">Habitaciones</a></li>
+                    <li><a href="/services" class="hover:text-twine transition">Servicios</a></li>
+                    <li><a href="/#contacto" class="hover:text-twine transition">Contacto</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-[9px] uppercase tracking-[2px] font-bold text-white mb-3">Servicios</h4>
+                <ul class="space-y-1.5 text-[11px]">
+                    <li>Restaurante</li>
+                    <li>Spa &amp; Bienestar</li>
+                    <li>Gimnasio</li>
+                    <li>Piscina</li>
+                    <li>Room Service</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-[9px] uppercase tracking-[2px] font-bold text-white mb-3">Contacto</h4>
+                <ul class="space-y-1.5 text-[11px]">
+                    <li>📍 24 Rue Grimaldi, Quartier de la Condamine, Mónaco</li>
+                    <li>📞 +377 93 12 34 56</li>
+                    <li>✉️ reservas@montclairhotel.com</li>
+                    <li>🕐 Lunes - Domingo: 24 horas</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-6xl mx-auto mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between text-[10px] text-pampas/40 gap-4">
+            <p>2026© Montclair Grand Hotel. Todos los derechos reservados.</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-twine transition">Política de privacidad</a>
+                <a href="#" class="hover:text-twine transition">Términos y condiciones</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tipos de Habitación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-6">
+    <h1 class="text-2xl font-bold mb-4">Tipos de Habitación</h1>
+    <a
+      th:href="@{/room-types/add}"
+      class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded mb-4 inline-block"
+    >
+      Añadir tipo
+    </a>
+    <table class="min-w-full bg-white border mt-4">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2">Id</th>
+          <th class="px-4 py-2">Nombre</th>
+          <th class="px-4 py-2">Descripción</th>
+          <th class="px-4 py-2">Precio/noche</th>
+          <th class="px-4 py-2">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="rt : ${roomTypes}" class="border-t">
+          <td class="px-4 py-2" th:text="${rt.id}"></td>
+          <td class="px-4 py-2" th:text="${rt.name}"></td>
+          <td class="px-4 py-2" th:text="${rt.description}"></td>
+          <td class="px-4 py-2" th:text="${rt.pricePerNight}"></td>
+          <td class="px-4 py-2">
+            <a
+              th:href="@{'/room-types/edit/' + ${rt.id}}"
+              class="text-blue-600 mr-2"
+              >Editar</a
+            >
+            <a
+              th:href="@{'/room-types/delete/' + ${rt.id}}"
+              class="text-red-600"
+              onclick="return confirm('¿Eliminar?');"
+              >Borrar</a
+            >
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
