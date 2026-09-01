@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.entities.Client;
 import com.example.demo.service.ClientService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,12 +14,13 @@ public class AuthController {
 
     private final ClientService clientService;
 
+    @Autowired
     public AuthController(ClientService clientService) {
         this.clientService = clientService;
     }
 
     @GetMapping("/login")
-    public String loginForm(Model model) {
+    public String loginForm() {
         return "login";
     }
 
@@ -27,22 +29,29 @@ public class AuthController {
                                @RequestParam(value = "email", required = false) String email,
                                @RequestParam(value = "password", required = false) String password,
                                Model model) {
-        String identifier = (username != null && !username.isBlank()) ? username : email;
+        String identifier = null;
+        if (username != null && !username.trim().isEmpty()) {
+            identifier = username.trim();
+        } else if (email != null && !email.trim().isEmpty()) {
+            identifier = email.trim();
+        }
 
-        if (identifier == null || identifier.isBlank() || password == null || password.isBlank()) {
-            model.addAttribute("error", "Por favor ingresa tu usuario o correo y tu contraseña.");
+        if (identifier == null || password == null || password.trim().isEmpty()) {
+            model.addAttribute("error", "Por favor ingresa tu correo/usuario y tu contraseña.");
             return "login";
         }
 
-        Client client = clientService.login(identifier, password);
+        Client client = clientService.login(identifier, password.trim());
         if (client == null) {
-            model.addAttribute("error", "Credenciales inválidas. El usuario/correo o la contraseña son incorrectos.");
+            model.addAttribute("error", "Usuario o contraseña incorrectos.");
             model.addAttribute("username", identifier);
             return "login";
         }
 
-        model.addAttribute("client", client);
-        model.addAttribute("success", "¡Credenciales válidas! Inicio de sesión exitoso. Bienvenido(a), " + client.getFirstName() + " " + client.getLastName() + ".");
-        return "login";
+        if (client.isAdmin()) {
+            return "redirect:/admin/rooms";
+        }
+
+        return "redirect:/profile/" + client.getId();
     }
 }

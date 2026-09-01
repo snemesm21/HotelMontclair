@@ -1,61 +1,153 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
+<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+<head>
     <meta charset="UTF-8" />
-    <title>Formulario Tipo de Habitación</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${roomType.id} == null ? 'Nuevo Tipo de Habitación - Montclair Grand Hotel' : 'Modificar Tipo de Habitación - Montclair Grand Hotel'">Tipo de Habitación - Montclair Grand Hotel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="p-6">
-    <h1
-      class="text-2xl font-bold mb-4"
-      th:text="${roomType.id} == null ? 'Crear tipo de habitación' : 'Editar tipo de habitación'"
-    >
-      Formulario
-    </h1>
-    <form
-      th:action="${roomType.id} == null ? @{/room-types/add} : @{'/room-types/edit/' + ${roomType.id}}"
-      th:object="${roomType}"
-      method="post"
-      class="space-y-4 max-w-md"
-    >
-      <div>
-        <label class="block font-medium">Nombre</label>
-        <input
-          type="text"
-          th:field="*{name}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div>
-        <label class="block font-medium">Descripción</label>
-        <input
-          type="text"
-          th:field="*{description}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div>
-        <label class="block font-medium">Precio por noche</label>
-        <input
-          type="number"
-          step="0.01"
-          th:field="*{pricePerNight}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div class="flex space-x-2">
-        <button
-          type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-        >
-          Guardar
-        </button>
-        <a
-          th:href="@{/room-types}"
-          class="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
-          >Cancelar</a
-        >
-      </div>
-    </form>
-  </body>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        twine: { DEFAULT: '#C59B63', hover: '#A87C49', dark: '#73503C', light: '#D4B07A' },
+                        mirage: { DEFAULT: '#141E26', dark: '#0F161C', light: '#1C2A35' },
+                        pampas: '#FAF7F2',
+                        pampasAlt: '#F0EBE3',
+                        woodsmoke: '#111413',
+                        silver: '#CAC6C6',
+                        ivory: '#FDFBF7'
+                    },
+                    fontFamily: {
+                        serif: ['"Cinzel"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        display: ['"Cormorant Garamond"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+
+    <header class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
+        <div class="flex-1">
+            <a href="/" class="inline-flex flex-col items-center">
+                <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
+                <div class="flex items-center gap-2 mt-1 mb-0.5">
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                    <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                </div>
+            </a>
+        </div>
+        <nav class="hidden sm:flex items-center gap-6 text-white/90">
+            <a href="/admin/rooms" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Habitaciones</a>
+            <a href="/admin/room-types" class="text-[9px] uppercase tracking-[2px] font-semibold text-twine border-b border-twine pb-0.5">Tipos de Habitación</a>
+        </nav>
+        <div class="flex-1 flex justify-end">
+            <a href="/admin/room-types" class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1">
+                ← Volver a Categorías
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-6 py-12">
+        <div class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-xl w-full max-w-xl p-8 sm:p-10 relative overflow-hidden">
+            
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-twine-dark via-twine to-twine-light"></div>
+
+            <div class="text-center mb-8">
+                <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-1">CATEGORÍAS DE ESTANCIA</span>
+                <h1 class="font-serif text-2xl sm:text-3xl text-woodsmoke tracking-[2px] uppercase"
+                    th:text="${roomType.id} == null ? 'Nuevo Tipo de Habitación' : 'Modificar Categoría'">
+                    Nuevo Tipo de Habitación
+                </h1>
+                <div class="flex items-center justify-center gap-3 mt-3">
+                    <div class="h-[1px] w-8 bg-twine/40"></div>
+                    <div class="w-1.5 h-1.5 rotate-45 border border-twine"></div>
+                    <div class="h-[1px] w-8 bg-twine/40"></div>
+                </div>
+                <p class="text-xs text-woodsmoke/60 mt-2">
+                    Define las características y tarifa base para esta categoría de alojamiento.
+                </p>
+            </div>
+
+            <form th:action="${roomType.id} == null ? @{/admin/room-types/add} : @{'/admin/room-types/edit/' + ${roomType.id}}"
+                  th:object="${roomType}"
+                  method="post"
+                  class="space-y-5">
+                
+                <input type="hidden" th:field="*{id}" th:if="${roomType.id} != null" />
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        Nombre de la Categoría *
+                    </label>
+                    <input
+                        type="text"
+                        th:field="*{name}"
+                        placeholder="ej. Suite Presidencial"
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        Descripción General *
+                    </label>
+                    <textarea
+                        th:field="*{description}"
+                        rows="3"
+                        placeholder="ej. Estancias amplias con sala de estar, terraza privada y vistas panorámicas..."
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        required
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        Tarifa Base de Referencia (€ / Noche) *
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        th:field="*{pricePerNight}"
+                        placeholder="ej. 200.00"
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        required
+                    />
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row gap-3">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-6 rounded-[2px] transition duration-300 shadow-sm"
+                        th:text="${roomType.id} == null ? 'Guardar Categoría' : 'Actualizar Categoría'"
+                    >
+                        Guardar Categoría
+                    </button>
+                    <a
+                        th:href="@{/admin/room-types}"
+                        class="sm:w-auto text-center border border-[#E8E2DA] hover:bg-pampas text-woodsmoke/70 text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-6 rounded-[2px] transition duration-300"
+                    >
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+    <footer class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5">
+        <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+    </footer>
+
+</body>
 </html>

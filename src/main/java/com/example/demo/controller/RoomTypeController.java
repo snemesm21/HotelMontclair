@@ -2,16 +2,19 @@ package com.example.demo.controller;
 
 import com.example.demo.entities.RoomType;
 import com.example.demo.service.RoomTypeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequestMapping("/room-types")
+@RequestMapping("/admin/room-types")
 public class RoomTypeController {
+
     private final RoomTypeService service;
 
+    @Autowired
     public RoomTypeController(RoomTypeService service) {
         this.service = service;
     }
@@ -20,7 +23,7 @@ public class RoomTypeController {
     public String list(Model model) {
         List<RoomType> list = service.findAll();
         model.addAttribute("roomTypes", list);
-        return "room-types"; // thymeleaf template
+        return "room-types";
     }
 
     @GetMapping("/add")
@@ -32,7 +35,7 @@ public class RoomTypeController {
     @PostMapping("/add")
     public String add(@ModelAttribute RoomType roomType) {
         service.save(roomType);
-        return "redirect:/room-types";
+        return "redirect:/admin/room-types";
     }
 
     @GetMapping("/edit/{id}")
@@ -46,13 +49,12 @@ public class RoomTypeController {
     public String edit(@PathVariable Long id, @ModelAttribute RoomType roomType) {
         roomType.setId(id);
         service.save(roomType);
-        return "redirect:/room-types";
+        return "redirect:/admin/room-types";
     }
 
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         service.delete(id);
-        return "redirect:/room-types";
+        return "redirect:/admin/room-types";
     }
 }
-

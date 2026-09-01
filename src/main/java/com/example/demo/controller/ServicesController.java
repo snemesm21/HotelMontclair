@@ -11,8 +11,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/services")
 public class ServicesController {
 
+    private final ServiceService serviceService;
+
     @Autowired
-    private ServiceService serviceService;
+    public ServicesController(ServiceService serviceService) {
+        this.serviceService = serviceService;
+    }
 
     // http://localhost:8080/services
     @GetMapping
@@ -43,8 +47,9 @@ public class ServicesController {
     @GetMapping("/add")
     public String mostrarFormularioCrear(Model model) {
         Service service = new Service();
-        service.setId(null); // ID nulo para indicar que es un registro nuevo
+        service.setId(null);
         model.addAttribute("service", service);
+        model.addAttribute("pageTitle", "Nuevo Servicio");
         return "service-form";
     }
 
@@ -60,6 +65,7 @@ public class ServicesController {
     public String mostrarFormularioEditar(@PathVariable("id") Long id, Model model) {
         Service service = serviceService.searchById(id);
         model.addAttribute("service", service);
+        model.addAttribute("pageTitle", "Modificar Servicio");
         return "service-form";
     }
 

@@ -12,7 +12,6 @@
       rel="stylesheet"
     />
 
-    <!-- ===== Tailwind + congif ===== -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -45,7 +44,6 @@
       <div
         class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto px-6 py-3 relative"
       >
-        <!-- Logo -->
         <a href="/#inicio" class="flex items-center">
           <img
             src="/Images/Logo.jpg"
@@ -55,91 +53,19 @@
         </a>
 
         <div class="flex items-center space-x-3">
-          <!-- ESTADO: sin sesión iniciada -->
-          <div
-            th:if="${session.cliente == null}"
-            class="flex items-center space-x-3"
+          <a
+            href="/login"
+            class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white inline-block"
           >
-            <button
-              id="btn-abrir-login"
-              type="button"
-              class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white"
-            >
-              Login
-            </button>
-            <a
-              href="/rooms/cards"
-              class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover"
-            >
-              Reservar Ahora
-            </a>
-          </div>
+            Login
+          </a>
+          <a
+            href="/rooms/cards"
+            class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover inline-block"
+          >
+            Reservar Ahora
+          </a>
 
-          <!-- ESTADO: sesión iniciada (se activa solo cuando el backend
-               guarde el cliente en ${session.cliente}) -->
-          <div th:if="${session.cliente != null}" class="relative">
-            <button
-              type="button"
-              class="flex text-sm rounded-full focus:ring-4 focus:ring-twine/30"
-              id="user-menu-button"
-              aria-expanded="false"
-              data-dropdown-toggle="user-dropdown"
-              data-dropdown-placement="bottom"
-            >
-              <span class="sr-only">Abrir menú de usuario</span>
-              <img
-                class="w-9 h-9 rounded-full object-cover border border-twine/40"
-                th:src="${session.cliente.fotoUrl} ?: '/Images/avatar-default.png'"
-                alt="Foto de perfil"
-              />
-            </button>
-
-            <div
-              class="z-50 hidden absolute right-0 mt-2 bg-white border border-[#E3DDD4] rounded-sm shadow-lg w-44"
-              id="user-dropdown"
-            >
-              <div class="px-4 py-3 text-sm border-b border-[#E3DDD4]">
-                <span
-                  class="block font-serif text-woodsmoke"
-                  th:text="${session.cliente.nombre}"
-                  >Nombre Cliente</span
-                >
-                <span
-                  class="block text-[11px] text-[#6A737D] truncate"
-                  th:text="${session.cliente.email}"
-                  >cliente@correo.com</span
-                >
-              </div>
-              <ul
-                class="p-2 text-sm font-sans"
-                aria-labelledby="user-menu-button"
-              >
-                <li>
-                  <a
-                    href="/mi-cuenta"
-                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
-                    >Mi Cuenta</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="/mis-reservas"
-                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
-                    >Mis Reservas</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="/logout"
-                    class="block w-full px-3 py-2 rounded-sm text-[#DC2626] hover:bg-[#FEF2F2]"
-                    >Cerrar Sesión</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Botón hamburguesa(Nav bar comprimido): solo visible por debajo de md -->
           <button
             data-collapse-toggle="navbar-index"
             type="button"
@@ -660,7 +586,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL DE LOGIN ===== -->
     <div id="modal-login" class="modal-overlay hidden">
       <div class="modal-box">
         <button id="btn-cerrar-login" type="button" class="close-btn">✕</button>
@@ -670,7 +595,6 @@
           <h3>Iniciar Sesión</h3>
         </div>
 
-        <!-- POST normal: con accion /login para nav -->
         <form
           id="form-login"
           class="modal-form"
@@ -711,7 +635,6 @@
 
     <script src="/js/app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
-    <!-- Lógica del modal de login -->
     <script src="/js/login-modal.js"></script>
   </body>
 </html>

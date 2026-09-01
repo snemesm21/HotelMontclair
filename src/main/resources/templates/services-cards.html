@@ -1,90 +1,70 @@
 <!doctype html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Servicios - Montclair Grand Hotel</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Servicios - Montclair Grand Hotel</title>
 
-    <link rel="stylesheet" href="/css/global.css" />
-    <link rel="stylesheet" href="/css/pages/services-cards.css" />
-  </head>
-  <body class="admin-page-body">
-    <div class="container admin-container">
-      <!-- Header / Navigation Bar -->
-      <div class="admin-header">
-        <div class="admin-header-title">
-          <a href="/" class="admin-back-link">← Volver al Inicio</a>
-          <h1 class="admin-title">Catálogo de Servicios</h1>
-          <p class="admin-desc">
-            Explora nuestras experiencias y comodidades exclusivas
-          </p>
-        </div>
-        <div class="admin-header-actions">
-          <a href="/services" class="btn btn-outline" style="padding: 10px 16px"
-            >Ver en Tabla</a
-          >
-          <a
-            href="/services/new"
-            class="btn btn-primary"
-            style="padding: 10px 20px"
-            >+ Nuevo Servicio</a
-          >
-        </div>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/pages/services-cards.css" />
+</head>
+
+<body class="admin-page-body">
+  <div class="container admin-container">
+    <div class="admin-header">
+      <div class="admin-header-title">
+        <a href="/" class="admin-back-link">← Volver al Inicio</a>
+        <h1 class="admin-title">Catálogo de Servicios</h1>
+        <p class="admin-desc">
+          Explora nuestras experiencias y comodidades exclusivas
+        </p>
       </div>
-
-      <!-- Cards Grid -->
-      <div class="admin-cards-grid">
-        <article th:each="svc : ${services}" class="admin-service-card">
-          <div class="admin-card-img">
-            <img th:src="${svc.imageUrl}" th:alt="${svc.name}" />
-            <span class="admin-card-price" th:text="${svc.price} + ' €'"></span>
-          </div>
-          <div class="admin-card-body">
-            <div class="admin-card-header">
-              <h3 th:text="${svc.name}">Servicio</h3>
-              <span class="admin-card-id" th:text="'#' + ${svc.id}">#1</span>
-            </div>
-            <p class="admin-card-desc" th:text="${svc.description}">
-              Descripción del servicio
-            </p>
-
-            <div class="admin-card-footer">
-              <a th:href="@{'/services/' + ${svc.id}}" class="admin-detail-link"
-                >Detalles →</a
-              >
-              <div class="admin-card-actions">
-                <a
-                  th:href="@{'/services/edit/' + ${svc.id}}"
-                  class="admin-btn-edit"
-                  >Editar</a
-                >
-                <a
-                  th:href="@{'/services/delete/' + ${svc.id}}"
-                  onclick="
-                    return confirm('¿Estás seguro de eliminar este servicio?');
-                  "
-                  class="admin-btn-delete"
-                  >Eliminar</a
-                >
-              </div>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <div th:if="${#lists.isEmpty(services)}" class="admin-empty-state">
-        <p>No hay servicios registrados en este momento.</p>
-        <a href="/services/new" class="btn btn-primary" style="margin-top: 16px"
-          >Crear Primer Servicio</a
-        >
+      <div class="admin-header-actions">
+        <a href="/services" class="btn btn-outline" style="padding: 10px 16px">Ver en Tabla</a>
+        <a href="/services/new" class="btn btn-primary" style="padding: 10px 20px">+ Nuevo Servicio</a>
       </div>
     </div>
-  </body>
+
+    <div class="admin-cards-grid">
+      <article th:each="svc : ${services}" class="admin-service-card">
+        <div class="admin-card-img">
+          <img th:src="${svc.imageUrl}" th:alt="${svc.name}" />
+          <span class="admin-card-price" th:text="${svc.price} + ' €'"></span>
+        </div>
+        <div class="admin-card-body">
+          <div class="admin-card-header">
+            <h3 th:text="${svc.name}">Servicio</h3>
+            <span class="admin-card-id" th:text="'#' + ${svc.id}">#1</span>
+          </div>
+          <p class="admin-card-desc" th:text="${svc.description}">
+            Descripción del servicio
+          </p>
+
+          <div class="admin-card-footer">
+            <a th:href="@{'/services/' + ${svc.id}}" class="admin-detail-link">Detalles →</a>
+            <div class="admin-card-actions">
+              <a th:href="@{'/services/edit/' + ${svc.id}}" class="admin-btn-edit">Editar</a>
+              <a th:href="@{'/services/delete/' + ${svc.id}}" onclick="
+                    return confirm('¿Estás seguro de eliminar este servicio?');
+                  " class="admin-btn-delete">Eliminar</a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div th:if="${#lists.isEmpty(services)}" class="admin-empty-state">
+      <p>No hay servicios registrados en este momento.</p>
+      <a href="/services/new" class="btn btn-primary" style="margin-top: 16px">Crear Primer Servicio</a>
+    </div>
+  </div>
+</body>
+
 </html>

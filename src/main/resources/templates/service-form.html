@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle} + ' - Montclair Grand Hotel'">Formulario de Servicio</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/pages/service-form.css">
 </head>
+
 <body class="form-page-body">
 
     <div class="form-page-container">
-        <!-- Back Navigation -->
         <div class="form-nav">
             <a href="/services" class="btn btn-outline" style="border:none;">← Volver al Listado</a>
-            <a href="/" class="nav-home-link">Inicio ⚜</a>
+            <a href="/" class="nav-home-link">Inicio</a>
         </div>
 
-        <!-- Form Card -->
         <div class="service-form-card">
             <div class="form-header">
                 <div class="form-subtitle-box">
@@ -34,7 +36,7 @@
             </div>
 
             <form th:action="@{/services/save}" th:object="${service}" method="post" class="service-form">
-                <!-- Hidden ID for Updates -->
+
                 <input type="hidden" th:field="*{id}">
 
                 <div class="form-row-2">
@@ -50,7 +52,8 @@
 
                 <div class="form-group-sm">
                     <label for="description">Descripción *</label>
-                    <textarea id="description" th:field="*{description}" rows="3" required placeholder="Describe brevemente la experiencia u oferta..."></textarea>
+                    <textarea id="description" th:field="*{description}" rows="3" required
+                        placeholder="Describe brevemente la experiencia u oferta..."></textarea>
                 </div>
 
                 <div class="form-row-3">
@@ -64,23 +67,28 @@
                     </div>
                     <div class="form-group-sm">
                         <label for="priceLabel">Texto de Tarifa</label>
-                        <input type="text" id="priceLabel" th:field="*{priceLabel}" placeholder="Ej. Desde € 40 EUR o Incluido">
+                        <input type="text" id="priceLabel" th:field="*{priceLabel}"
+                            placeholder="Ej. Desde € 40 EUR o Incluido">
                     </div>
                 </div>
 
                 <div class="form-group-sm">
                     <label for="imageUrl">URL de la Imagen *</label>
-                    <input type="text" id="imageUrl" th:field="*{imageUrl}" required placeholder="Ej. https://... o /Images/...">
-                    <p class="form-hint">Puedes pegar un link directo a cualquier imagen o una ruta local en /Images/...</p>
+                    <input type="text" id="imageUrl" th:field="*{imageUrl}" required
+                        placeholder="Ej. https://... o /Images/...">
+                    <p class="form-hint">Puedes pegar un link directo a cualquier imagen o una ruta local en /Images/...
+                    </p>
                 </div>
 
                 <div class="form-actions">
                     <a href="/services" class="btn btn-outline" style="flex:1; text-align:center;">Cancelar</a>
-                    <button type="submit" class="btn btn-primary" style="flex:2; text-align:center;">Guardar Servicio</button>
+                    <button type="submit" class="btn btn-primary" style="flex:2; text-align:center;">Guardar
+                        Servicio</button>
                 </div>
             </form>
         </div>
     </div>
 
 </body>
+
 </html>

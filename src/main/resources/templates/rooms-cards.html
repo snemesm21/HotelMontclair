@@ -12,7 +12,6 @@
       rel="stylesheet"
     />
 
-    <!-- ===== Tailwind + config ===== -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -41,14 +40,12 @@
     <link rel="stylesheet" href="/css/pages/index.css" />
   </head>
   <body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
-    <!-- ===== NAVBAR ===== -->
     <nav
       class="bg-pampas sticky top-0 z-40 w-full border-b border-[rgba(202,198,198,0.5)] shadow-sm"
     >
       <div
         class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto px-6 py-3 relative"
       >
-        <!-- Logo -->
         <a href="/#inicio" class="flex items-center">
           <img
             src="/Images/Logo.jpg"
@@ -58,90 +55,19 @@
         </a>
 
         <div class="flex items-center space-x-3">
-          <!-- ESTADO: sin sesión iniciada -->
-          <div
-            th:if="${session.cliente == null}"
-            class="flex items-center space-x-3"
+          <a
+            href="/login"
+            class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white inline-block"
           >
-            <button
-              id="btn-abrir-login"
-              type="button"
-              class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white"
-            >
-              Login
-            </button>
-            <a
-              href="/rooms/cards"
-              class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover"
-            >
-              Reservar Ahora
-            </a>
-          </div>
+            Login
+          </a>
+          <a
+            href="/rooms/cards"
+            class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover inline-block"
+          >
+            Reservar Ahora
+          </a>
 
-          <!-- ESTADO: sesión iniciada -->
-          <div th:if="${session.cliente != null}" class="relative">
-            <button
-              type="button"
-              class="flex text-sm rounded-full focus:ring-4 focus:ring-twine/30"
-              id="user-menu-button"
-              aria-expanded="false"
-              data-dropdown-toggle="user-dropdown"
-              data-dropdown-placement="bottom"
-            >
-              <span class="sr-only">Abrir menú de usuario</span>
-              <img
-                class="w-9 h-9 rounded-full object-cover border border-twine/40"
-                th:src="${session.cliente.fotoUrl} ?: '/Images/avatar-default.png'"
-                alt="Foto de perfil"
-              />
-            </button>
-
-            <div
-              class="z-50 hidden absolute right-0 mt-2 bg-white border border-[#E3DDD4] rounded-sm shadow-lg w-44"
-              id="user-dropdown"
-            >
-              <div class="px-4 py-3 text-sm border-b border-[#E3DDD4]">
-                <span
-                  class="block font-serif text-woodsmoke"
-                  th:text="${session.cliente.nombre}"
-                  >Nombre Cliente</span
-                >
-                <span
-                  class="block text-[11px] text-[#6A737D] truncate"
-                  th:text="${session.cliente.email}"
-                  >cliente@correo.com</span
-                >
-              </div>
-              <ul
-                class="p-2 text-sm font-sans"
-                aria-labelledby="user-menu-button"
-              >
-                <li>
-                  <a
-                    href="/mi-cuenta"
-                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
-                    >Mi Cuenta</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="/mis-reservas"
-                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
-                    >Mis Reservas</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="/logout"
-                    class="block w-full px-3 py-2 rounded-sm text-[#DC2626] hover:bg-[#FEF2F2]"
-                    >Cerrar Sesión</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Botón hamburguesa: solo visible por debajo de md -->
           <button
             data-collapse-toggle="navbar-index"
             type="button"
@@ -223,7 +149,6 @@
       </div>
     </nav>
 
-    <!-- Dark Hero -->
     <section class="bg-mirage text-white pt-20 pb-16 px-6 lg:px-12 relative">
       <div class="max-w-4xl mx-auto text-center">
         <span
@@ -249,7 +174,6 @@
       </div>
     </section>
 
-    <!-- Intro Section -->
     <section class="bg-ivory py-16 px-6 lg:px-12 border-b border-[#E8E2DA]">
       <div class="max-w-4xl mx-auto text-center">
         <h2
@@ -275,7 +199,6 @@
       </div>
     </section>
 
-    <!-- Room Cards Grid -->
     <main class="bg-pampas py-14 px-6 lg:px-12">
       <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
@@ -283,7 +206,6 @@
             th:each="room : ${rooms}"
             class="group bg-white rounded-[4px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col border border-[#E8E2DA]/80"
           >
-            <!-- Image with hover zoom -->
             <a
               th:href="@{'/rooms/' + ${room.id}}"
               class="block relative h-52 overflow-hidden"
@@ -298,7 +220,6 @@
               ></div>
             </a>
 
-            <!-- Card Body -->
             <div class="p-5 flex flex-col flex-grow">
               <a th:href="@{'/rooms/' + ${room.id}}" class="block mb-3">
                 <h3
@@ -309,7 +230,6 @@
                 </h3>
               </a>
 
-              <!-- Specs Row -->
               <div
                 class="flex items-center gap-1.5 text-[9px] text-woodsmoke/60 font-medium mb-3 flex-wrap"
               >
@@ -333,7 +253,6 @@
                 </span>
               </div>
 
-              <!-- Description -->
               <p
                 class="text-[11px] text-woodsmoke/70 leading-relaxed mb-4 flex-grow"
                 th:text="${room.description}"
@@ -341,7 +260,6 @@
                 Descripción.
               </p>
 
-              <!-- Price -->
               <p class="text-[13px] font-bold text-woodsmoke mb-4">
                 <span class="text-[#73503C]">Desde</span>
                 <span
@@ -353,7 +271,6 @@
                 >
               </p>
 
-              <!-- CTA Button -->
               <div class="pt-3 border-t border-[#E8E2DA]">
                 <a
                   th:href="@{'/rooms/' + ${room.id}}"
@@ -368,12 +285,10 @@
       </div>
     </main>
 
-    <!-- CTA Section with image -->
     <section class="bg-mirage relative overflow-hidden">
       <div
         class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 min-h-[320px]"
       >
-        <!-- Left: Room image -->
         <div class="hidden lg:block relative">
           <img
             src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80"
@@ -384,7 +299,6 @@
             class="absolute inset-0 bg-gradient-to-r from-transparent to-mirage/70"
           ></div>
         </div>
-        <!-- Right: CTA text -->
         <div class="flex flex-col justify-center px-8 lg:px-16 py-16 text-white">
           <div class="flex items-center gap-3 mb-4">
             <div class="h-[1px] w-8 bg-twine"></div>
@@ -417,7 +331,6 @@
       </div>
     </section>
 
-    <!-- ===== FOOTER (Exact from index.html) ===== -->
     <footer id="contacto" class="main-footer">
       <div class="container footer-grid">
         <div class="footer-logo-col">
@@ -501,7 +414,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL DE LOGIN ===== -->
     <div id="modal-login" class="modal-overlay hidden">
       <div class="modal-box">
         <button id="btn-cerrar-login" type="button" class="close-btn">✕</button>

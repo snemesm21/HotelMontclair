@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.entities.RoomType;
 import com.example.demo.repository.RoomTypeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import java.util.List;
 public class RoomTypeServiceImpl implements RoomTypeService {
     private final RoomTypeRepository repository;
 
+    @Autowired
     public RoomTypeServiceImpl(RoomTypeRepository repository) {
         this.repository = repository;
     }

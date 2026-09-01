@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.entities.Client;
 import com.example.demo.repository.ClientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import java.util.List;
 public class ClientServiceImpl implements ClientService {
     private final ClientRepository repository;
 
+    @Autowired
     public ClientServiceImpl(ClientRepository repository) {
         this.repository = repository;
     }
@@ -36,8 +38,10 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public Client login(String usernameOrEmail, String password) {
         if (usernameOrEmail == null || password == null) return null;
-        return repository.findByUsernameOrEmail(usernameOrEmail)
-                .filter(c -> password.equals(c.getPassword()))
+        String idTrimmed = usernameOrEmail.trim();
+        String passTrimmed = password.trim();
+        return repository.findByUsernameOrEmail(idTrimmed)
+                .filter(c -> c.getPassword() != null && passTrimmed.equals(c.getPassword().trim()))
                 .orElse(null);
     }
 }

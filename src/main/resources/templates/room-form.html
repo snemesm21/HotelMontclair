@@ -1,77 +1,254 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
+<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+<head>
     <meta charset="UTF-8" />
-    <title>Formulario de Habitación</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${room.id} == null ? 'Nueva Habitación - Montclair Grand Hotel' : 'Editar Habitación - Montclair Grand Hotel'">Gestión de Habitación - Montclair Grand Hotel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="p-6">
-    <h1
-      class="text-2xl font-bold mb-4"
-      th:text="${room.id} == null ? 'Crear habitación' : 'Editar habitación'"
-    >
-      Formulario
-    </h1>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        twine: { DEFAULT: '#C59B63', hover: '#A87C49', dark: '#73503C', light: '#D4B07A' },
+                        mirage: { DEFAULT: '#141E26', dark: '#0F161C', light: '#1C2A35' },
+                        pampas: '#FAF7F2',
+                        pampasAlt: '#F0EBE3',
+                        woodsmoke: '#111413',
+                        silver: '#CAC6C6',
+                        ivory: '#FDFBF7'
+                    },
+                    fontFamily: {
+                        serif: ['"Cinzel"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        display: ['"Cormorant Garamond"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
 
-    <form
-      th:action="@{/rooms/save}"
-      th:object="${room}"
-      method="post"
-      class="space-y-4 max-w-md"
-    >
-      <input type="hidden" th:field="*{id}" />
+    <header class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
+        <div class="flex-1">
+            <a href="/" class="inline-flex flex-col items-center">
+                <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
+                <div class="flex items-center gap-2 mt-1 mb-0.5">
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                    <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                </div>
+            </a>
+        </div>
+        <nav class="hidden sm:flex items-center gap-6 text-white/90">
+            <a href="/admin/rooms" class="text-[9px] uppercase tracking-[2px] font-semibold text-twine border-b border-twine pb-0.5">Habitaciones</a>
+            <a href="/admin/room-types" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Tipos de Habitación</a>
+        </nav>
+        <div class="flex-1 flex justify-end">
+            <a href="/admin/rooms" class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1">
+                ← Volver a Habitaciones
+            </a>
+        </div>
+    </header>
 
-      <div>
-        <label class="block font-medium">Número</label>
-        <input
-          type="text"
-          th:field="*{number}"
-          class="border rounded w-full p-2"
-        />
-      </div>
+    <main class="flex-grow flex items-center justify-center p-6 py-12">
+        <div class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-xl w-full max-w-2xl p-8 sm:p-10 relative overflow-hidden">
+            
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-twine-dark via-twine to-twine-light"></div>
 
-      <div>
-        <label class="block font-medium">Piso</label>
-        <input
-          type="number"
-          th:field="*{floor}"
-          class="border rounded w-full p-2"
-        />
-      </div>
+            <div class="text-center mb-8">
+                <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-1">GESTIÓN DE ESTANCIAS</span>
+                <h1 class="font-serif text-2xl sm:text-3xl text-woodsmoke tracking-[2px] uppercase"
+                    th:text="${room.id} == null ? 'Nueva Habitación' : 'Modificar Habitación'">
+                    Nueva Habitación
+                </h1>
+                <div class="flex items-center justify-center gap-3 mt-3">
+                    <div class="h-[1px] w-8 bg-twine/40"></div>
+                    <div class="w-1.5 h-1.5 rotate-45 border border-twine"></div>
+                    <div class="h-[1px] w-8 bg-twine/40"></div>
+                </div>
+                <p class="text-xs text-woodsmoke/60 mt-2">
+                    Completa la información, características e imagen principal para esta estancia.
+                </p>
+            </div>
 
-      <div>
-        <label class="block font-medium">Tipo</label>
-        <select th:field="*{typeId}" class="border rounded w-full p-2">
-          <option
-            th:each="type : ${roomTypes}"
-            th:value="${type.id}"
-            th:text="${type.name}"
-          ></option>
-        </select>
-      </div>
+            <form th:action="@{/admin/rooms/save}" th:object="${room}" method="post" class="space-y-5">
+                <input type="hidden" th:field="*{id}" />
 
-      <div>
-        <label class="block font-medium">Estado</label>
-        <select th:field="*{status}" class="border rounded w-full p-2">
-          <option value="AVAILABLE">Disponible</option>
-          <option value="OCCUPIED">Ocupada</option>
-        </select>
-      </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Nombre / Título Comercial *
+                        </label>
+                        <input
+                            type="text"
+                            th:field="*{name}"
+                            placeholder="ej. Deluxe King Suite"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Número de Habitación *
+                        </label>
+                        <input
+                            type="text"
+                            th:field="*{number}"
+                            placeholder="ej. 101"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                </div>
 
-      <div class="flex space-x-2">
-        <button
-          type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-        >
-          Guardar
-        </button>
-        <a
-          th:href="@{/rooms}"
-          class="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
-        >
-          Cancelar
-        </a>
-      </div>
-    </form>
-  </body>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Tipo de Habitación *
+                        </label>
+                        <select th:field="*{typeId}" class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition">
+                            <option th:each="type : ${roomTypes}" th:value="${type.id}" th:text="${type.name}">Suite</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Piso *
+                        </label>
+                        <input
+                            type="number"
+                            th:field="*{floor}"
+                            placeholder="ej. 1"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Estado *
+                        </label>
+                        <select th:field="*{status}" class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition">
+                            <option value="AVAILABLE">Disponible</option>
+                            <option value="OCCUPIED">Ocupada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Precio (€ / Noche) *
+                        </label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            th:field="*{pricePerNight}"
+                            placeholder="ej. 150.00"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Capacidad (Huéspedes)
+                        </label>
+                        <input
+                            type="number"
+                            th:field="*{capacity}"
+                            placeholder="ej. 2"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Tipo de Cama
+                        </label>
+                        <input
+                            type="text"
+                            th:field="*{bedType}"
+                            placeholder="ej. King Size"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Área (m²)
+                        </label>
+                        <input
+                            type="number"
+                            th:field="*{area}"
+                            placeholder="ej. 35"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        URL de Imagen Principal *
+                    </label>
+                    <input
+                        type="url"
+                        th:field="*{imageUrl}"
+                        placeholder="ej. https://images.unsplash.com/photo-..."
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                    />
+                    <p class="text-[10px] text-woodsmoke/50 mt-1">Pega una URL de imagen de alta resolución para la tarjeta y portada de la habitación.</p>
+                </div>
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        URL de Imagen Secundaria (Opcional)
+                    </label>
+                    <input
+                        type="url"
+                        th:field="*{secondaryImageUrl}"
+                        placeholder="ej. https://images.unsplash.com/photo-..."
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                    />
+                </div>
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        Descripción Breve
+                    </label>
+                    <textarea
+                        th:field="*{description}"
+                        rows="3"
+                        placeholder="Describe la atmósfera, amenidades clave y confort de la estancia..."
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                    ></textarea>
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row gap-3">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-6 rounded-[2px] transition duration-300 shadow-sm"
+                        th:text="${room.id} == null ? 'Guardar y Publicar Habitación' : 'Actualizar Habitación'"
+                    >
+                        Guardar y Publicar Habitación
+                    </button>
+                    <a
+                        th:href="@{/admin/rooms}"
+                        class="sm:w-auto text-center border border-[#E8E2DA] hover:bg-pampas text-woodsmoke/70 text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-6 rounded-[2px] transition duration-300"
+                    >
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+    <footer class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5">
+        <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+    </footer>
+
+</body>
 </html>

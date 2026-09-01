@@ -14,7 +14,6 @@
       rel="stylesheet"
     />
 
-    <!-- ===== Tailwind + config ===== -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -43,14 +42,12 @@
     <link rel="stylesheet" href="/css/pages/index.css" />
   </head>
   <body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
-    <!-- ===== NAVBAR ===== -->
     <nav
       class="bg-pampas sticky top-0 z-40 w-full border-b border-[rgba(202,198,198,0.5)] shadow-sm"
     >
       <div
         class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto px-6 py-3 relative"
       >
-        <!-- Logo -->
         <a href="/#inicio" class="flex items-center">
           <img
             src="/Images/Logo.jpg"
@@ -60,90 +57,19 @@
         </a>
 
         <div class="flex items-center space-x-3">
-          <!-- ESTADO: sin sesión iniciada -->
-          <div
-            th:if="${session.cliente == null}"
-            class="flex items-center space-x-3"
+          <a
+            href="/login"
+            class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white inline-block"
           >
-            <button
-              id="btn-abrir-login"
-              type="button"
-              class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white"
-            >
-              Login
-            </button>
-            <a
-              href="/rooms/cards"
-              class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover"
-            >
-              Reservar Ahora
-            </a>
-          </div>
+            Login
+          </a>
+          <a
+            href="/rooms/cards"
+            class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover inline-block"
+          >
+            Reservar Ahora
+          </a>
 
-          <!-- ESTADO: sesión iniciada -->
-          <div th:if="${session.cliente != null}" class="relative">
-            <button
-              type="button"
-              class="flex text-sm rounded-full focus:ring-4 focus:ring-twine/30"
-              id="user-menu-button"
-              aria-expanded="false"
-              data-dropdown-toggle="user-dropdown"
-              data-dropdown-placement="bottom"
-            >
-              <span class="sr-only">Abrir menú de usuario</span>
-              <img
-                class="w-9 h-9 rounded-full object-cover border border-twine/40"
-                th:src="${session.cliente.fotoUrl} ?: '/Images/avatar-default.png'"
-                alt="Foto de perfil"
-              />
-            </button>
-
-            <div
-              class="z-50 hidden absolute right-0 mt-2 bg-white border border-[#E3DDD4] rounded-sm shadow-lg w-44"
-              id="user-dropdown"
-            >
-              <div class="px-4 py-3 text-sm border-b border-[#E3DDD4]">
-                <span
-                  class="block font-serif text-woodsmoke"
-                  th:text="${session.cliente.nombre}"
-                  >Nombre Cliente</span
-                >
-                <span
-                  class="block text-[11px] text-[#6A737D] truncate"
-                  th:text="${session.cliente.email}"
-                  >cliente@correo.com</span
-                >
-              </div>
-              <ul
-                class="p-2 text-sm font-sans"
-                aria-labelledby="user-menu-button"
-              >
-                <li>
-                  <a
-                    href="/mi-cuenta"
-                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
-                    >Mi Cuenta</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="/mis-reservas"
-                    class="block w-full px-3 py-2 rounded-sm text-woodsmoke hover:bg-pampas"
-                    >Mis Reservas</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="/logout"
-                    class="block w-full px-3 py-2 rounded-sm text-[#DC2626] hover:bg-[#FEF2F2]"
-                    >Cerrar Sesión</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Botón hamburguesa: solo visible por debajo de md -->
           <button
             data-collapse-toggle="navbar-index"
             type="button"
@@ -225,7 +151,6 @@
       </div>
     </nav>
 
-    <!-- Hero: Full-width image with overlay text -->
     <section class="relative h-[60vh] min-h-[400px] overflow-hidden">
       <img
         th:src="${room.imageUrl}"
@@ -247,7 +172,6 @@
           >
             Deluxe Room
           </h1>
-          <!-- Specs badges -->
           <div class="flex items-center gap-3 flex-wrap">
             <span
               class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-sm px-3 py-1.5 text-[11px] font-medium text-white/90"
@@ -278,12 +202,9 @@
       </div>
     </section>
 
-    <!-- Main Content: Description + Secondary Image -->
     <main class="bg-ivory py-20 px-6 lg:px-12">
       <div class="max-w-6xl mx-auto">
-        <!-- Two-column layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          <!-- Left Column: Text Content -->
           <div>
             <span
               class="font-sans text-[9px] tracking-[3px] text-twine uppercase font-bold block mb-3"
@@ -297,7 +218,6 @@
               Una experiencia de descanso excepcional
             </h2>
 
-            <!-- Elegant thin line divider -->
             <div class="w-16 h-[1px] bg-twine mb-6"></div>
 
             <p
@@ -307,7 +227,6 @@
               Descripción completa.
             </p>
 
-            <!-- Highlights as elegant list -->
             <div class="space-y-6">
               <div
                 th:each="h : ${room.highlights}"
@@ -338,10 +257,8 @@
             </div>
           </div>
 
-          <!-- Right Column: Images stacked with artistic framing -->
           <div class="space-y-5">
             <div class="relative">
-              <!-- Decorative gold corner accents -->
               <div
                 class="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 border-twine/50 z-10"
               ></div>
@@ -355,7 +272,6 @@
               />
             </div>
 
-            <!-- Price / Capacity Info Card -->
             <div class="bg-mirage text-white rounded-[3px] p-8 shadow-lg">
               <div class="grid grid-cols-2 divide-x divide-white/15 text-center">
                 <div class="pr-5">
@@ -403,7 +319,6 @@
       </div>
     </main>
 
-    <!-- Gallery Section -->
     <section class="bg-pampas py-20 px-6 lg:px-12">
       <div class="max-w-6xl mx-auto">
         <div class="text-center mb-14">
@@ -438,7 +353,6 @@
       </div>
     </section>
 
-    <!-- ===== FOOTER (Exact from index.html) ===== -->
     <footer id="contacto" class="main-footer">
       <div class="container footer-grid">
         <div class="footer-logo-col">
@@ -522,7 +436,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL DE LOGIN ===== -->
     <div id="modal-login" class="modal-overlay hidden">
       <div class="modal-box">
         <button id="btn-cerrar-login" type="button" class="close-btn">✕</button>

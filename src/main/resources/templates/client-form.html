@@ -1,76 +1,220 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-  <head>
+<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+<head>
     <meta charset="UTF-8" />
-    <title>Formulario Cliente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${client.id} == null ? 'Registro de Huésped - Montclair Grand Hotel' : 'Modificar Cliente - Montclair Grand Hotel'">Registro de Cliente - Montclair Grand Hotel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="p-6">
-    <h1
-      class="text-2xl font-bold mb-4"
-      th:text="${client.id} == null ? 'Crear cliente' : 'Editar cliente'"
-    >
-      Formulario
-    </h1>
-    <form
-      th:action="${client.id} == null ? @{/clients/add} : @{'/clients/edit/' + ${client.id}}"
-      th:object="${client}"
-      method="post"
-      class="space-y-4 max-w-md"
-    >
-      <div>
-        <label class="block font-medium">Usuario</label>
-        <input
-          type="text"
-          th:field="*{username}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div>
-        <label class="block font-medium">Contraseña</label>
-        <input
-          type="password"
-          th:field="*{password}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div>
-        <label class="block font-medium">Email</label>
-        <input
-          type="email"
-          th:field="*{email}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div>
-        <label class="block font-medium">Nombre</label>
-        <input
-          type="text"
-          th:field="*{firstName}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div>
-        <label class="block font-medium">Apellido</label>
-        <input
-          type="text"
-          th:field="*{lastName}"
-          class="border rounded w-full p-2"
-        />
-      </div>
-      <div class="flex space-x-2">
-        <button
-          type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-        >
-          Guardar
-        </button>
-        <a
-          th:href="@{/clients}"
-          class="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
-          >Cancelar</a
-        >
-      </div>
-    </form>
-  </body>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        twine: { DEFAULT: '#C59B63', hover: '#A87C49', dark: '#73503C', light: '#D4B07A' },
+                        mirage: { DEFAULT: '#141E26', dark: '#0F161C', light: '#1C2A35' },
+                        pampas: '#FAF7F2',
+                        pampasAlt: '#F0EBE3',
+                        woodsmoke: '#111413',
+                        silver: '#CAC6C6',
+                        ivory: '#FDFBF7'
+                    },
+                    fontFamily: {
+                        serif: ['"Cinzel"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        display: ['"Cormorant Garamond"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+
+    <header class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
+        <div class="flex-1">
+            <a href="/" class="inline-flex flex-col items-center">
+                <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
+                <div class="flex items-center gap-2 mt-1 mb-0.5">
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                    <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
+                    <div class="h-[1px] w-5 bg-twine"></div>
+                </div>
+            </a>
+        </div>
+        <nav class="hidden sm:flex items-center gap-6 text-white/90">
+            <a href="/" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Inicio</a>
+            <a href="/rooms/cards" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Habitaciones</a>
+            <a href="/services" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Servicios</a>
+        </nav>
+        <div class="flex-1 flex justify-end gap-4 items-center">
+            <a href="/login" class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1">
+                ← Iniciar Sesión
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-6 py-12">
+        <div class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-xl w-full max-w-xl p-8 sm:p-10 relative overflow-hidden">
+            
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-twine-dark via-twine to-twine-light"></div>
+
+            <div class="text-center mb-8">
+                <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-2"
+                      th:text="${client.id} == null ? 'MEMBRESÍA & ACCESO' : 'ADMINISTRACIÓN DE CUENTA'">
+                    MEMBRESÍA & ACCESO
+                </span>
+                <h1 class="font-serif text-2xl sm:text-3xl text-woodsmoke tracking-[2px] uppercase"
+                    th:text="${client.id} == null ? 'Crear Nueva Cuenta' : 'Modificar Cliente'">
+                    Crear Nueva Cuenta
+                </h1>
+                <div class="flex items-center justify-center gap-3 mt-3">
+                    <div class="h-[1px] w-8 bg-twine/40"></div>
+                    <div class="w-1.5 h-1.5 rotate-45 border border-twine"></div>
+                    <div class="h-[1px] w-8 bg-twine/40"></div>
+                </div>
+                <p class="text-xs text-woodsmoke/60 mt-3 max-w-md mx-auto"
+                   th:text="${client.id} == null ? 'Ingresa tus datos para registrarte como huésped y disfrutar de los beneficios exclusivos de Montclair Grand Hotel.' : 'Actualiza la información asociada a este cliente.'">
+                    Ingresa tus datos para registrarte como huésped y disfrutar de los beneficios exclusivos de Montclair Grand Hotel.
+                </p>
+            </div>
+
+            <form th:action="${client.id} == null ? @{/clients/add} : @{'/clients/edit/' + ${client.id}}"
+                  th:object="${client}"
+                  method="post"
+                  class="space-y-4">
+
+                <input type="hidden" th:field="*{id}" th:if="${client.id} != null" />
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Nombre *
+                        </label>
+                        <input
+                            type="text"
+                            th:field="*{firstName}"
+                            placeholder="ej. Alejandro"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Apellido *
+                        </label>
+                        <input
+                            type="text"
+                            th:field="*{lastName}"
+                            placeholder="ej. Morales"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Nombre de Usuario *
+                        </label>
+                        <input
+                            type="text"
+                            th:field="*{username}"
+                            placeholder="ej. amorales"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Correo Electrónico *
+                        </label>
+                        <input
+                            type="email"
+                            th:field="*{email}"
+                            placeholder="ej. amorales@example.com"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Contraseña *
+                        </label>
+                        <input
+                            type="password"
+                            th:field="*{password}"
+                            placeholder="••••••••"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                            Teléfono de Contacto
+                        </label>
+                        <input
+                            type="tel"
+                            th:field="*{phone}"
+                            placeholder="ej. +34 600 123 456"
+                            class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5">
+                        URL de Foto de Perfil (Opcional)
+                    </label>
+                    <input
+                        type="url"
+                        th:field="*{avatarUrl}"
+                        placeholder="ej. https://images.unsplash.com/..."
+                        class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+                    />
+                    <p class="text-[10px] text-woodsmoke/50 mt-1">Si dejas este campo vacío, se asignará un avatar predeterminado de cortesía.</p>
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row gap-3">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-6 rounded-[2px] transition duration-300 shadow-sm"
+                        th:text="${client.id} == null ? 'Registrarme e Ingresar' : 'Guardar Cambios'"
+                    >
+                        Registrarme e Ingresar
+                    </button>
+                    <a
+                        th:href="@{/login}"
+                        class="sm:w-auto text-center border border-[#E8E2DA] hover:bg-pampas text-woodsmoke/70 text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-6 rounded-[2px] transition duration-300"
+                    >
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-[#E8E2DA] text-center" th:if="${client.id} == null">
+                <p class="text-xs text-woodsmoke/60">
+                    ¿Ya tienes una cuenta registrada?
+                    <a th:href="@{/login}" class="text-twine-dark font-bold hover:underline ml-1">
+                        Inicia sesión aquí
+                    </a>
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5">
+        <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+    </footer>
+
+</body>
 </html>

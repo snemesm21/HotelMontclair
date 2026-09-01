@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.entities.Client;
 import com.example.demo.service.ClientService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import java.util.List;
 public class ClientController {
     private final ClientService service;
 
+    @Autowired
     public ClientController(ClientService service) {
         this.service = service;
     }
@@ -31,8 +33,8 @@ public class ClientController {
 
     @PostMapping("/add")
     public String add(@ModelAttribute Client client) {
-        service.save(client);
-        return "redirect:/clients";
+        Client saved = service.save(client);
+        return "redirect:/profile/" + saved.getId();
     }
 
     @GetMapping("/edit/{id}")
