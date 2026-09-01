@@ -79,7 +79,7 @@
             <!-- SUCCESS VALIDATION BANNER -->
             <div th:if="${success}" class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-[3px] mb-6 shadow-sm">
                 <div class="flex items-start gap-3">
-                    <span class="text-xl">✅</span>
+                    <span class="text-xl">X</span>
                     <div>
                         <h4 class="font-bold text-sm text-emerald-800">¡Validación Correcta!</h4>
                         <p class="text-xs mt-1 leading-relaxed" th:text="${success}"></p>
@@ -97,7 +97,7 @@
             <!-- ERROR VALIDATION BANNER -->
             <div th:if="${error}" class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-[3px] mb-6 shadow-sm">
                 <div class="flex items-start gap-3">
-                    <span class="text-xl">⚠️</span>
+                    <span class="text-xl">X</span>
                     <div>
                         <h4 class="font-bold text-sm text-red-700">Error de Autenticación</h4>
                         <p class="text-xs mt-1 leading-relaxed" th:text="${error}"></p>
@@ -145,7 +145,7 @@
             <!-- Demo Helper Note -->
             <div class="mt-8 pt-6 border-t border-[#E8E2DA] text-center">
                 <p class="text-[11px] text-woodsmoke/60">
-                    💡 Credenciales de prueba:
+                    Credenciales de prueba:
                 </p>
                 <div class="inline-block mt-2 bg-pampas border border-[#E8E2DA] rounded-[2px] px-3 py-1.5 text-[11px] text-woodsmoke/80">
                     Usuario: <strong class="text-twine-dark">demo</strong> | Contraseña: <strong class="text-twine-dark">demo</strong>
