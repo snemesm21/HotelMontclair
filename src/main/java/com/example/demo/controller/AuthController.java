@@ -55,3 +55,5 @@ public class AuthController {
         return "redirect:/profile/" + client.getId();
     }
 }
+
+/* Authentication Controller */
