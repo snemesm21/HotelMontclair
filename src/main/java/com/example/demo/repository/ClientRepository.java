@@ -1,16 +1,15 @@
 package com.example.demo.repository;
 
 import com.example.demo.entities.Client;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import jakarta.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
-@Component
+@Repository
 public class ClientRepository {
     private final Map<Long, Client> store = new LinkedHashMap<>();
-    private final AtomicLong idGen = new AtomicLong(1);
+    private long idGen = 1L;
 
     @PostConstruct
     public void init() {
@@ -24,7 +23,7 @@ public class ClientRepository {
     public List<Client> findAll() { return new ArrayList<>(store.values()); }
     public Client findById(Long id) { return store.get(id); }
     public Client save(Client c) {
-        if (c.getId() == null) c.setId(idGen.getAndIncrement());
+        if (c.getId() == null) c.setId(idGen++);
         if (c.getUsername() != null) c.setUsername(c.getUsername().trim());
         if (c.getEmail() != null) c.setEmail(c.getEmail().trim().toLowerCase());
         if (c.getPassword() != null) c.setPassword(c.getPassword().trim());

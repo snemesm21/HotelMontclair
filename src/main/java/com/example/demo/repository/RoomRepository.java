@@ -2,16 +2,15 @@ package com.example.demo.repository;
 
 import com.example.demo.entities.Room;
 import com.example.demo.entities.RoomStatus;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import jakarta.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
-@Component
+@Repository
 public class RoomRepository {
     private final Map<Long, Room> store = new LinkedHashMap<>();
-    private final AtomicLong idGen = new AtomicLong(1);
+    private long idGen = 1L;
 
     @PostConstruct
     public void init() {
@@ -108,7 +107,7 @@ public class RoomRepository {
     public List<Room> findAll() { return new ArrayList<>(store.values()); }
     public Room findById(Long id) { return store.get(id); }
     public Room save(Room room) {
-        if (room.getId() == null) room.setId(idGen.getAndIncrement());
+        if (room.getId() == null) room.setId(idGen++);
         store.put(room.getId(), room);
         return room;
     }

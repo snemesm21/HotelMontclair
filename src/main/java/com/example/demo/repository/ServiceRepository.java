@@ -5,11 +5,11 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class ServiceRepository {
-    private final Map<Long, Service> store = new ConcurrentHashMap<>();
+    private final Map<Long, Service> store = new LinkedHashMap<>();
+    private long idGen = 9L;
 
     @PostConstruct
     public void init() {
@@ -242,8 +242,7 @@ public class ServiceRepository {
 
     public Service save(Service service) {
         if (service.getId() == null) {
-            long next = store.keySet().stream().mapToLong(Long::longValue).max().orElse(0L) + 1L;
-            service.setId(next);
+            service.setId(idGen++);
         }
         store.put(service.getId(), service);
         return service;

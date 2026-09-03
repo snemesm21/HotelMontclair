@@ -11,18 +11,15 @@ import java.util.List;
 @Controller
 @RequestMapping("/clients")
 public class ClientController {
-    private final ClientService service;
 
     @Autowired
-    public ClientController(ClientService service) {
-        this.service = service;
-    }
+    private ClientService service;
 
     @GetMapping
     public String list(Model model) {
         List<Client> list = service.findAll();
         model.addAttribute("clients", list);
-        return "clients"; // thymeleaf template
+        return "clients";
     }
 
     @GetMapping("/add")
@@ -57,4 +54,3 @@ public class ClientController {
         return "redirect:/clients";
     }
 }
-

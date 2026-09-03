@@ -35,27 +35,7 @@
 </head>
 <body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
 
-    <header class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
-        <div class="flex-1">
-            <a href="/" class="inline-flex flex-col items-center">
-                <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
-                <div class="flex items-center gap-2 mt-1 mb-0.5">
-                    <div class="h-[1px] w-5 bg-twine"></div>
-                    <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
-                    <div class="h-[1px] w-5 bg-twine"></div>
-                </div>
-            </a>
-        </div>
-        <nav class="hidden sm:flex items-center gap-6 text-white/90">
-            <a href="/admin/rooms" class="text-[9px] uppercase tracking-[2px] font-semibold text-twine border-b border-twine pb-0.5">Habitaciones</a>
-            <a href="/admin/room-types" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Tipos de Habitación</a>
-        </nav>
-        <div class="flex-1 flex justify-end gap-4 items-center">
-            <a href="/rooms/cards" target="_blank" class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1">
-                Catálogo Público
-            </a>
-        </div>
-    </header>
+    <div th:replace="~{fragmentos :: navbar-admin}"></div>
 
     <main class="flex-grow max-w-7xl w-full mx-auto p-6 sm:p-8 lg:p-12">
         
@@ -204,9 +184,7 @@
 
     </main>
 
-    <footer class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5">
-        <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
-    </footer>
+    <div th:replace="~{fragmentos :: footer-admin}"></div>
 
 </body>
 </html>

@@ -11,12 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/services")
 public class ServicesController {
 
-    private final ServiceService serviceService;
-
     @Autowired
-    public ServicesController(ServiceService serviceService) {
-        this.serviceService = serviceService;
-    }
+    private ServiceService serviceService;
 
     // http://localhost:8080/services
     @GetMapping

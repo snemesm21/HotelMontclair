@@ -11,12 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/profile")
 public class ProfileController {
 
-    private final ClientService clientService;
-
     @Autowired
-    public ProfileController(ClientService clientService) {
-        this.clientService = clientService;
-    }
+    private ClientService clientService;
 
     @GetMapping("/{id}")
     public String viewProfile(@PathVariable Long id, Model model) {

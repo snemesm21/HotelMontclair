@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fragmentos</title>
+</head>
+<body>
+
+    <!-- ==========================================
+         FRAGMENTO 1: NAVBAR PÚBLICO (Web de Clientes)
+         ========================================== -->
+    <div th:fragment="navbar">
+        <nav class="bg-pampas sticky top-0 z-40 w-full border-b border-[rgba(202,198,198,0.5)] shadow-sm">
+            <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto px-6 py-3 relative">
+                <a href="/#inicio" class="flex items-center">
+                    <img src="/Images/Logo.jpg" class="h-[70px] w-[200px] object-cover" alt="Montclair Grand Hotel" />
+                </a>
+
+                <div class="flex items-center space-x-3">
+                    <a href="/login" class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white inline-block">
+                        Login
+                    </a>
+                    <a href="/rooms/cards" class="font-sans text-xs font-bold uppercase tracking-widest bg-twine text-white px-5 py-2.5 rounded-sm shadow-sm transition-colors duration-300 hover:bg-twine-hover inline-block">
+                        Reservar Ahora
+                    </a>
+
+                    <button data-collapse-toggle="navbar-index" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-woodsmoke rounded-sm md:hidden hover:bg-[#F0EBE3] focus:outline-none focus:ring-2 focus:ring-twine/30" aria-controls="navbar-index" aria-expanded="false">
+                        <span class="sr-only">Abrir menú principal</span>
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h14"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="items-center justify-between hidden w-full md:flex md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2" id="navbar-index">
+                    <ul class="flex flex-col p-4 md:p-0 mt-4 font-sans text-xs font-semibold uppercase tracking-widest border border-[#E3DDD4] rounded-sm bg-white md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-transparent">
+                        <li>
+                            <a href="/#inicio" class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0">Inicio</a>
+                        </li>
+                        <li>
+                            <a href="/rooms/cards" class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0">Habitaciones</a>
+                        </li>
+                        <li>
+                            <a href="/services" class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0">Servicios</a>
+                        </li>
+                        <li>
+                            <a href="/#galeria" class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0">Galería</a>
+                        </li>
+                        <li>
+                            <a href="/#ubicacion" class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0">Ubicación</a>
+                        </li>
+                        <li>
+                            <a href="/#contacto" class="block py-2 px-3 text-woodsmoke rounded hover:text-twine md:p-0">Contacto</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ==========================================
+         FRAGMENTO 2: NAVBAR / HEADER ADMIN
+         ========================================== -->
+    <div th:fragment="navbar-admin">
+        <header class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md">
+            <div class="flex-1">
+                <a href="/" class="inline-flex flex-col items-center">
+                    <span class="font-serif text-lg tracking-[4px] text-white font-normal uppercase leading-none">Montclair</span>
+                    <div class="flex items-center gap-2 mt-1 mb-0.5">
+                        <div class="h-[1px] w-5 bg-twine"></div>
+                        <span class="font-sans text-[6.5px] tracking-[2.5px] text-twine uppercase font-semibold">Grand Hotel</span>
+                        <div class="h-[1px] w-5 bg-twine"></div>
+                    </div>
+                </a>
+            </div>
+            <nav class="hidden sm:flex items-center gap-6 text-white/90">
+                <a href="/admin/rooms" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Habitaciones</a>
+                <a href="/admin/room-types" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Tipos de Habitación</a>
+                <a href="/clients" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Clientes</a>
+                <a href="/services/table" class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition">Servicios</a>
+            </nav>
+            <div class="flex-1 flex justify-end gap-4 items-center">
+                <a href="/rooms/cards" class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1">
+                    Vista Pública →
+                </a>
+            </div>
+        </header>
+    </div>
+
+    <!-- ==========================================
+         FRAGMENTO 3: FOOTER PÚBLICO
+         ========================================== -->
+    <div th:fragment="footer">
+        <footer id="contacto" class="main-footer">
+            <div class="container footer-grid">
+                <div class="footer-logo-col">
+                    <a href="/#inicio" class="logo-link">
+                        <span class="logo-title">Montclair</span>
+                        <div class="logo-subtitle-box">
+                            <div class="line"></div>
+                            <span class="logo-subtitle">Grand Hotel</span>
+                            <div class="line"></div>
+                        </div>
+                        <div class="logo-ornament">
+                            <div class="line long"></div>
+                            <div class="dot"></div>
+                            <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="ornament-img" />
+                            <div class="dot"></div>
+                            <div class="line long"></div>
+                        </div>
+                    </a>
+                    <p class="slogan">Lujo atemporal. Hospitalidad excepcional</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Enlaces Rápidos</h4>
+                    <ul>
+                        <li><a href="/#inicio">Inicio</a></li>
+                        <li><a href="/rooms/cards">Habitaciones</a></li>
+                        <li><a href="/services">Servicios</a></li>
+                        <li><a href="/#galeria">Galería</a></li>
+                        <li><a href="/#ubicacion">Ubicación</a></li>
+                        <li><a href="/#contacto">Contacto</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Servicios</h4>
+                    <ul>
+                        <li>Restaurante</li>
+                        <li>Spa & Bienestar</li>
+                        <li>Gimnasio</li>
+                        <li>Salones de eventos</li>
+                        <li>Piscina</li>
+                        <li>Room Service</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Contacto</h4>
+                    <ul class="contact-list">
+                        <li>
+                            <img src="/Images/Ubicacion del hotel.png" alt="Ubicación" />
+                            <span>Monaco</span>
+                        </li>
+                        <li>
+                            <img src="/Images/Numero de contacto.png" alt="Teléfono" />
+                            <span>+377 93 12 34 56</span>
+                        </li>
+                        <li>
+                            <img src="/Images/Correo electronico.png" alt="Email" />
+                            <span>reservas@montclairhotel.com</span>
+                        </li>
+                        <li>
+                            <img src="/Images/Horario de atencion.png" alt="Horario" />
+                            <span>Lunes - Domingo: 24 horas</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+
+        <div class="copyright-bar">
+            <div class="container flex-between">
+                <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+                <div class="legal-links">
+                    <a href="#">Política de privacidad</a>
+                    <a href="#">Términos y condiciones</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         FRAGMENTO 4: FOOTER ADMIN
+         ========================================== -->
+    <div th:fragment="footer-admin">
+        <footer class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5">
+            <p>2026 &copy; Montclair Grand Hotel. Panel de Administración. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+</body>
+</html>

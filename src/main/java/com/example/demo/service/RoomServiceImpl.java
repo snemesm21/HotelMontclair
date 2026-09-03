@@ -10,14 +10,12 @@ import java.util.List;
 
 @Service
 public class RoomServiceImpl implements RoomService {
-    private final RoomRepository roomRepo;
-    private final RoomTypeRepository typeRepo;
 
     @Autowired
-    public RoomServiceImpl(RoomRepository roomRepo, RoomTypeRepository typeRepo) {
-        this.roomRepo = roomRepo;
-        this.typeRepo = typeRepo;
-    }
+    private RoomRepository roomRepo;
+
+    @Autowired
+    private RoomTypeRepository typeRepo;
 
     @Override
     public List<Room> findAll() {

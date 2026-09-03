@@ -12,12 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class AuthController {
 
-    private final ClientService clientService;
-
     @Autowired
-    public AuthController(ClientService clientService) {
-        this.clientService = clientService;
-    }
+    private ClientService clientService;
 
     @GetMapping("/login")
     public String loginForm() {
@@ -26,9 +22,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public String processLogin(@RequestParam(value = "username", required = false) String username,
-                               @RequestParam(value = "email", required = false) String email,
-                               @RequestParam(value = "password", required = false) String password,
-                               Model model) {
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "password", required = false) String password,
+            Model model) {
         String identifier = null;
         if (username != null && !username.trim().isEmpty()) {
             identifier = username.trim();
@@ -55,5 +51,3 @@ public class AuthController {
         return "redirect:/profile/" + client.getId();
     }
 }
-
-/* Authentication Controller */

@@ -9,12 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class MainController {
 
-    private final ServiceService serviceService;
-
     @Autowired
-    public MainController(ServiceService serviceService) {
-        this.serviceService = serviceService;
-    }
+    private ServiceService serviceService;
 
     @GetMapping({"/", "/index", "/home"})
     public String index(Model model) {

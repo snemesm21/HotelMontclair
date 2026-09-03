@@ -12,12 +12,8 @@ import java.util.List;
 @RequestMapping("/admin/room-types")
 public class RoomTypeController {
 
-    private final RoomTypeService service;
-
     @Autowired
-    public RoomTypeController(RoomTypeService service) {
-        this.service = service;
-    }
+    private RoomTypeService service;
 
     @GetMapping
     public String list(Model model) {

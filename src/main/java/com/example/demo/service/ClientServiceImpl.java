@@ -8,12 +8,9 @@ import java.util.List;
 
 @Service
 public class ClientServiceImpl implements ClientService {
-    private final ClientRepository repository;
 
     @Autowired
-    public ClientServiceImpl(ClientRepository repository) {
-        this.repository = repository;
-    }
+    private ClientRepository repository;
 
     @Override
     public List<Client> findAll() {

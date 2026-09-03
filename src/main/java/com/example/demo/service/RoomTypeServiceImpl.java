@@ -8,12 +8,9 @@ import java.util.List;
 
 @Service
 public class RoomTypeServiceImpl implements RoomTypeService {
-    private final RoomTypeRepository repository;
 
     @Autowired
-    public RoomTypeServiceImpl(RoomTypeRepository repository) {
-        this.repository = repository;
-    }
+    private RoomTypeRepository repository;
 
     @Override
     public List<RoomType> findAll() {

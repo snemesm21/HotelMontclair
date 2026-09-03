@@ -16,18 +16,13 @@ import com.example.demo.service.RoomTypeService;
 @Controller
 public class RoomController {
 
-    private final RoomService roomService;
-    private final RoomTypeService roomTypeService;
+    @Autowired
+    private RoomService roomService;
 
     @Autowired
-    public RoomController(RoomService roomService, RoomTypeService roomTypeService) {
-        this.roomService = roomService;
-        this.roomTypeService = roomTypeService;
-    }
+    private RoomTypeService roomTypeService;
 
-    // ========== VISTA VISUAL / TARJETAS (PÚBLICA) ==========
-
-    @GetMapping({"/rooms", "/rooms/cards"})
+    @GetMapping({ "/rooms", "/rooms/cards" })
     public String showCards(Model model) {
         List<Room> rooms = roomService.findAll();
         model.addAttribute("rooms", rooms);
@@ -43,8 +38,6 @@ public class RoomController {
         model.addAttribute("room", room);
         return "room-detail";
     }
-
-    // ========== CRUD HABITACIONES ADMIN (/admin/rooms) ==========
 
     @GetMapping("/admin/rooms")
     public String listRooms(Model model) {

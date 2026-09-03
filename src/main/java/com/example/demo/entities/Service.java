@@ -40,7 +40,8 @@ public class Service {
         this.imageUrl = imageUrl;
     }
 
-    public Service(Long id, String tag, String name, String description, String schedule, Double price, String priceLabel, String imageUrl) {
+    public Service(Long id, String tag, String name, String description, String schedule, Double price,
+            String priceLabel, String imageUrl) {
         this.id = id;
         this.tag = tag;
         this.name = name;
@@ -59,55 +60,65 @@ public class Service {
         private String description;
     }
 
-    // Getters con lógica personalizada (fallback)
     public String getTag() {
-        if (tag != null && !tag.isBlank()) return tag;
+        if (tag != null && !tag.isBlank())
+            return tag;
         return (id != null) ? String.format("EXPERIENCIA %02d", id) : "EXPERIENCIA";
     }
 
     public String getSchedule() {
-        if (schedule != null && !schedule.isBlank()) return schedule;
+        if (schedule != null && !schedule.isBlank())
+            return schedule;
         return "8:00 AM - 10:00 PM";
     }
 
     public String getPriceLabel() {
-        if (priceLabel != null && !priceLabel.isBlank()) return priceLabel;
-        if (price == null || price == 0.0) return "Incluido";
+        if (priceLabel != null && !priceLabel.isBlank())
+            return priceLabel;
+        if (price == null || price == 0.0)
+            return "Incluido";
         return String.format("Desde € %.0f EUR", price);
     }
 
     public String getHeroDescription() {
-        if (heroDescription != null && !heroDescription.isBlank()) return heroDescription;
+        if (heroDescription != null && !heroDescription.isBlank())
+            return heroDescription;
         return description;
     }
 
     public String getTagline() {
-        if (tagline != null && !tagline.isBlank()) return tagline;
+        if (tagline != null && !tagline.isBlank())
+            return tagline;
         return getTag() + " · SIGNATURE EXPERIENCE";
     }
 
     public String getHeadline() {
-        if (headline != null && !headline.isBlank()) return headline;
+        if (headline != null && !headline.isBlank())
+            return headline;
         return "Una experiencia exclusiva diseñada para ti";
     }
 
     public String getFullDescription() {
-        if (fullDescription != null && !fullDescription.isBlank()) return fullDescription;
+        if (fullDescription != null && !fullDescription.isBlank())
+            return fullDescription;
         return description;
     }
 
     public String getScheduleNote() {
-        if (scheduleNote != null && !scheduleNote.isBlank()) return scheduleNote;
+        if (scheduleNote != null && !scheduleNote.isBlank())
+            return scheduleNote;
         return "Todos los días";
     }
 
     public String getPriceNote() {
-        if (priceNote != null && !priceNote.isBlank()) return priceNote;
+        if (priceNote != null && !priceNote.isBlank())
+            return priceNote;
         return "Por persona · reserva previa";
     }
 
     public String getSecondaryImageUrl() {
-        if (secondaryImageUrl != null && !secondaryImageUrl.isBlank()) return secondaryImageUrl;
+        if (secondaryImageUrl != null && !secondaryImageUrl.isBlank())
+            return secondaryImageUrl;
         return imageUrl;
     }
 
