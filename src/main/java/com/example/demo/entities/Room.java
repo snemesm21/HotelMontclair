@@ -19,7 +19,17 @@ import jakarta.persistence.Transient;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Getter
+@Setter
+@ToString(exclude = "type")
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -40,6 +50,7 @@ public class Room {
 
     @ManyToOne
     @JoinColumn(name = "type_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private RoomType type;
 
     @Column(nullable = false, length = 20)
@@ -78,7 +89,9 @@ public class Room {
         return typeId != null ? typeId : type == null ? null : type.getId();
     }
 
-    @Data
+    @Getter
+    @Setter
+    @ToString
     @NoArgsConstructor
     @AllArgsConstructor
     @Embeddable

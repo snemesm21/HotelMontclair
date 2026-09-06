@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entities.Service;
+import com.example.demo.errors.NotFoundException;
 import com.example.demo.service.ServiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -31,12 +32,14 @@ public class ServicesController {
     // http://localhost:8080/services/1
     @GetMapping("/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
-        Service svc = serviceService.searchById(id);
-        if (svc != null) {
+        try {
+            Service svc = serviceService.searchById(id);
             model.addAttribute("service", svc);
             return "service-detail";
+        } catch (NotFoundException e) {
+            model.addAttribute("mensaje", e.getMessage());
+            return "error";
         }
-        return "redirect:/services";
     }
 
     // http://localhost:8080/services/add
@@ -59,10 +62,15 @@ public class ServicesController {
     // http://localhost:8080/services/update/1
     @GetMapping("/update/{id}")
     public String mostrarFormularioEditar(@PathVariable("id") Long id, Model model) {
-        Service service = serviceService.searchById(id);
-        model.addAttribute("service", service);
-        model.addAttribute("pageTitle", "Modificar Servicio");
-        return "service-form";
+        try {
+            Service service = serviceService.searchById(id);
+            model.addAttribute("service", service);
+            model.addAttribute("pageTitle", "Modificar Servicio");
+            return "service-form";
+        } catch (NotFoundException e) {
+            model.addAttribute("mensaje", e.getMessage());
+            return "error";
+        }
     }
 
     // http://localhost:8080/services/delete/1

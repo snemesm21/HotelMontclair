@@ -10,7 +10,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Data
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import jakarta.persistence.OneToMany;
+import java.util.List;
+import java.util.ArrayList;
+
+@Getter
+@Setter
+@ToString(exclude = "rooms")
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -28,4 +39,7 @@ public class RoomType {
 
     @Column(nullable = false)
     private double pricePerNight;
+
+    @OneToMany(mappedBy = "type")
+    private List<Room> rooms = new ArrayList<>();
 }

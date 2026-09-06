@@ -17,11 +17,19 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "hotel_services")
+@Table(name = "services")
 public class Service {
 
     @Id
@@ -84,7 +92,9 @@ public class Service {
         this.imageUrl = imageUrl;
     }
 
-    @Data
+    @Getter
+    @Setter
+    @ToString
     @NoArgsConstructor
     @AllArgsConstructor
     @Embeddable

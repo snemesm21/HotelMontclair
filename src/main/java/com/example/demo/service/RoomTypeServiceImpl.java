@@ -6,6 +6,8 @@ import com.example.demo.repository.RoomRepository;
 import com.example.demo.repository.RoomTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.demo.errors.NotFoundException;
 import java.util.List;
 
 @Service
@@ -24,10 +26,15 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
     @Override
     public RoomType findById(Long id) {
-        return repository.findById(id).orElse(null);
+        RoomType roomType = repository.findById(id).orElse(null);
+        if (roomType == null) {
+            throw new NotFoundException(id);
+        }
+        return roomType;
     }
 
     @Override
+    @Transactional
     public RoomType save(RoomType roomType) {
         RoomType savedType = repository.save(roomType);
         for (Room room : roomRepository.findAll()) {
@@ -40,7 +47,12 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
+        RoomType roomType = repository.findById(id).orElse(null);
+        if (roomType == null) {
+            throw new NotFoundException(id);
+        }
         repository.deleteById(id);
     }
 }

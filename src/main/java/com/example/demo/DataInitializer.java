@@ -46,11 +46,11 @@ public class DataInitializer implements CommandLineRunner {
 
         if (roomTypeRepository.count() == 0) {
             List<RoomType> types = new ArrayList<>();
-            types.add(roomTypeRepository.save(new RoomType(null, "Simple", "Habitación estándar", 80.0)));
-            types.add(roomTypeRepository.save(new RoomType(null, "Deluxe", "Habitación amplia con servicios premium", 116.52)));
-            types.add(roomTypeRepository.save(new RoomType(null, "Suite", "Habitación de lujo con sala privada", 200.0)));
-            types.add(roomTypeRepository.save(new RoomType(null, "Premium Suite", "Suite exclusiva con balcón privado", 280.0)));
-            types.add(roomTypeRepository.save(new RoomType(null, "Suite Royale", "La experiencia más exclusiva del hotel", 350.0)));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Simple").description("Habitación estándar").pricePerNight(80.0).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Deluxe").description("Habitación amplia con servicios premium").pricePerNight(116.52).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Suite").description("Habitación de lujo con sala privada").pricePerNight(200.0).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Premium Suite").description("Suite exclusiva con balcón privado").pricePerNight(280.0).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Suite Royale").description("La experiencia más exclusiva del hotel").pricePerNight(350.0).build()));
 
             for (int index = 1; index <= 50; index++) {
                 RoomType type = types.get((index - 1) % types.size());
