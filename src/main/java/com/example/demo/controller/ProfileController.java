@@ -14,6 +14,11 @@ public class ProfileController {
     @Autowired
     private ClientService clientService;
 
+    @GetMapping
+    public String profileWithoutId() {
+        return "redirect:/login";
+    }
+
     @GetMapping("/{id}")
     public String viewProfile(@PathVariable Long id, Model model) {
         Client client = clientService.findById(id);
@@ -36,6 +41,24 @@ public class ProfileController {
         }
         if (client.getAvatarUrl() == null || client.getAvatarUrl().isBlank()) {
             client.setAvatarUrl(existing.getAvatarUrl());
+        }
+        if (client.getUsername() == null || client.getUsername().isBlank()) {
+            client.setUsername(existing.getUsername());
+        }
+        if (client.getEmail() == null || client.getEmail().isBlank()) {
+            client.setEmail(existing.getEmail());
+        }
+        if (client.getFirstName() == null || client.getFirstName().isBlank()) {
+            client.setFirstName(existing.getFirstName());
+        }
+        if (client.getLastName() == null || client.getLastName().isBlank()) {
+            client.setLastName(existing.getLastName());
+        }
+        if (client.getPhone() == null || client.getPhone().isBlank()) {
+            client.setPhone(existing.getPhone());
+        }
+        if (client.getRole() == null || client.getRole().isBlank()) {
+            client.setRole(existing.getRole());
         }
         clientService.save(client);
         return "redirect:/profile/" + id + "?updated=true";

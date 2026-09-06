@@ -24,22 +24,27 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room findById(Long id) {
-        return roomRepo.findById(id);
+        return roomRepo.findById(id).orElse(null);
     }
 
     @Override
     public Room save(Room room) {
-        if (room.getTypeId() != null && typeRepo.findById(room.getTypeId()) == null) {
+        if (room.getTypeId() != null) {
+            RoomType type = typeRepo.findById(room.getTypeId()).orElse(null);
+            if (type != null) {
+                room.setType(type);
+            }
+        } else if (room.getType() == null) {
             List<RoomType> types = typeRepo.findAll();
             if (!types.isEmpty()) {
-                room.setTypeId(types.get(0).getId());
+                room.setType(types.get(0));
             }
         }
         if (room.getImageUrl() == null || room.getImageUrl().isBlank()) {
             room.setImageUrl("https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80");
         }
         if (room.getId() != null) {
-            Room existing = roomRepo.findById(room.getId());
+            Room existing = roomRepo.findById(room.getId()).orElse(null);
             if (existing != null) {
                 if (room.getHighlights() == null || room.getHighlights().isEmpty()) {
                     room.setHighlights(existing.getHighlights());
@@ -66,6 +71,6 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public void delete(Long id) {
-        roomRepo.delete(id);
+        roomRepo.deleteById(id);
     }
 }

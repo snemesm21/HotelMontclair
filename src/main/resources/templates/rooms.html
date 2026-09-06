@@ -74,6 +74,7 @@
                             <th class="py-4 px-5 font-semibold">ID</th>
                             <th class="py-4 px-5 font-semibold">Imagen</th>
                             <th class="py-4 px-5 font-semibold">Habitación / Nombre</th>
+                            <th class="py-4 px-5 font-semibold">Tipo</th>
                             <th class="py-4 px-5 font-semibold">Piso & Capacidad</th>
                             <th class="py-4 px-5 font-semibold">Tarifa / Noche</th>
                             <th class="py-4 px-5 font-semibold">Estado</th>
@@ -85,6 +86,10 @@
                             
                             <td class="py-4 px-5 font-mono text-twine-dark font-semibold text-[11px]" th:text="'#' + ${#numbers.formatInteger(r.id, 3)}">
                                 #001
+                            </td>
+
+                            <td class="py-4 px-5 text-[11px] text-woodsmoke/80" th:text="${r.type != null ? r.type.name : 'Sin tipo'}">
+                                Suite
                             </td>
 
                             <td class="py-4 px-5">
@@ -172,7 +177,7 @@
                         </tr>
 
                         <tr th:if="${#lists.isEmpty(rooms)}">
-                            <td colspan="7" class="py-12 text-center text-woodsmoke/50 italic">
+                            <td colspan="8" class="py-12 text-center text-woodsmoke/50 italic">
                                 No se encontraron habitaciones registradas actualmente.
                             </td>
                         </tr>

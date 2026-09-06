@@ -24,7 +24,7 @@ public class RoomController {
 
     @GetMapping({ "/rooms", "/rooms/cards" })
     public String showCards(Model model) {
-        List<Room> rooms = roomService.findAll();
+        List<Room> rooms = roomService.findAll().stream().limit(4).toList();
         model.addAttribute("rooms", rooms);
         return "rooms-cards";
     }
@@ -57,6 +57,9 @@ public class RoomController {
     @GetMapping("/admin/rooms/edit/{id}")
     public String showEditForm(@PathVariable("id") Long id, Model model) {
         Room room = roomService.findById(id);
+        if (room != null && room.getType() != null) {
+            room.setTypeId(room.getType().getId());
+        }
         model.addAttribute("room", room);
         model.addAttribute("roomTypes", roomTypeService.findAll());
         return "room-form";

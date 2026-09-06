@@ -3,6 +3,16 @@ package com.example.demo.entities;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,15 +20,33 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "hotel_services")
 public class Service {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 120)
     private String name;
+
+    @Column(nullable = false, length = 500)
     private String description;
+
+    @Column(nullable = false)
     private Double price;
+
+    @Column(length = 500)
     private String imageUrl;
+
+    @Column(nullable = false, unique = true, length = 40)
     private String tag;
+
+    @Column(nullable = false, length = 80)
     private String schedule;
+
+    @Column(length = 80)
     private String priceLabel;
 
     // Detailed Card Attributes
@@ -29,7 +57,11 @@ public class Service {
     private String scheduleNote;
     private String priceNote;
     private String secondaryImageUrl;
+    @ElementCollection
+    @CollectionTable(name = "service_highlights", joinColumns = @JoinColumn(name = "service_id"))
     private List<Highlight> highlights = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "service_gallery_images", joinColumns = @JoinColumn(name = "service_id"))
     private List<String> galleryImages = new ArrayList<>();
 
     public Service(Long id, String name, String description, Double price, String imageUrl) {
@@ -55,6 +87,7 @@ public class Service {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @Embeddable
     public static class Highlight {
         private String title;
         private String description;

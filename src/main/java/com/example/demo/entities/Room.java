@@ -3,6 +3,18 @@ package com.example.demo.entities;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +22,27 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "rooms")
 public class Room {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true, length = 20)
     private String number;
+
+    @Column(nullable = false)
     private int floor;
+
+    @Transient
     private Long typeId;
+
+    @ManyToOne
+    @JoinColumn(name = "type_id", nullable = false)
+    private RoomType type;
+
+    @Column(nullable = false, length = 20)
     private RoomStatus status;
 
     // Atributos visuales (tarjeta)
@@ -31,7 +59,11 @@ public class Room {
     private String headline;
     private String fullDescription;
     private String secondaryImageUrl;
+    @ElementCollection
+    @CollectionTable(name = "room_highlights", joinColumns = @JoinColumn(name = "room_id"))
     private List<Highlight> highlights = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "room_gallery_images", joinColumns = @JoinColumn(name = "room_id"))
     private List<String> galleryImages = new ArrayList<>();
 
     public Room(Long id, String number, int floor, Long typeId, RoomStatus status) {
@@ -42,9 +74,14 @@ public class Room {
         this.status = status;
     }
 
+    public Long getTypeId() {
+        return typeId != null ? typeId : type == null ? null : type.getId();
+    }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @Embeddable
     public static class Highlight {
         private String title;
         private String description;

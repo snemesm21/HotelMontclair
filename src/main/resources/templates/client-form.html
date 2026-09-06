@@ -153,8 +153,8 @@
                             type="password"
                             th:field="*{password}"
                             placeholder="••••••••"
+                            th:required="${client.id == null}"
                             class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
-                            required
                         />
                     </div>
                     <div>

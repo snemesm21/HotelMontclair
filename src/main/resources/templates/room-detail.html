@@ -175,6 +175,10 @@
           <div class="flex items-center gap-3 flex-wrap">
             <span
               class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-sm px-3 py-1.5 text-[11px] font-medium text-white/90"
+              th:text="${room.type != null ? room.type.name : 'Habitación'}"
+            >Suite</span>
+            <span
+              class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-sm px-3 py-1.5 text-[11px] font-medium text-white/90"
             >
               📐 <span th:text="${room.area} + ' m²'">30 m²</span>
             </span>
@@ -193,7 +197,7 @@
               class="flex items-center gap-1.5 bg-twine/20 backdrop-blur-sm border border-twine/40 rounded-sm px-3 py-1.5 text-[11px] font-bold text-white"
             >
               <span
-                th:text="'Desde €' + ${#numbers.formatDecimal(room.pricePerNight, 1, 2)} + ' / noche'"
+                th:text="'Desde €' + ${#numbers.formatDecimal(room.type != null ? room.type.pricePerNight : room.pricePerNight, 1, 2)} + ' / noche'"
                 >Desde €116.52 / noche</span
               >
             </span>

@@ -19,7 +19,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public Client findById(Long id) {
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public void delete(Long id) {
-        repository.delete(id);
+        repository.deleteById(id);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class ClientServiceImpl implements ClientService {
         if (usernameOrEmail == null || password == null) return null;
         String idTrimmed = usernameOrEmail.trim();
         String passTrimmed = password.trim();
-        return repository.findByUsernameOrEmail(idTrimmed)
+        return repository.findByUsernameIgnoreCaseOrEmailIgnoreCase(idTrimmed, idTrimmed)
                 .filter(c -> c.getPassword() != null && passTrimmed.equals(c.getPassword().trim()))
                 .orElse(null);
     }

@@ -156,7 +156,7 @@
               <p class="text-[13px] font-bold text-woodsmoke mb-4">
                 <span class="text-[#73503C]">Desde</span>
                 <span
-                  th:text="'$' + ${#numbers.formatDecimal(room.pricePerNight, 1, 2)}"
+                  th:text="'€' + ${#numbers.formatDecimal(room.type != null ? room.type.pricePerNight : room.pricePerNight, 1, 2)}"
                   >$116.52</span
                 >
                 <span class="text-[#73503C] font-normal text-[11px]"

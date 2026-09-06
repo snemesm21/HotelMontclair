@@ -4,13 +4,21 @@
 
 .table-page-body {
   background-color: #f2eeeb;
-  padding: 24px;
+  padding: 0;
   min-height: 100vh;
 }
 
+.table-page-body .table-container {
+  width: calc(100% - 32px);
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
 @media (min-width: 1024px) {
-  .table-page-body {
-    padding: 48px;
+  .table-page-body .table-container {
+    width: calc(100% - 96px);
+    margin-top: 48px;
+    margin-bottom: 48px;
   }
 }
 

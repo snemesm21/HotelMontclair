@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.entities.RoomType;
+import com.example.demo.entities.Room;
+import com.example.demo.repository.RoomRepository;
 import com.example.demo.repository.RoomTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,9 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Autowired
     private RoomTypeRepository repository;
 
+    @Autowired
+    private RoomRepository roomRepository;
+
     @Override
     public List<RoomType> findAll() {
         return repository.findAll();
@@ -19,17 +24,24 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
     @Override
     public RoomType findById(Long id) {
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
     public RoomType save(RoomType roomType) {
-        return repository.save(roomType);
+        RoomType savedType = repository.save(roomType);
+        for (Room room : roomRepository.findAll()) {
+            if (room.getType() != null && savedType.getId().equals(room.getType().getId())) {
+                room.setPricePerNight(savedType.getPricePerNight());
+                roomRepository.save(room);
+            }
+        }
+        return savedType;
     }
 
     @Override
     public void delete(Long id) {
-        repository.delete(id);
+        repository.deleteById(id);
     }
 }
 

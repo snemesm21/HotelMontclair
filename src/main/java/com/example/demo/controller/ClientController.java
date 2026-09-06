@@ -43,7 +43,36 @@ public class ClientController {
 
     @PostMapping("/edit/{id}")
     public String edit(@PathVariable Long id, @ModelAttribute Client client) {
+        Client existing = service.findById(id);
+        if (existing == null) {
+            return "redirect:/clients";
+        }
+
         client.setId(id);
+        if (client.getPassword() == null || client.getPassword().isBlank()) {
+            client.setPassword(existing.getPassword());
+        }
+        if (client.getAvatarUrl() == null || client.getAvatarUrl().isBlank()) {
+            client.setAvatarUrl(existing.getAvatarUrl());
+        }
+        if (client.getRole() == null || client.getRole().isBlank()) {
+            client.setRole(existing.getRole());
+        }
+        if (client.getUsername() == null || client.getUsername().isBlank()) {
+            client.setUsername(existing.getUsername());
+        }
+        if (client.getEmail() == null || client.getEmail().isBlank()) {
+            client.setEmail(existing.getEmail());
+        }
+        if (client.getFirstName() == null || client.getFirstName().isBlank()) {
+            client.setFirstName(existing.getFirstName());
+        }
+        if (client.getLastName() == null || client.getLastName().isBlank()) {
+            client.setLastName(existing.getLastName());
+        }
+        if (client.getPhone() == null || client.getPhone().isBlank()) {
+            client.setPhone(existing.getPhone());
+        }
         service.save(client);
         return "redirect:/clients";
     }
