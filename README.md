@@ -66,7 +66,7 @@ La relación entre habitación y tipo de habitación es `ManyToOne`: muchas habi
 
 Los datos de prueba se cargan automáticamente desde `DataInitializer`:
 
-- 10 clientes
+- 10 clientes de prueba, además del administrador
 - 5 tipos de habitación
 - 50 habitaciones
 - 8 servicios del hotel
@@ -89,7 +89,9 @@ Usuario: demo
 Contraseña: demo
 ```
 
-También se generan usuarios desde `cliente3` hasta `cliente10`. Su contraseña coincide con su usuario.
+También se generan usuarios desde `cliente3` hasta `cliente11`. Su contraseña coincide con su usuario.
+
+El diagrama entidad-relación se encuentra en [docs/diagrama-entidad-relacion.md](docs/diagrama-entidad-relacion.md).
 
 ## Rutas principales
 

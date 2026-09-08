@@ -42,6 +42,9 @@ public class DataInitializer implements CommandLineRunner {
                         "cliente" + index + "@example.com", "Cliente", "Montclair", null,
                         "+34 612 345 6" + String.format("%02d", index), "CLIENT"));
             }
+                clientRepository.save(new Client(null, "cliente11", "cliente11",
+                    "cliente11@example.com", "Cliente", "Montclair", null,
+                    "+34 612 345 611", "CLIENT"));
         }
 
         if (roomTypeRepository.count() == 0) {

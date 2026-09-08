@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.demo.entities.Room;
-import com.example.demo.errors.NotFoundException;
 import com.example.demo.service.RoomService;
 import com.example.demo.service.RoomTypeService;
 
@@ -32,14 +31,9 @@ public class RoomController {
 
     @GetMapping("/rooms/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
-        try {
-            Room room = roomService.findById(id);
-            model.addAttribute("room", room);
-            return "room-detail";
-        } catch (NotFoundException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
-        }
+        Room room = roomService.findById(id);
+        model.addAttribute("room", room);
+        return "room-detail";
     }
 
     @GetMapping("/admin/rooms")
@@ -59,18 +53,13 @@ public class RoomController {
 
     @GetMapping("/admin/rooms/edit/{id}")
     public String showEditForm(@PathVariable("id") Long id, Model model) {
-        try {
-            Room room = roomService.findById(id);
-            if (room.getType() != null) {
-                room.setTypeId(room.getType().getId());
-            }
-            model.addAttribute("room", room);
-            model.addAttribute("roomTypes", roomTypeService.findAll());
-            return "room-form";
-        } catch (NotFoundException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
+        Room room = roomService.findById(id);
+        if (room.getType() != null) {
+            room.setTypeId(room.getType().getId());
         }
+        model.addAttribute("room", room);
+        model.addAttribute("roomTypes", roomTypeService.findAll());
+        return "room-form";
     }
 
     @PostMapping("/admin/rooms/save")

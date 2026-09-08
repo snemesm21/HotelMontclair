@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.entities.RoomType;
-import com.example.demo.errors.NotFoundException;
 import com.example.demo.service.RoomTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -37,14 +36,9 @@ public class RoomTypeController {
 
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Long id, Model model) {
-        try {
-            RoomType rt = service.findById(id);
-            model.addAttribute("roomType", rt);
-            return "room-type-form";
-        } catch (NotFoundException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
-        }
+        RoomType rt = service.findById(id);
+        model.addAttribute("roomType", rt);
+        return "room-type-form";
     }
 
     @PostMapping("/edit/{id}")

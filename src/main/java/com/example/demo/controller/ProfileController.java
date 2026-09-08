@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.entities.Client;
-import com.example.demo.errors.NotFoundException;
 import com.example.demo.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -22,20 +21,14 @@ public class ProfileController {
 
     @GetMapping("/{id}")
     public String viewProfile(@PathVariable Long id, Model model) {
-        try {
-            Client client = clientService.findById(id);
-            model.addAttribute("client", client);
-            return "profile";
-        } catch (NotFoundException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
-        }
+        Client client = clientService.findById(id);
+        model.addAttribute("client", client);
+        return "profile";
     }
 
     @PostMapping("/edit/{id}")
     public String editProfile(@PathVariable Long id, @ModelAttribute Client client, Model model) {
-        try {
-            Client existing = clientService.findById(id);
+        Client existing = clientService.findById(id);
         client.setId(id);
         if (client.getPassword() == null || client.getPassword().isBlank()) {
             client.setPassword(existing.getPassword());
@@ -63,10 +56,6 @@ public class ProfileController {
         }
         clientService.save(client);
         return "redirect:/profile/" + id + "?updated=true";
-        } catch (NotFoundException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
-        }
     }
 
     @PostMapping("/delete/{id}")
