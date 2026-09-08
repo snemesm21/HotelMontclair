@@ -25,7 +25,7 @@ public class RoomController {
 
     @GetMapping({ "/rooms", "/rooms/cards" })
     public String showCards(Model model) {
-        List<Room> rooms = roomService.findAll().stream().limit(4).toList();
+        List<Room> rooms = roomService.findAll();
         model.addAttribute("rooms", rooms);
         return "rooms-cards";
     }

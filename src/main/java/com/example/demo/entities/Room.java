@@ -57,18 +57,35 @@ public class Room {
     private RoomStatus status;
 
     // Atributos visuales (tarjeta)
+    @Column(length = 100)
     private String name;
+    
     private int capacity;
+    
+    @Column(length = 50)
     private String bedType;
+    
     private int area;
+    
+    @Column(length = 500)
     private String imageUrl;
+    
+    @Column(length = 1000)
     private String description;
+    
     private double pricePerNight;
 
     // Atributos de detalle
+    @Column(length = 1000)
     private String heroDescription;
+    
+    @Column(length = 200)
     private String headline;
+    
+    @Column(length = 2000)
     private String fullDescription;
+    
+    @Column(length = 500)
     private String secondaryImageUrl;
     @ElementCollection
     @CollectionTable(name = "room_highlights", joinColumns = @JoinColumn(name = "room_id"))

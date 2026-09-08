@@ -58,12 +58,25 @@ public class Service {
     private String priceLabel;
 
     // Detailed Card Attributes
+    @Column(length = 1000)
     private String heroDescription;
+    
+    @Column(length = 100)
     private String tagline;
+    
+    @Column(length = 200)
     private String headline;
+    
+    @Column(length = 2000)
     private String fullDescription;
+    
+    @Column(length = 100)
     private String scheduleNote;
+    
+    @Column(length = 100)
     private String priceNote;
+    
+    @Column(length = 500)
     private String secondaryImageUrl;
     @ElementCollection
     @CollectionTable(name = "service_highlights", joinColumns = @JoinColumn(name = "service_id"))

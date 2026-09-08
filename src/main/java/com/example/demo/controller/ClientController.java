@@ -31,6 +31,9 @@ public class ClientController {
 
     @PostMapping("/add")
     public String add(@ModelAttribute Client client) {
+        if (client.getRole() == null || client.getRole().isBlank()) {
+            client.setRole("CLIENT");
+        }
         Client saved = service.save(client);
         return "redirect:/profile/" + saved.getId();
     }

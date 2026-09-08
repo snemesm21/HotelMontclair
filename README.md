@@ -12,7 +12,8 @@ Aplicación web para la gestión y presentación de un hotel. El proyecto está 
 - H2 Database
 - Lombok
 - Maven Wrapper
-- HTML y CSS
+- HTML, CSS y JavaScript
+- Swiper.js (para carruseles dinámicos)
 
 ## Requisitos
 
@@ -132,7 +133,7 @@ src/main/java/com/example/demo/
 ├── entities/         Entidades JPA y modelos del dominio
 ├── repository/       Interfaces JpaRepository
 ├── service/          Servicios y lógica de aplicación
-└── errors/           Manejo global de errores
+└── errors/           Excepciones personalizadas (ej. NotFoundException)
 
 src/main/resources/
 ├── application.properties
@@ -159,7 +160,7 @@ Compilar sin ejecutar las pruebas:
 
 ## Manejo de errores
 
-Los errores de las vistas web son gestionados por `GlobalExceptionHandler`. La plantilla correspondiente se encuentra en:
+Los errores de las vistas web (como entidades no encontradas en la base de datos) se gestionan de forma explícita mediante bloques `try-catch` en cada controlador, capturando excepciones personalizadas como `NotFoundException` y pasando el mensaje a la plantilla de error. La plantilla correspondiente se encuentra en:
 
 ```text
 src/main/resources/templates/error.html
