@@ -40,6 +40,9 @@ public class RoomType {
     @Column(nullable = false)
     private double pricePerNight;
 
+    @Column(length = 500)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "type")
     private List<Room> rooms = new ArrayList<>();
 }

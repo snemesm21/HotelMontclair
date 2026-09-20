@@ -17,9 +17,14 @@ public class ClientController {
 
     @GetMapping
     public String list(Model model) {
-        List<Client> list = service.findAll();
-        model.addAttribute("clients", list);
-        return "clients";
+        try {
+            List<Client> list = service.findAll();
+            model.addAttribute("clients", list);
+            return "clients";
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al cargar los clientes: " + e.getMessage());
+            return "error";
+        }
     }
 
     @GetMapping("/add")
@@ -29,56 +34,67 @@ public class ClientController {
     }
 
     @PostMapping("/add")
-    public String add(@ModelAttribute Client client) {
-        if (client.getRole() == null || client.getRole().isBlank()) {
-            client.setRole("CLIENT");
+    public String add(@ModelAttribute Client client, Model model) {
+        try {
+            Client saved = service.save(client);
+            return "redirect:/profile/" + saved.getId();
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("mensaje", e.getMessage());
+            return "error";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            model.addAttribute("mensaje", "No se pudo registrar: El nombre de usuario o el correo electrónico ya están en uso.");
+            return "error";
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al registrar cliente: " + e.getMessage());
+            return "error";
         }
-        Client saved = service.save(client);
-        return "redirect:/profile/" + saved.getId();
     }
 
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Long id, Model model) {
-        Client c = service.findById(id);
-        model.addAttribute("client", c);
-        return "client-form";
+        try {
+            Client c = service.findById(id);
+            model.addAttribute("client", c);
+            return "client-form";
+        } catch (com.example.demo.errors.NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al cargar formulario de edición: " + e.getMessage());
+            return "error";
+        }
     }
 
     @PostMapping("/edit/{id}")
     public String edit(@PathVariable Long id, @ModelAttribute Client client, Model model) {
-        Client existing = service.findById(id);
-        client.setId(id);
-        if (client.getPassword() == null || client.getPassword().isBlank()) {
-            client.setPassword(existing.getPassword());
+        try {
+            client.setId(id);
+            service.save(client);
+            return "redirect:/clients";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("mensaje", e.getMessage());
+            return "error";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            model.addAttribute("mensaje", "No se pudo actualizar: El nombre de usuario o el correo electrónico ya están en uso.");
+            return "error";
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al actualizar cliente: " + e.getMessage());
+            return "error";
         }
-        if (client.getAvatarUrl() == null || client.getAvatarUrl().isBlank()) {
-            client.setAvatarUrl(existing.getAvatarUrl());
-        }
-        if (client.getRole() == null || client.getRole().isBlank()) {
-            client.setRole(existing.getRole());
-        }
-        if (client.getUsername() == null || client.getUsername().isBlank()) {
-            client.setUsername(existing.getUsername());
-        }
-        if (client.getEmail() == null || client.getEmail().isBlank()) {
-            client.setEmail(existing.getEmail());
-        }
-        if (client.getFirstName() == null || client.getFirstName().isBlank()) {
-            client.setFirstName(existing.getFirstName());
-        }
-        if (client.getLastName() == null || client.getLastName().isBlank()) {
-            client.setLastName(existing.getLastName());
-        }
-        if (client.getPhone() == null || client.getPhone().isBlank()) {
-            client.setPhone(existing.getPhone());
-        }
-        service.save(client);
-        return "redirect:/clients";
     }
 
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Long id) {
-        service.delete(id);
-        return "redirect:/clients";
+    public String delete(@PathVariable Long id, Model model) {
+        try {
+            service.delete(id);
+            return "redirect:/clients";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            model.addAttribute("mensaje", "No se puede eliminar el cliente porque tiene registros asociados (por ejemplo, reservaciones).");
+            return "error";
+        } catch (com.example.demo.errors.NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al eliminar cliente: " + e.getMessage());
+            return "error";
+        }
     }
 }

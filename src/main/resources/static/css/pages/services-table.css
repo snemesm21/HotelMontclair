@@ -6,12 +6,15 @@
   background-color: #f2eeeb;
   padding: 0;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .table-page-body .table-container {
   width: calc(100% - 32px);
   margin-top: 32px;
   margin-bottom: 32px;
+  flex-grow: 1;
 }
 
 @media (min-width: 1024px) {
@@ -49,7 +52,7 @@
 
 .services-table th {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -64,16 +67,17 @@
 
 .services-table td.col-id {
   font-family: monospace;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--twine);
   font-weight: bold;
   width: 60px;
 }
 
 .col-image img {
-  width: 64px;
-  height: 48px;
-  object-fit: cover;
+  width: 80px;
+  height: 60px;
+  object-fit: contain;
+  background-color: white;
   border: 1px solid #e3ddd4;
 }
 
@@ -83,13 +87,13 @@
 
 .td-title {
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: 18px;
   color: var(--woodsmoke);
 }
 
 .td-desc {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 13px;
   color: #5c646d;
   line-height: 1.5;
   max-width: 300px;
@@ -101,7 +105,7 @@
 
 .td-tag {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 11px;
   background-color: #f0ebe3 !important;
   color: #8c8275 !important;
   text-transform: uppercase;
@@ -111,14 +115,14 @@
 
 .td-label {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   color: #8c8275;
 }
 
 .td-detail {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--woodsmoke);
   font-weight: 500;
 }

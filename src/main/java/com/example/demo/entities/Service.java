@@ -85,6 +85,9 @@ public class Service {
     @CollectionTable(name = "service_gallery_images", joinColumns = @JoinColumn(name = "service_id"))
     private List<String> galleryImages = new ArrayList<>();
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean hidden = false;
+
     public Service(Long id, String name, String description, Double price, String imageUrl) {
         this.id = id;
         this.name = name;

@@ -25,29 +25,30 @@ public class AuthController {
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "password", required = false) String password,
             Model model) {
-        String identifier = null;
-        if (username != null && !username.trim().isEmpty()) {
-            identifier = username.trim();
-        } else if (email != null && !email.trim().isEmpty()) {
-            identifier = email.trim();
-        }
+        try {
+            Client client;
+            try {
+                client = clientService.login(username, email, password);
+            } catch (IllegalArgumentException e) {
+                model.addAttribute("error", e.getMessage());
+                return "login";
+            }
 
-        if (identifier == null || password == null || password.trim().isEmpty()) {
-            model.addAttribute("error", "Por favor ingresa tu correo/usuario y tu contraseña.");
-            return "login";
-        }
+            if (client == null) {
+                model.addAttribute("error", "Usuario o contraseña incorrectos.");
+                String identifier = (username != null && !username.trim().isEmpty()) ? username.trim() : (email != null ? email.trim() : "");
+                model.addAttribute("username", identifier);
+                return "login";
+            }
 
-        Client client = clientService.login(identifier, password.trim());
-        if (client == null) {
-            model.addAttribute("error", "Usuario o contraseña incorrectos.");
-            model.addAttribute("username", identifier);
-            return "login";
-        }
+            if (client.isAdmin()) {
+                return "redirect:/admin/rooms";
+            }
 
-        if (client.isAdmin()) {
-            return "redirect:/admin/rooms";
+            return "redirect:/profile/" + client.getId();
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error inesperado durante el login: " + e.getMessage());
+            return "error";
         }
-
-        return "redirect:/profile/" + client.getId();
     }
 }

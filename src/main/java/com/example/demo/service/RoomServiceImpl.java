@@ -36,6 +36,9 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public Room save(Room room) {
+        if (room.getNumber() == null || room.getNumber().isBlank()) {
+            throw new IllegalArgumentException("El número de habitación es obligatorio.");
+        }
         if (room.getTypeId() != null) {
             RoomType type = typeRepo.findById(room.getTypeId()).orElse(null);
             if (type != null) {
@@ -47,9 +50,12 @@ public class RoomServiceImpl implements RoomService {
                 room.setType(types.get(0));
             }
         }
-        if (room.getImageUrl() == null || room.getImageUrl().isBlank()) {
-            room.setImageUrl("https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80");
+        // Validar que tenga tipo asignado
+        if (room.getType() == null) {
+            throw new IllegalArgumentException(
+                    "Debes seleccionar un tipo de habitación. Asegúrate de haber creado al menos un tipo antes.");
         }
+
         if (room.getId() != null) {
             Room existing = roomRepo.findById(room.getId()).orElse(null);
             if (existing != null) {
@@ -58,9 +64,6 @@ public class RoomServiceImpl implements RoomService {
                 }
                 if (room.getGalleryImages() == null || room.getGalleryImages().isEmpty()) {
                     room.setGalleryImages(existing.getGalleryImages());
-                }
-                if (room.getSecondaryImageUrl() == null || room.getSecondaryImageUrl().isBlank()) {
-                    room.setSecondaryImageUrl(existing.getSecondaryImageUrl());
                 }
                 if (room.getHeroDescription() == null || room.getHeroDescription().isBlank()) {
                     room.setHeroDescription(existing.getHeroDescription());
@@ -73,7 +76,17 @@ public class RoomServiceImpl implements RoomService {
                 }
             }
         }
+        // Validar número de habitación duplicado
+        if (room.getNumber() != null && !room.getNumber().isBlank()) {
+            Room existing = roomRepo.findByNumber(room.getNumber()).orElse(null);
+            if (existing != null && !existing.getId().equals(room.getId())) {
+                throw new IllegalArgumentException(
+                        "Ya existe una habitación con el número '" + room.getNumber()
+                                + "'. Por favor elige un número diferente.");
+            }
+        }
         return roomRepo.save(room);
+
     }
 
     @Override

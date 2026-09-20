@@ -36,7 +36,7 @@
       };
     </script>
 
-    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/global.css?v=3" />
     <link rel="stylesheet" href="/css/pages/index.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   </head>
@@ -99,16 +99,16 @@
         <div class="swiper mySwiper !pb-14 px-12" style="--swiper-navigation-color: #BF925A; --swiper-pagination-color: #BF925A; --swiper-navigation-size: 24px;">
           <div class="swiper-wrapper">
             <article
-              th:each="room : ${rooms}"
+              th:each="type : ${roomTypes}"
               class="swiper-slide h-auto group bg-white rounded-[4px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col border border-[#E8E2DA]/80"
             >
             <a
-              th:href="@{'/rooms/' + ${room.id}}"
+              th:href="@{'/rooms/type/' + ${type.id}}"
               class="block relative h-52 overflow-hidden"
             >
               <img
-                th:src="${room.imageUrl}"
-                th:alt="${room.name}"
+                th:src="${type.imageUrl}"
+                th:alt="${type.name}"
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div
@@ -117,41 +117,18 @@
             </a>
 
             <div class="p-5 flex flex-col flex-grow">
-              <a th:href="@{'/rooms/' + ${room.id}}" class="block mb-3">
+              <a th:href="@{'/rooms/type/' + ${type.id}}" class="block mb-3">
                 <h3
                   class="font-serif text-sm font-bold text-woodsmoke tracking-[2px] uppercase group-hover:text-twine transition-colors duration-300"
-                  th:text="${room.name}"
+                  th:text="${type.name}"
                 >
-                  Deluxe Room
+                  Suite
                 </h3>
               </a>
 
-              <div
-                class="flex items-center gap-1.5 text-[9px] text-woodsmoke/60 font-medium mb-3 flex-wrap"
-              >
-                <span
-                  class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1"
-                >
-                  <span th:text="${room.area} + ' m²'">30 m²</span>
-                </span>
-                <span class="text-twine/40">|</span>
-                <span
-                  class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1"
-                >
-                  <span th:text="${room.bedType}">King Size</span>
-                </span>
-                <span class="text-twine/40">|</span>
-                <span
-                  class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1"
-                >
-                  <span>👤</span>
-                  <span th:text="${room.capacity}">2</span>
-                </span>
-              </div>
-
               <p
                 class="text-[11px] text-woodsmoke/70 leading-relaxed mb-4 flex-grow"
-                th:text="${room.description}"
+                th:text="${type.description}"
               >
                 Descripción.
               </p>
@@ -159,20 +136,20 @@
               <p class="text-[13px] font-bold text-woodsmoke mb-4">
                 <span class="text-[#73503C]">Desde</span>
                 <span
-                  th:text="'€' + ${#numbers.formatDecimal(room.type != null ? room.type.pricePerNight : room.pricePerNight, 1, 2)}"
-                  >$116.52</span
+                  th:text="'€' + ${#numbers.formatDecimal(type.pricePerNight, 1, 2)}"
+                  >€116.52</span
                 >
                 <span class="text-[#73503C] font-normal text-[11px]"
-                  >€ / noche</span
+                  > / noche</span
                 >
               </p>
 
               <div class="pt-3 border-t border-[#E8E2DA]">
                 <a
-                  th:href="@{'/rooms/' + ${room.id}}"
+                  th:href="@{'/rooms/type/' + ${type.id}}"
                   class="block text-center border border-twine/70 text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition-all duration-300"
                 >
-                  Reservar
+                  Ver Habitaciones
                 </a>
               </div>
             </div>

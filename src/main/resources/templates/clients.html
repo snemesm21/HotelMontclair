@@ -62,9 +62,9 @@
         <div class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-lg overflow-hidden">
             
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
+                <table class="w-full text-left border-collapse text-sm">
                     <thead>
-                        <tr class="bg-mirage text-white font-serif text-[10px] tracking-[1.5px] uppercase border-b border-white/10">
+                        <tr class="bg-mirage text-white font-serif text-[12px] tracking-[1.5px] uppercase border-b border-white/10">
                             <th class="py-4 px-6 font-semibold">ID</th>
                             <th class="py-4 px-6 font-semibold">Cliente / Huésped</th>
                             <th class="py-4 px-6 font-semibold">Usuario</th>
@@ -76,7 +76,7 @@
                     <tbody class="divide-y divide-[#E8E2DA]">
                         <tr th:each="c : ${clients}" class="hover:bg-pampas/60 transition group">
                             
-                            <td class="py-4 px-6 font-mono text-twine-dark font-semibold text-[11px]" th:text="'#' + ${#numbers.formatInteger(c.id, 3)}">
+                            <td class="py-4 px-6 font-mono text-twine-dark font-semibold text-[13px]" th:text="'#' + ${#numbers.formatInteger(c.id, 3)}">
                                 #001
                             </td>
 
@@ -90,12 +90,12 @@
                                     />
                                     <div>
                                         <p class="font-semibold text-woodsmoke" th:text="${c.firstName} + ' ' + ${c.lastName}">Nombre Apellido</p>
-                                        <span class="text-[9px] uppercase tracking-wider text-twine-dark font-medium">Huésped Registrado</span>
+                                        <span class="text-[11px] uppercase tracking-wider text-twine-dark font-medium">Huésped Registrado</span>
                                     </div>
                                 </div>
                             </td>
 
-                            <td class="py-4 px-6 text-woodsmoke/80 font-mono text-[11px]" th:text="${c.username}">
+                            <td class="py-4 px-6 text-woodsmoke/80 font-mono text-[13px]" th:text="${c.username}">
                                 demo
                             </td>
 
@@ -157,7 +157,7 @@
 
     </main>
 
-    <div th:replace="~{fragmentos :: footer-admin}"></div>
+    <div th:replace="~{admin-fragmentos :: footer-admin}"></div>
 
 </body>
 </html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="'Habitaciones ' + ${roomType.name} + ' - Montclair Grand Hotel'">Habitaciones - Montclair Grand Hotel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              twine: "#BF925A",
+              "twine-hover": "#73503C",
+              mirage: "#141E26",
+              pampas: "#F2EEEB",
+              woodsmoke: "#111413",
+              silver: "#CAC6C6",
+              ivory: "#FDFBF7",
+            },
+            fontFamily: {
+              serif: ["Cinzel", "serif"],
+              sans: ["Inter", "sans-serif"],
+              display: ["Cormorant Garamond", "serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <link rel="stylesheet" href="/css/global.css?v=3" />
+    <link rel="stylesheet" href="/css/pages/index.css" />
+  </head>
+  <body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+    <div th:replace="~{fragmentos :: navbar}"></div>
+
+    <section class="bg-mirage text-white pt-20 pb-16 px-6 lg:px-12 relative overflow-hidden" th:style="'background-image: linear-gradient(to right, rgba(20,30,38,0.9), rgba(20,30,38,0.8)), url(' + ${roomType.imageUrl} + '); background-size: cover; background-position: center;'">
+      <div class="max-w-4xl mx-auto text-center relative z-10">
+        <span
+          class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-4"
+          >CATEGORÍA SELECCIONADA</span
+        >
+        <h1
+          class="font-serif text-4xl sm:text-5xl md:text-[54px] font-normal tracking-[2px] leading-tight mb-5"
+          th:text="${roomType.name}"
+        >
+          Suite Deluxe
+        </h1>
+        <p
+          class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-2xl mx-auto mb-8"
+          th:text="${roomType.description}"
+        >
+          Descripción del tipo de habitación.
+        </p>
+        <div class="flex items-center justify-center gap-3">
+          <div class="h-[1px] w-14 bg-twine/40"></div>
+          <div class="w-2.5 h-2.5 rotate-45 border border-twine bg-twine"></div>
+          <div class="h-[1px] w-14 bg-twine/40"></div>
+        </div>
+      </div>
+    </section>
+
+    <main class="bg-pampas py-14 px-6 lg:px-12">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="font-display text-2xl md:text-3xl text-woodsmoke tracking-[1px] italic font-medium">
+              Habitaciones Disponibles
+            </h2>
+            <a href="/rooms/cards" class="text-[10px] uppercase tracking-[2px] font-bold text-twine hover:text-twine-hover transition-colors">
+              &larr; Volver a Tipos
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <article
+              th:each="room : ${rooms}"
+              class="h-auto group bg-white rounded-[4px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col border border-[#E8E2DA]/80"
+            >
+            <div class="p-5 flex flex-col flex-grow">
+              <a th:href="@{'/rooms/' + ${room.id}}" class="block mb-3">
+                <h3
+                  class="font-serif text-lg font-bold text-woodsmoke tracking-[2px] uppercase group-hover:text-twine transition-colors duration-300"
+                  th:text="'Habitación ' + ${room.number}"
+                >
+                  Habitación 101
+                </h3>
+              </a>
+
+              <div
+                class="flex items-center gap-1.5 text-[9px] text-woodsmoke/60 font-medium mb-3 flex-wrap"
+              >
+                <span class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1">
+                  <span>Piso</span>
+                  <span th:text="${room.floor}">1</span>
+                </span>
+                <span class="text-twine/40">|</span>
+                <span class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1">
+                  <span th:text="${room.area} + ' m²'">30 m²</span>
+                </span>
+                <span class="text-twine/40">|</span>
+                <span class="flex items-center gap-0.5 bg-pampas border border-[#E8E2DA] rounded-sm px-2 py-1">
+                  <span>👤</span>
+                  <span th:text="${room.capacity}">2</span>
+                </span>
+              </div>
+
+              <div class="mb-4">
+                  <span th:if="${room.status.name() == 'AVAILABLE'}" class="inline-block px-2 py-1 bg-green-100 text-green-800 text-[9px] uppercase tracking-wider rounded border border-green-200 font-bold">Disponible</span>
+                  <span th:if="${room.status.name() == 'OCCUPIED'}" class="inline-block px-2 py-1 bg-red-100 text-red-800 text-[9px] uppercase tracking-wider rounded border border-red-200 font-bold">Ocupada</span>
+              </div>
+
+              <p class="text-[13px] font-bold text-woodsmoke mb-4 mt-auto">
+                <span class="text-[#73503C]">Precio</span>
+                <span
+                  th:text="'€' + ${#numbers.formatDecimal(roomType.pricePerNight, 1, 2)}"
+                  >€116.52</span
+                >
+                <span class="text-[#73503C] font-normal text-[11px]"
+                  > / noche</span
+                >
+              </p>
+
+              <div class="pt-3 border-t border-[#E8E2DA]">
+                <a
+                  th:href="@{'/rooms/' + ${room.id}}"
+                  class="block text-center border border-twine/70 text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition-all duration-300"
+                >
+                  Ver Detalles / Reservar
+                </a>
+              </div>
+            </div>
+          </article>
+          
+          <div th:if="${#lists.isEmpty(rooms)}" class="col-span-full py-12 text-center text-woodsmoke/60">
+              <p>No hay habitaciones disponibles para esta categoría actualmente.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="~{fragmentos :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
+  </body>
+</html>

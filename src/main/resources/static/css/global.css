@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     /* Colores del diseÃ±o de Figma */
     --twine: #BF925A;
     --twine-hover: #73503C;
@@ -27,6 +27,19 @@ body {
     background-color: var(--pampas);
     color: var(--woodsmoke);
     font-family: var(--font-sans);
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+}
+
+.bg-mirage-dark {
+    background-color: #0F161C !important;
+}
+
+.site-footer-wrapper {
+    margin-top: auto !important;
+    width: 100% !important;
 }
 
 img {
@@ -220,6 +233,7 @@ ul {
 .main-footer {
     padding: 64px 24px 48px 24px;
     background-color: var(--pampas);
+    border-top: 1px solid rgba(202, 198, 198, 0.5);
 }
 
 .footer-grid {

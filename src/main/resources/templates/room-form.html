@@ -259,51 +259,7 @@
             </div>
           </div>
 
-          <div>
-            <label
-              class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
-            >
-              URL de Imagen Principal *
-            </label>
-            <input
-              type="url"
-              th:field="*{imageUrl}"
-              placeholder="ej. https://images.unsplash.com/photo-..."
-              class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
-            />
-            <p class="text-[10px] text-woodsmoke/50 mt-1">
-              Pega una URL de imagen de alta resolución para la tarjeta y
-              portada de la habitación.
-            </p>
-          </div>
 
-          <div>
-            <label
-              class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
-            >
-              URL de Imagen Secundaria (Opcional)
-            </label>
-            <input
-              type="url"
-              th:field="*{secondaryImageUrl}"
-              placeholder="ej. https://images.unsplash.com/photo-..."
-              class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
-            />
-          </div>
-
-          <div>
-            <label
-              class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
-            >
-              Descripción Breve
-            </label>
-            <textarea
-              th:field="*{description}"
-              rows="3"
-              placeholder="Describe la atmósfera, amenidades clave y confort de la estancia..."
-              class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
-            ></textarea>
-          </div>
 
           <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button

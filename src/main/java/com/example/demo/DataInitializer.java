@@ -49,11 +49,11 @@ public class DataInitializer implements CommandLineRunner {
 
         if (roomTypeRepository.count() == 0) {
             List<RoomType> types = new ArrayList<>();
-            types.add(roomTypeRepository.save(RoomType.builder().name("Simple").description("Habitación estándar").pricePerNight(80.0).build()));
-            types.add(roomTypeRepository.save(RoomType.builder().name("Deluxe").description("Habitación amplia con servicios premium").pricePerNight(116.52).build()));
-            types.add(roomTypeRepository.save(RoomType.builder().name("Suite").description("Habitación de lujo con sala privada").pricePerNight(200.0).build()));
-            types.add(roomTypeRepository.save(RoomType.builder().name("Premium Suite").description("Suite exclusiva con balcón privado").pricePerNight(280.0).build()));
-            types.add(roomTypeRepository.save(RoomType.builder().name("Suite Royale").description("La experiencia más exclusiva del hotel").pricePerNight(350.0).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Simple").description("Habitación estándar").pricePerNight(80.0).imageUrl(roomImage(1)).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Deluxe").description("Habitación amplia con servicios premium").pricePerNight(116.52).imageUrl(roomImage(2)).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Suite").description("Habitación de lujo con sala privada").pricePerNight(200.0).imageUrl(roomImage(3)).build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Premium Suite").description("Suite exclusiva con balcón privado").pricePerNight(280.0).imageUrl("https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80").build()));
+            types.add(roomTypeRepository.save(RoomType.builder().name("Suite Royale").description("La experiencia más exclusiva del hotel").pricePerNight(350.0).imageUrl(roomImage(5)).build()));
 
             for (int index = 1; index <= 50; index++) {
                 RoomType type = types.get((index - 1) % types.size());
@@ -65,8 +65,6 @@ public class DataInitializer implements CommandLineRunner {
                 room.setBedType("King Size");
                 room.setArea(type.getName().contains("Suite") ? 60 : 30);
                 room.setPricePerNight(type.getPricePerNight());
-                room.setImageUrl(roomImage(index));
-                room.setDescription(type.getDescription());
                 applyOriginalRoomContent(room, index);
                 roomRepository.save(room);
             }

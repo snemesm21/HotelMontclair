@@ -14,7 +14,12 @@ public class MainController {
 
     @GetMapping({"/", "/index", "/home"})
     public String index(Model model) {
-        model.addAttribute("services", serviceService.searchAll());
-        return "index";
+        try {
+            model.addAttribute("services", serviceService.searchAll());
+            return "index";
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al cargar la página principal: " + e.getMessage());
+            return "error";
+        }
     }
 }

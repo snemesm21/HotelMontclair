@@ -36,6 +36,15 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Override
     @Transactional
     public RoomType save(RoomType roomType) {
+        if (roomType.getName() == null || roomType.getName().isBlank()) {
+            throw new IllegalArgumentException("El nombre del tipo de habitación es obligatorio.");
+        }
+        RoomType existing = repository.findByNameIgnoreCase(roomType.getName().trim()).orElse(null);
+        if (existing != null && !existing.getId().equals(roomType.getId())) {
+            throw new IllegalArgumentException(
+                    "Ya existe un tipo de habitación llamado '" + roomType.getName().trim()
+                            + "'. Por favor elige un nombre diferente.");
+        }
         RoomType savedType = repository.save(roomType);
         for (Room room : roomRepository.findAll()) {
             if (room.getType() != null && savedType.getId().equals(room.getType().getId())) {
@@ -56,4 +65,3 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         repository.deleteById(id);
     }
 }
-

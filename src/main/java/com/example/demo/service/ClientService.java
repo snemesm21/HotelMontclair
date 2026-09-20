@@ -5,9 +5,12 @@ import java.util.List;
 
 public interface ClientService {
     List<Client> findAll();
-    Client findById(Long id);
-    Client save(Client client);
-    void delete(Long id);
-    Client login(String username, String password); // returns client if ok, else null
-}
 
+    Client findById(Long id);
+
+    Client save(Client client);
+
+    void delete(Long id);
+
+    Client login(String username, String email, String password);
+}

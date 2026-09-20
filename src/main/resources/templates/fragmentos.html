@@ -5,9 +5,7 @@
     <title>Fragmentos</title>
   </head>
   <body>
-    <!-- ==========================================
-         FRAGMENTO 1: NAVBAR PÚBLICO (Web de Clientes)
-         ========================================== -->
+
     <div th:fragment="navbar">
       <nav
         class="bg-pampas sticky top-0 z-40 w-full border-b border-[rgba(202,198,198,0.5)] shadow-sm"
@@ -168,10 +166,11 @@
       </header>
     </div>
 
+
     <!-- ==========================================
-         FRAGMENTO 3: FOOTER PÚBLICO
+         FRAGMENTO 4: FOOTER PÚBLICO
          ========================================== -->
-    <div th:fragment="footer">
+    <div th:fragment="footer" class="site-footer-wrapper">
       <footer id="contacto" class="main-footer">
         <div class="container footer-grid">
           <div class="footer-logo-col">
@@ -256,20 +255,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- ==========================================
-         FRAGMENTO 4: FOOTER ADMIN
-         ========================================== -->
-    <div th:fragment="footer-admin">
-      <footer
-        class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5"
-      >
-        <p>
-          2026 &copy; Montclair Grand Hotel. Panel de Administración. Todos los
-          derechos reservados.
-        </p>
-      </footer>
     </div>
   </body>
 </html>

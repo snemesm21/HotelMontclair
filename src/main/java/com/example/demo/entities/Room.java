@@ -67,12 +67,6 @@ public class Room {
     
     private int area;
     
-    @Column(length = 500)
-    private String imageUrl;
-    
-    @Column(length = 1000)
-    private String description;
-    
     private double pricePerNight;
 
     // Atributos de detalle
@@ -126,10 +120,17 @@ public class Room {
         this.galleryImages.add(url);
     }
 
-    // Getters personalizados con lógica de respaldo (fallback)
+    public String getImageUrl() {
+        return type != null ? type.getImageUrl() : null;
+    }
+
+    public String getDescription() {
+        return type != null ? type.getDescription() : null;
+    }
+
     public String getHeroDescription() {
         if (heroDescription != null && !heroDescription.isBlank()) return heroDescription;
-        return description;
+        return getDescription();
     }
 
     public String getHeadline() {
@@ -139,12 +140,12 @@ public class Room {
 
     public String getFullDescription() {
         if (fullDescription != null && !fullDescription.isBlank()) return fullDescription;
-        return description;
+        return getDescription();
     }
 
     public String getSecondaryImageUrl() {
         if (secondaryImageUrl != null && !secondaryImageUrl.isBlank()) return secondaryImageUrl;
-        return imageUrl;
+        return getImageUrl();
     }
 
     public String getPriceLabel() {

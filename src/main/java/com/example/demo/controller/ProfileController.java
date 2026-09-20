@@ -21,52 +21,53 @@ public class ProfileController {
 
     @GetMapping("/{id}")
     public String viewProfile(@PathVariable Long id, Model model) {
-        Client client = clientService.findById(id);
-        model.addAttribute("client", client);
-        return "profile";
+        try {
+            Client client = clientService.findById(id);
+            model.addAttribute("client", client);
+            return "profile";
+        } catch (com.example.demo.errors.NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error inesperado al cargar el perfil: " + e.getMessage());
+            return "error";
+        }
     }
 
     @PostMapping("/edit/{id}")
     public String editProfile(@PathVariable Long id, @ModelAttribute Client client, Model model) {
-        Client existing = clientService.findById(id);
-        client.setId(id);
-        if (client.getPassword() == null || client.getPassword().isBlank()) {
-            client.setPassword(existing.getPassword());
+        try {
+            client.setId(id);
+            clientService.save(client);
+            return "redirect:/profile/" + id + "?updated=true";
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error inesperado al guardar el perfil: " + e.getMessage());
+            return "error";
         }
-        if (client.getAvatarUrl() == null || client.getAvatarUrl().isBlank()) {
-            client.setAvatarUrl(existing.getAvatarUrl());
-        }
-        if (client.getUsername() == null || client.getUsername().isBlank()) {
-            client.setUsername(existing.getUsername());
-        }
-        if (client.getEmail() == null || client.getEmail().isBlank()) {
-            client.setEmail(existing.getEmail());
-        }
-        if (client.getFirstName() == null || client.getFirstName().isBlank()) {
-            client.setFirstName(existing.getFirstName());
-        }
-        if (client.getLastName() == null || client.getLastName().isBlank()) {
-            client.setLastName(existing.getLastName());
-        }
-        if (client.getPhone() == null || client.getPhone().isBlank()) {
-            client.setPhone(existing.getPhone());
-        }
-        if (client.getRole() == null || client.getRole().isBlank()) {
-            client.setRole(existing.getRole());
-        }
-        clientService.save(client);
-        return "redirect:/profile/" + id + "?updated=true";
     }
 
     @PostMapping("/delete/{id}")
-    public String deleteProfilePost(@PathVariable Long id) {
-        clientService.delete(id);
-        return "redirect:/login?deleted=true";
+    public String deleteProfilePost(@PathVariable Long id, Model model) {
+        try {
+            clientService.delete(id);
+            return "redirect:/login?deleted=true";
+        } catch (com.example.demo.errors.NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error inesperado al eliminar el perfil: " + e.getMessage());
+            return "error";
+        }
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteProfileGet(@PathVariable Long id) {
-        clientService.delete(id);
-        return "redirect:/login?deleted=true";
+    public String deleteProfileGet(@PathVariable Long id, Model model) {
+        try {
+            clientService.delete(id);
+            return "redirect:/login?deleted=true";
+        } catch (com.example.demo.errors.NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error inesperado al eliminar el perfil: " + e.getMessage());
+            return "error";
+        }
     }
 }
