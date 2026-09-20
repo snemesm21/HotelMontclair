@@ -22,4 +22,14 @@ public class MainController {
             return "error";
         }
     }
+
+    @GetMapping("/gallery")
+    public String gallery() {
+        return "gallery";
+    }
+
+    @GetMapping("/location")
+    public String location() {
+        return "location";
+    }
 }

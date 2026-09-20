@@ -1,17 +1,11 @@
 package com.example.demo;
 
-import com.example.demo.entities.Client;
-import com.example.demo.entities.Room;
-import com.example.demo.entities.RoomStatus;
-import com.example.demo.entities.RoomType;
-import com.example.demo.entities.Service;
-import com.example.demo.repository.ClientRepository;
-import com.example.demo.repository.RoomRepository;
-import com.example.demo.repository.RoomTypeRepository;
-import com.example.demo.repository.ServiceRepository;
+import com.example.demo.entities.*;
+import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,13 +15,21 @@ public class DataInitializer implements CommandLineRunner {
     private final RoomTypeRepository roomTypeRepository;
     private final RoomRepository roomRepository;
     private final ServiceRepository serviceRepository;
+    private final ReservationRepository reservationRepository;
+    private final ReservationRoomRepository reservationRoomRepository;
+    private final AcquiredServiceRepository acquiredServiceRepository;
 
     public DataInitializer(ClientRepository clientRepository, RoomTypeRepository roomTypeRepository,
-            RoomRepository roomRepository, ServiceRepository serviceRepository) {
+            RoomRepository roomRepository, ServiceRepository serviceRepository,
+            ReservationRepository reservationRepository,
+            ReservationRoomRepository reservationRoomRepository, AcquiredServiceRepository acquiredServiceRepository) {
         this.clientRepository = clientRepository;
         this.roomTypeRepository = roomTypeRepository;
         this.roomRepository = roomRepository;
         this.serviceRepository = serviceRepository;
+        this.reservationRepository = reservationRepository;
+        this.reservationRoomRepository = reservationRoomRepository;
+        this.acquiredServiceRepository = acquiredServiceRepository;
     }
 
     @Override
@@ -79,6 +81,40 @@ public class DataInitializer implements CommandLineRunner {
             saveRoomService();
             saveLaundry();
             saveTransfers();
+        }
+
+        if (reservationRepository.count() == 0) {
+            List<Client> clients = clientRepository.findAll();
+            List<Room> rooms = roomRepository.findAll();
+            List<Service> services = serviceRepository.findAll();
+
+            for (int i = 0; i < 5; i++) {
+                Reservation reservation = Reservation.builder()
+                        .client(clients.get(i))
+                        .checkInDate(LocalDate.now().plusDays(i))
+                        .checkOutDate(LocalDate.now().plusDays(i + 3))
+                        .numberOfPeople(2)
+                        .status("CONFIRMED")
+                        .build();
+                reservation = reservationRepository.save(reservation);
+
+                ReservationRoom resRoom = ReservationRoom.builder()
+                        .reservation(reservation)
+                        .room(rooms.get(i))
+                        .pricePerNight(rooms.get(i).getPricePerNight())
+                        .build();
+                resRoom = reservationRoomRepository.save(resRoom);
+
+                AcquiredService acqService = AcquiredService.builder()
+                        .reservationRoom(resRoom)
+                        .service(services.get(i))
+                        .date(LocalDate.now().plusDays(i + 1))
+                        .quantity(2)
+                        .unitPrice(services.get(i).getPrice() == null ? 0 : services.get(i).getPrice())
+                        .build();
+                acqService.calculateSubtotal();
+                acquiredServiceRepository.save(acqService);
+            }
         }
     }
 
