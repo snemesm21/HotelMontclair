@@ -26,10 +26,7 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
     @Override
     public RoomType findById(Long id) {
-        RoomType roomType = repository.findById(id).orElse(null);
-        if (roomType == null) {
-            throw new NotFoundException(id);
-        }
+        RoomType roomType = repository.findById(id).orElseThrow(() -> new NotFoundException(id));
         return roomType;
     }
 
@@ -58,9 +55,9 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Override
     @Transactional
     public void delete(Long id) {
-        RoomType roomType = repository.findById(id).orElse(null);
-        if (roomType == null) {
-            throw new NotFoundException(id);
+        RoomType roomType = repository.findById(id).orElseThrow(() -> new NotFoundException(id));
+        if (roomRepository.existsByType_Id(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el tipo de habitación porque tiene habitaciones asociadas.");
         }
         repository.deleteById(id);
     }

@@ -28,8 +28,9 @@ public class ClientController {
     }
 
     @GetMapping("/add")
-    public String addForm(Model model) {
+    public String addForm(@RequestParam(required = false, defaultValue = "false") boolean admin, Model model) {
         model.addAttribute("client", new Client());
+        model.addAttribute("isAdmin", admin);
         return "client-form";
     }
 
@@ -55,6 +56,7 @@ public class ClientController {
         try {
             Client c = service.findById(id);
             model.addAttribute("client", c);
+            model.addAttribute("isAdmin", true); // Edit is only for admin right now
             return "client-form";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;

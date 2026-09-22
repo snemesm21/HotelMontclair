@@ -15,28 +15,7 @@
 </head>
 <body>
 
-    <header class="header sticky-nav">
-        <div class="logo-container">
-            <a href="/#inicio" class="logo-link">
-                <div class="logo-img">
-                    <img src="/Images/Logo.jpg">
-                </div>
-            </a>
-        </div>
-        
-        <nav class="nav-links">
-            <a href="/#inicio">Inicio</a>
-            <a href="/rooms/cards">Habitaciones</a>
-            <a href="/services" class="active">Servicios</a>
-            <a href="/#galeria">Galería</a>
-            <a href="/#ubicacion">Ubicación</a>
-            <a href="/#contacto">Contacto</a>
-        </nav>
-
-        <div class="nav-btn-container">
-            <a href="/services" class="btn btn-outline" style="border:none;">← Volver a Servicios</a>
-        </div>
-    </header>
+    <div th:replace="~{fragmentos :: navbar}"></div>
 
     <section class="services-hero">
         <div class="container services-hero-content">
@@ -134,76 +113,7 @@
         </div>
     </main>
 
-    <footer id="contacto" class="main-footer">
-        <div class="container footer-grid">
-            
-            <div class="footer-logo-col">
-                <a href="/#inicio" class="logo-link">
-                    <span class="logo-title">Montclair</span>
-                    <div class="logo-subtitle-box">
-                        <div class="line"></div>
-                        <span class="logo-subtitle">Grand Hotel</span>
-                        <div class="line"></div>
-                    </div>
-                    <div class="logo-ornament">
-                        <div class="line long"></div>
-                        <div class="dot"></div>
-                        <img src="/Images/Flor de liz info principal.png" alt="Ornamento" class="ornament-img">
-                        <div class="dot"></div>
-                        <div class="line long"></div>
-                    </div>
-                </a>
-                <p class="slogan">Lujo atemporal. Hospitalidad excepcional</p>
-            </div>
-
-            <div class="footer-col">
-                <h4>Enlaces Rápidos</h4>
-                <ul>
-                    <li><a href="/#inicio">Inicio</a></li>
-                    <li><a href="/rooms/cards">Habitaciones</a></li>
-                    <li><a href="/services">Servicios</a></li>
-                    <li><a href="/#galeria">Galería</a></li>
-                    <li><a href="/#ubicacion">Ubicación</a></li>
-                    <li><a href="/#contacto">Contacto</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4>Servicios</h4>
-                <ul>
-                    <li>Restaurante</li>
-                    <li>Spa & Bienestar</li>
-                    <li>Gimnasio</li>
-                    <li>Salones de eventos</li>
-                    <li>Piscina</li>
-                    <li>Room Service</li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4>Contacto</h4>
-                <ul class="contact-list">
-                    <li>
-                        <img src="/Images/Ubicacion del hotel.png" alt="Ubicación">
-                        <span>Monaco</span>
-                    </li>
-                    <li>
-                        <img src="/Images/Numero de contacto.png" alt="Teléfono">
-                        <span>+377 93 12 34 56</span>
-                    </li>
-                    <li>
-                        <img src="/Images/Correo electronico.png" alt="Email">
-                        <span>reservas@montclairhotel.com</span>
-                    </li>
-                    <li>
-                        <img src="/Images/Horario de atencion.png" alt="Horario">
-                        <span>Lunes - Domingo: 24 horas</span>
-                    </li>
-                </ul>
-            </div>
-
-        </div>
-    </footer>
+    <div th:replace="~{fragmentos :: footer}"></div>
 
     <div class="copyright-bar">
         <div class="container flex-between">

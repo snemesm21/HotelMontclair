@@ -26,10 +26,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room findById(Long id) {
-        Room room = roomRepo.findById(id).orElse(null);
-        if (room == null) {
-            throw new NotFoundException(id);
-        }
+        Room room = roomRepo.findById(id).orElseThrow(() -> new NotFoundException(id));
         return room;
     }
 
@@ -92,10 +89,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Room room = roomRepo.findById(id).orElse(null);
-        if (room == null) {
-            throw new NotFoundException(id);
-        }
+        Room room = roomRepo.findById(id).orElseThrow(() -> new NotFoundException(id));
         roomRepo.deleteById(id);
     }
 }

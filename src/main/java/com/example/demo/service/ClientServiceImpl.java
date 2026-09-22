@@ -26,10 +26,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public Client findById(Long id) {
-        Client client = repository.findById(id).orElse(null);
-        if (client == null) {
-            throw new NotFoundException(id);
-        }
+        Client client = repository.findById(id).orElseThrow(() -> new NotFoundException(id));
         return client;
     }
 
@@ -103,10 +100,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Client client = repository.findById(id).orElse(null);
-        if (client == null) {
-            throw new NotFoundException(id);
-        }
+        Client client = repository.findById(id).orElseThrow(() -> new NotFoundException(id));
 
         if (reservationRepository.existsByClientId(id)) {
             throw new IllegalArgumentException(

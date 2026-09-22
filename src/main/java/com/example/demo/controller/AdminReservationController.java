@@ -46,7 +46,9 @@ public class AdminReservationController {
         model.addAttribute("clients", clientService.findAll());
         model.addAttribute("rooms", roomService.findAll().stream()
                 .filter(r -> r.getStatus() == RoomStatus.AVAILABLE).toList());
-        model.addAttribute("services", serviceService.searchAll());
+        model.addAttribute("services", serviceService.searchAll().stream()
+                .filter(s -> !s.isHidden())
+                .toList());
         return "admin-reservation-form";
     }
 
@@ -139,7 +141,9 @@ public class AdminReservationController {
 
         model.addAttribute("reservation", reservation);
         model.addAttribute("clients", clientService.findAll());
-        model.addAttribute("services", serviceService.searchAll());
+        model.addAttribute("services", serviceService.searchAll().stream()
+                .filter(s -> !s.isHidden() || selectedServiceIds.contains(s.getId()))
+                .toList());
         model.addAttribute("selectedServiceIds", selectedServiceIds); // nuevo
         return "admin-reservation-edit";
     }

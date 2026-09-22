@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface RoomRepository extends JpaRepository<Room, Long> {
     Optional<Room> findByNumber(String number);
     List<Room> findByStatus(String status);
+    boolean existsByType_Id(Long id);
 }

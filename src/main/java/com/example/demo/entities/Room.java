@@ -23,8 +23,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Setter
@@ -50,7 +48,6 @@ public class Room {
 
     @ManyToOne
     @JoinColumn(name = "type_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private RoomType type;
 
     @Column(nullable = false, length = 20)

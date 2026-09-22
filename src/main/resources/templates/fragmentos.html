@@ -22,20 +22,20 @@
 
           <div class="flex items-center space-x-3">
             <a
-              th:if="${session.loggedClient == null}"
+              th:if="${loggedClient == null}"
               href="/login"
               class="font-sans text-xs font-bold uppercase tracking-widest border border-twine text-twine px-4 py-2 rounded-sm transition-colors duration-300 hover:bg-twine hover:text-white inline-block"
             >
               Login
             </a>
 
-            <div th:if="${session.loggedClient != null}" class="relative group">
+            <div th:if="${loggedClient != null}" class="relative group">
               <a
-                th:href="@{'/profile/' + ${session.loggedClient.id}}"
+                th:href="@{'/profile/' + ${loggedClient.id}}"
                 class="flex items-center gap-2 px-1 py-1 rounded-full hover:bg-pampas transition"
               >
                 <img
-                  th:src="${session.loggedClient.avatarUrl != null && !session.loggedClient.avatarUrl.isEmpty()} ? ${session.loggedClient.avatarUrl} : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'"
+                  th:src="${loggedClient.avatarUrl != null && !loggedClient.avatarUrl.isEmpty()} ? ${loggedClient.avatarUrl} : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'"
                   alt="Mi perfil"
                   class="w-9 h-9 rounded-full object-cover border-2 border-twine"
                   onerror="
@@ -45,7 +45,7 @@
                 />
                 <span
                   class="hidden sm:inline text-xs font-semibold text-woodsmoke max-w-[100px] truncate"
-                  th:text="${session.loggedClient.firstName}"
+                  th:text="${loggedClient.firstName}"
                   >Nombre</span
                 >
               </a>
@@ -54,12 +54,12 @@
                 class="absolute right-0 mt-1 w-48 bg-white border border-[#E8E2DA] rounded-[3px] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden"
               >
                 <a
-                  th:href="@{'/profile/' + ${session.loggedClient.id}}"
+                  th:href="@{'/profile/' + ${loggedClient.id}}"
                   class="block px-4 py-2.5 text-xs text-woodsmoke hover:bg-pampas transition"
                   >Mi Perfil</a
                 >
                 <a
-                  href="/reservations"
+                  th:href="@{/reservations(clientId=${loggedClient.id})}"
                   class="block px-4 py-2.5 text-xs text-woodsmoke hover:bg-pampas transition border-t border-[#E8E2DA]"
                   >Mis Reservas</a
                 >

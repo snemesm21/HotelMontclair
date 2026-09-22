@@ -24,6 +24,7 @@ public class ProfileController {
         try {
             Client client = clientService.findById(id);
             model.addAttribute("client", client);
+            model.addAttribute("loggedClient", client);
             return "profile";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;

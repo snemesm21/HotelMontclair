@@ -24,7 +24,7 @@
                 light: "#D4B07A",
               },
               mirage: { DEFAULT: "#141E26", dark: "#0F161C", light: "#1C2A35" },
-              pampas: "#FAF7F2",
+              pampas: "#F2EEEB",
               pampasAlt: "#F0EBE3",
               woodsmoke: "#111413",
               silver: "#CAC6C6",
@@ -43,7 +43,28 @@
   <body
     class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between"
   >
-    <div th:replace="~{fragmentos :: navbar}"></div>
+    <header
+      class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md"
+    >
+      <div class="flex-1">
+        <a href="/#inicio" class="inline-flex items-center">
+          <img
+            src="/Images/Logo_oscuro.png"
+            class="h-[70px] w-[200px] object-cover"
+            alt="Montclair Grand Hotel"
+          />
+        </a>
+      </div>
+
+      <div class="flex-1 flex justify-end">
+        <a
+          th:href="@{/profile/{id}(id=${clientId})}"
+          class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1"
+        >
+          ← Volver al Perfil
+        </a>
+      </div>
+    </header>
 
     <main class="flex-grow max-w-3xl w-full mx-auto p-6 sm:p-8 lg:p-12">
       <div class="text-center mb-10">
@@ -82,6 +103,7 @@
           method="post"
           class="space-y-6"
         >
+          <input type="hidden" name="clientId" th:value="${clientId}" />
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label
@@ -153,7 +175,7 @@
 
           <div class="pt-2 flex justify-end gap-3">
             <a
-              href="/reservations"
+              th:href="@{/reservations(clientId=${clientId})}"
               class="text-xs font-bold uppercase tracking-widest text-woodsmoke/60 hover:text-woodsmoke px-4 py-3.5"
               >Cancelar</a
             >
@@ -168,6 +190,10 @@
       </div>
     </main>
 
-    <div th:replace="~{fragmentos :: footer}"></div>
+    <footer
+      class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5"
+    >
+      <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+    </footer>
   </body>
 </html>

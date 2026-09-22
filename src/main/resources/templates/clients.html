@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/global.css" />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -47,7 +48,7 @@
             </div>
             <div>
                 <a
-                    th:href="@{/clients/add}"
+                    th:href="@{/clients/add(admin=true)}"
                     class="inline-flex items-center gap-2 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3 px-5 rounded-[2px] transition duration-300 shadow-sm"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

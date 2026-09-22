@@ -16,10 +16,7 @@ public class ServicesServiceImpl implements ServiceService {
 
     @Override
     public Service searchById(Long id) {
-        Service service = repo.findById(id).orElse(null);
-        if (service == null) {
-            throw new NotFoundException(id);
-        }
+        Service service = repo.findById(id).orElseThrow(() -> new NotFoundException(id));
         return service;
     }
 
@@ -37,10 +34,7 @@ public class ServicesServiceImpl implements ServiceService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Service service = repo.findById(id).orElse(null);
-        if (service == null) {
-            throw new NotFoundException(id);
-        }
+        Service service = repo.findById(id).orElseThrow(() -> new NotFoundException(id));
         repo.deleteById(id);
     }
 }

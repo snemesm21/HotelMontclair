@@ -24,7 +24,7 @@
                 light: "#D4B07A",
               },
               mirage: { DEFAULT: "#141E26", dark: "#0F161C", light: "#1C2A35" },
-              pampas: "#FAF7F2",
+              pampas: "#F2EEEB",
               pampasAlt: "#F0EBE3",
               woodsmoke: "#111413",
               silver: "#CAC6C6",
@@ -43,7 +43,28 @@
   <body
     class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between"
   >
-    <div th:replace="~{fragmentos :: navbar}"></div>
+    <header
+      class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md"
+    >
+      <div class="flex-1">
+        <a href="/#inicio" class="inline-flex items-center">
+          <img
+            src="/Images/Logo_oscuro.png"
+            class="h-[70px] w-[200px] object-cover"
+            alt="Montclair Grand Hotel"
+          />
+        </a>
+      </div>
+
+      <div class="flex-1 flex justify-end">
+        <a
+          th:href="@{/profile/{id}(id=${param.clientId})}"
+          class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1"
+        >
+          ← Volver al Perfil
+        </a>
+      </div>
+    </header>
 
     <main class="flex-grow max-w-4xl w-full mx-auto p-6 sm:p-8 lg:p-12">
       <div
@@ -61,7 +82,7 @@
           </h1>
         </div>
         <a
-          th:href="@{/reservations/new}"
+          th:href="@{/reservations/new(clientId=${param.clientId})}"
           class="inline-flex items-center gap-2 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3 px-5 rounded-[2px] transition duration-300 shadow-sm"
         >
           <svg
@@ -150,13 +171,13 @@
 
         <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-[#E8E2DA]">
           <a
-            th:href="@{'/reservations/edit/' + ${res.id}}"
+            th:href="@{/reservations/edit/{id}(id=${res.id}, clientId=${param.clientId})}"
             class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase tracking-[1.5px] font-bold py-2 px-4 rounded-[2px] transition duration-300"
           >
             Editar
           </a>
           <a
-            th:href="@{'/reservations/delete/' + ${res.id}}"
+            th:href="@{/reservations/delete/{id}(id=${res.id}, clientId=${param.clientId})}"
             class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-[10px] uppercase tracking-[1.5px] font-bold py-2 px-4 rounded-[2px] transition duration-300"
             onclick="
               return confirm(
@@ -170,6 +191,10 @@
       </div>
     </main>
 
-    <div th:replace="~{fragmentos :: footer}"></div>
+    <footer
+      class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5"
+    >
+      <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
+    </footer>
   </body>
 </html>

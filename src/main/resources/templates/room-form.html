@@ -15,6 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/global.css" />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,7 +30,7 @@
                 light: "#D4B07A",
               },
               mirage: { DEFAULT: "#141E26", dark: "#0F161C", light: "#1C2A35" },
-              pampas: "#FAF7F2",
+              pampas: "#F2EEEB",
               pampasAlt: "#F0EBE3",
               woodsmoke: "#111413",
               silver: "#CAC6C6",
@@ -48,40 +49,7 @@
   <body
     class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between"
   >
-    <header
-      class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md"
-    >
-      <div class="flex-1">
-        <a href="/#inicio" class="inline-flex items-center">
-          <img
-            src="/Images/Logo_oscuro.png"
-            class="h-[70px] w-[200px] object-cover"
-            alt="Montclair Grand Hotel"
-          />
-        </a>
-      </div>
-
-      <nav class="hidden sm:flex items-center gap-6 text-white/90">
-        <a
-          href="/admin/rooms"
-          class="text-[9px] uppercase tracking-[2px] font-semibold text-twine border-b border-twine pb-0.5"
-          >Habitaciones</a
-        >
-        <a
-          href="/admin/room-types"
-          class="text-[9px] uppercase tracking-[2px] font-semibold hover:text-twine transition"
-          >Tipos de Habitación</a
-        >
-      </nav>
-      <div class="flex-1 flex justify-end">
-        <a
-          href="/admin/rooms"
-          class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1"
-        >
-          ← Volver a Habitaciones
-        </a>
-      </div>
-    </header>
+    <div th:replace="~{fragmentos :: navbar-admin}"></div>
 
     <main class="flex-grow flex items-center justify-center p-6 py-12">
       <div
@@ -280,10 +248,6 @@
       </div>
     </main>
 
-    <footer
-      class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5"
-    >
-      <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
-    </footer>
+    <div th:replace="~{fragmentos :: footer}"></div>
   </body>
 </html>

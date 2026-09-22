@@ -11,6 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/css/global.css" />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -25,7 +26,7 @@
                 light: "#D4B07A",
               },
               mirage: { DEFAULT: "#141E26", dark: "#0F161C", light: "#1C2A35" },
-              pampas: "#FAF7F2",
+              pampas: "#F2EEEB",
               pampasAlt: "#F0EBE3",
               woodsmoke: "#111413",
               silver: "#CAC6C6",
@@ -49,7 +50,7 @@
       class="bg-mirage border-b border-white/10 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-md"
     >
       <div class="flex-1">
-        <a href="/" class="inline-flex flex-col items-center">
+        <a href="/#inicio" class="inline-flex items-center">
           <img
             src="/Images/Logo_oscuro.png"
             class="h-[70px] w-[200px] object-cover"
@@ -58,12 +59,12 @@
         </a>
       </div>
 
-      <div class="flex-1 flex justify-end items-center gap-4">
+      <div class="flex-1 flex justify-end">
         <a
-          href="/"
+          href="/login"
           class="text-xs uppercase tracking-[2px] font-semibold text-twine hover:underline inline-flex items-center gap-1"
         >
-          ← Volver al Inicio
+          ← Cerrar Sesión
         </a>
       </div>
     </header>
@@ -286,7 +287,7 @@
               </svg>
             </a>
             <a
-              href="/reservations"
+              th:href="@{/reservations(clientId=${client.id})}"
               class="flex items-center justify-between p-2.5 rounded-[2px] hover:bg-pampas transition group"
             >
               <div class="flex items-center gap-3">
@@ -324,7 +325,7 @@
               </svg>
             </a>
             <a
-              href="/reservations/new"
+              th:href="@{/reservations/new(clientId=${client.id})}"
               class="flex items-center justify-between p-2.5 rounded-[2px] hover:bg-pampas transition group bg-twine/5 border border-twine/20 mt-1"
             >
               <div class="flex items-center gap-3">
@@ -544,7 +545,7 @@
     </main>
 
     <footer
-      class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5 mt-12"
+      class="bg-mirage-dark text-pampas/60 py-6 px-6 text-center text-[10px] border-t border-white/5"
     >
       <p>2026 &copy; Montclair Grand Hotel. Todos los derechos reservados.</p>
     </footer>

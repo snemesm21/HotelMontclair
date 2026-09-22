@@ -4,7 +4,7 @@ import com.example.demo.entities.*;
 import com.example.demo.service.ReservationManagerService;
 import com.example.demo.service.RoomService;
 import com.example.demo.service.ServiceService;
-import jakarta.servlet.http.HttpSession;
+import com.example.demo.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,11 +26,28 @@ public class ReservationController {
     @Autowired
     private ServiceService serviceService;
 
+    @Autowired
+    private ClientService clientService;
+
+    @ModelAttribute("loggedClient")
+    public Client getLoggedClient(@RequestParam(value = "clientId", required = false) Long clientId) {
+        if (clientId != null) {
+            try {
+                return clientService.findById(clientId);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     // http://localhost:8080/reservations = mis reservas
     @GetMapping
-    public String myReservations(HttpSession session, Model model) {
-        Client client = (Client) session.getAttribute("loggedClient");
-        if (client == null) {
+    public String myReservations(@RequestParam Long clientId, Model model) {
+        Client client;
+        try {
+            client = clientService.findById(clientId);
+        } catch (Exception e) {
             return "redirect:/login";
         }
         try {
@@ -47,11 +64,14 @@ public class ReservationController {
 
     // http://localhost:8080/reservations/new
     @GetMapping("/new")
-    public String newForm(HttpSession session,
-            @RequestParam(required = false) Long roomId, // nuevo
+    public String newForm(@RequestParam Long clientId,
+            @RequestParam(required = false) Long roomId,
             Model model) {
-        Client client = (Client) session.getAttribute("loggedClient");
-        if (client == null) {
+        Client client;
+        try {
+            client = clientService.findById(clientId);
+            model.addAttribute("clientId", clientId);
+        } catch (Exception e) {
             return "redirect:/login";
         }
         List<Room> availableRooms = roomService.findAll().stream()
@@ -59,7 +79,9 @@ public class ReservationController {
                 .toList();
 
         model.addAttribute("rooms", availableRooms);
-        model.addAttribute("services", serviceService.searchAll());
+        model.addAttribute("services", serviceService.searchAll().stream()
+                .filter(s -> !s.isHidden())
+                .toList());
 
         if (roomId != null) {
             boolean stillAvailable = availableRooms.stream().anyMatch(r -> r.getId().equals(roomId));
@@ -71,15 +93,17 @@ public class ReservationController {
     }
 
     @PostMapping("/new")
-    public String create(HttpSession session,
+    public String create(@RequestParam Long clientId,
             @RequestParam Long roomId,
             @RequestParam String checkInDate,
             @RequestParam String checkOutDate,
             @RequestParam int numberOfPeople,
             @RequestParam(required = false) List<Long> serviceIds,
             Model model) {
-        Client client = (Client) session.getAttribute("loggedClient");
-        if (client == null) {
+        Client client;
+        try {
+            client = clientService.findById(clientId);
+        } catch (Exception e) {
             return "redirect:/login";
         }
         try {
@@ -125,7 +149,7 @@ public class ReservationController {
             }
 
             reservationService.save(reservation);
-            return "redirect:/reservations?created=true";
+            return "redirect:/reservations?clientId=" + clientId + "&created=true";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -134,9 +158,12 @@ public class ReservationController {
         }
     }
     @GetMapping("/edit/{id}")
-    public String editForm(@PathVariable Long id, HttpSession session, Model model) {
-        Client client = (Client) session.getAttribute("loggedClient");
-        if (client == null) {
+    public String editForm(@PathVariable Long id, @RequestParam Long clientId, Model model) {
+        Client client;
+        try {
+            client = clientService.findById(clientId);
+            model.addAttribute("clientId", clientId);
+        } catch (Exception e) {
             return "redirect:/login";
         }
         Reservation reservation = reservationService.searchById(id);
@@ -151,20 +178,24 @@ public class ReservationController {
                 .collect(java.util.stream.Collectors.toSet());
 
         model.addAttribute("reservation", reservation);
-        model.addAttribute("services", serviceService.searchAll());
+        model.addAttribute("services", serviceService.searchAll().stream()
+                .filter(s -> !s.isHidden() || selectedServiceIds.contains(s.getId()))
+                .toList());
         model.addAttribute("selectedServiceIds", selectedServiceIds); // nuevo
         return "reservation-edit";
     }
 
     @PostMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, HttpSession session,
+    public String edit(@PathVariable Long id, @RequestParam Long clientId,
             @RequestParam String checkInDate,
             @RequestParam String checkOutDate,
             @RequestParam int numberOfPeople,
             @RequestParam(required = false) List<Long> serviceIds,
             Model model) {
-        Client client = (Client) session.getAttribute("loggedClient");
-        if (client == null) {
+        Client client;
+        try {
+            client = clientService.findById(clientId);
+        } catch (Exception e) {
             return "redirect:/login";
         }
         try {
@@ -202,7 +233,7 @@ public class ReservationController {
             }
 
             reservationService.save(reservation);
-            return "redirect:/reservations?updated=true";
+            return "redirect:/reservations?clientId=" + clientId + "&updated=true";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -212,9 +243,11 @@ public class ReservationController {
     }
 
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, HttpSession session, Model model) {
-        Client client = (Client) session.getAttribute("loggedClient");
-        if (client == null) {
+    public String delete(@PathVariable Long id, @RequestParam Long clientId, Model model) {
+        Client client;
+        try {
+            client = clientService.findById(clientId);
+        } catch (Exception e) {
             return "redirect:/login";
         }
         try {
@@ -224,7 +257,7 @@ public class ReservationController {
                 return "error";
             }
             reservationService.delete(id);
-            return "redirect:/reservations?deleted=true";
+            return "redirect:/reservations?clientId=" + clientId + "&deleted=true";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
