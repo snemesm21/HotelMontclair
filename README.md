@@ -173,3 +173,7 @@ src/main/resources/templates/error.html
 - Las imágenes del contenido inicial usan URLs externas de Unsplash.
 - La consola H2 solo está pensada para desarrollo.
 - Para conservar datos entre reinicios habría que cambiar H2 en memoria por una base persistente y ajustar `ddl-auto`.
+
+## DIAGRAMA ENTIDAD / RELACION
+Link: https://dbdiagram.io/d/Montclair-6a9e052c5450bea1be039382
+
