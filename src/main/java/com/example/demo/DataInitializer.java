@@ -114,7 +114,7 @@ public class DataInitializer implements CommandLineRunner {
                     .quantity(2)
                     .unitPrice(services.get(i).getPrice() == null ? 0 : services.get(i).getPrice())
                     .build();
-            acqService.calculateSubtotal();
+
             resRoom.addAcquiredService(acqService); 
             reservationService.save(reservation);
         }

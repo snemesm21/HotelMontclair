@@ -99,7 +99,7 @@ public class AdminReservationController {
                             .quantity(1)
                             .unitPrice(service.getPrice() == null ? 0 : service.getPrice())
                             .build();
-                    acquired.calculateSubtotal();
+
                     reservationRoom.addAcquiredService(acquired);
                 }
             }
@@ -184,7 +184,7 @@ public class AdminReservationController {
                             .quantity(1)
                             .unitPrice(service.getPrice() == null ? 0 : service.getPrice())
                             .build();
-                    acquired.calculateSubtotal();
+
                     reservationRoom.addAcquiredService(acquired);
                 }
             }

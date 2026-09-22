@@ -48,10 +48,7 @@ public class AcquiredService {
     @Column(name = "precio_unitario", nullable = false)
     private double unitPrice;
 
-    @Column(name = "subtotal", nullable = false)
-    private double subtotal;
-    
-    public void calculateSubtotal() {
-        this.subtotal = this.quantity * this.unitPrice;
+    public double getSubtotal() {
+        return this.quantity * this.unitPrice;
     }
 }
