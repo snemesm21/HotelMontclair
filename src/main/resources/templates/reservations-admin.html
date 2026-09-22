@@ -1,152 +1,267 @@
 <!doctype html>
 <html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Administración de Reservas - Montclair Grand Hotel</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        twine: { DEFAULT: '#C59B63', hover: '#A87C49', dark: '#73503C', light: '#D4B07A' },
-                        mirage: { DEFAULT: '#141E26', dark: '#0F161C', light: '#1C2A35' },
-                        pampas: '#FAF7F2',
-                        pampasAlt: '#F0EBE3',
-                        woodsmoke: '#111413',
-                        silver: '#CAC6C6',
-                        ivory: '#FDFBF7'
-                    },
-                    fontFamily: {
-                        serif: ['"Cinzel"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif'],
-                        display: ['"Cormorant Garamond"', 'serif']
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              twine: {
+                DEFAULT: "#C59B63",
+                hover: "#A87C49",
+                dark: "#73503C",
+                light: "#D4B07A",
+              },
+              mirage: { DEFAULT: "#141E26", dark: "#0F161C", light: "#1C2A35" },
+              pampas: "#FAF7F2",
+              pampasAlt: "#F0EBE3",
+              woodsmoke: "#111413",
+              silver: "#CAC6C6",
+              ivory: "#FDFBF7",
+            },
+            fontFamily: {
+              serif: ['"Cinzel"', "serif"],
+              sans: ['"Inter"', "sans-serif"],
+              display: ['"Cormorant Garamond"', "serif"],
+            },
+          },
+        },
+      };
     </script>
-</head>
-<body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
-
+  </head>
+  <body
+    class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between"
+  >
     <div th:replace="~{fragmentos :: navbar-admin}"></div>
 
     <main class="flex-grow max-w-[90rem] w-full mx-auto p-6 sm:p-8 lg:p-12">
-        
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-            <div>
-                <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-1">PANEL DE GESTIÓN</span>
-                <h1 class="font-serif text-2xl sm:text-3xl text-woodsmoke tracking-[2px] uppercase">Reservas</h1>
-                <p class="text-xs text-woodsmoke/60 mt-1">Visualización de reservas generadas, clientes, habitaciones y cuenta de servicios.</p>
-            </div>
+      <div
+        class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8"
+      >
+        <div>
+          <span
+            class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-1"
+            >PANEL DE GESTIÓN</span
+          >
+          <h1
+            class="font-serif text-2xl sm:text-3xl text-woodsmoke tracking-[2px] uppercase"
+          >
+            Reservas
+          </h1>
+          <p class="text-xs text-woodsmoke/60 mt-1">
+            Visualización de reservas generadas, clientes, habitaciones y cuenta
+            de servicios.
+          </p>
         </div>
-
-        <!-- Alertas -->
-        <div th:if="${successMessage}" class="mb-6 p-4 rounded-[4px] bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold">
-            <span th:text="${successMessage}"></span>
+        <div>
+          <a
+            th:href="@{/admin/reservations/new}"
+            class="inline-flex items-center gap-2 bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3 px-5 rounded-[2px] transition duration-300 shadow-sm"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Nueva Reserva
+          </a>
         </div>
-        <div th:if="${errorMessage}" class="mb-6 p-4 rounded-[4px] bg-red-50 border border-red-200 text-red-800 text-sm font-semibold">
-            <span th:text="${errorMessage}"></span>
+      </div>
+
+      <!-- Alertas -->
+      <div
+        th:if="${successMessage}"
+        class="mb-6 p-4 rounded-[4px] bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold"
+      >
+        <span th:text="${successMessage}"></span>
+      </div>
+      <div
+        th:if="${errorMessage}"
+        class="mb-6 p-4 rounded-[4px] bg-red-50 border border-red-200 text-red-800 text-sm font-semibold"
+      >
+        <span th:text="${errorMessage}"></span>
+      </div>
+
+      <div
+        class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-lg overflow-hidden"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr
+                class="bg-mirage text-white font-serif text-[10px] tracking-[1.5px] uppercase border-b border-white/10"
+              >
+                <th class="py-4 px-5 font-semibold">ID</th>
+                <th class="py-4 px-5 font-semibold">Cliente</th>
+                <th class="py-4 px-5 font-semibold">Habitaciones</th>
+                <th class="py-4 px-5 font-semibold">Fechas</th>
+                <th class="py-4 px-5 font-semibold">Servicios (Cuenta)</th>
+                <th class="py-4 px-5 font-semibold">Estado</th>
+                <th class="py-4 px-5 font-semibold text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E8E2DA]">
+              <tr
+                th:each="reservation : ${reservations}"
+                class="hover:bg-pampas/60 transition group"
+              >
+                <td
+                  class="py-4 px-5 font-mono text-twine-dark font-semibold text-[11px]"
+                  th:text="'#' + ${#numbers.formatInteger(reservation.id, 3)}"
+                ></td>
+
+                <td class="py-4 px-5">
+                  <div class="flex flex-col">
+                    <span
+                      class="font-semibold text-woodsmoke text-[13px]"
+                      th:text="${reservation.client.getNombre()}"
+                    ></span>
+                    <span
+                      class="text-[11px] text-woodsmoke/60"
+                      th:text="${reservation.client.email}"
+                    ></span>
+                    <span
+                      class="text-[11px] text-woodsmoke/60 font-mono"
+                      th:text="${reservation.client.phone}"
+                    ></span>
+                  </div>
+                </td>
+
+                <td class="py-4 px-5">
+                  <ul class="space-y-1">
+                    <li
+                      th:each="rr : ${reservation.reservationRooms}"
+                      class="text-[11px] text-woodsmoke/80"
+                    >
+                      <strong th:text="${rr.room.name}"></strong> (Hab:
+                      <span th:text="${rr.room.number}"></span>)
+                    </li>
+                  </ul>
+                </td>
+
+                <td class="py-4 px-5">
+                  <div
+                    class="flex flex-col text-[11px] text-woodsmoke/80 space-y-0.5 font-mono"
+                  >
+                    <span
+                      ><span
+                        class="text-twine-dark font-bold uppercase text-[9px] tracking-wider"
+                        >IN:</span
+                      >
+                      <span th:text="${reservation.checkInDate}"></span
+                    ></span>
+                    <span
+                      ><span
+                        class="text-twine-dark font-bold uppercase text-[9px] tracking-wider"
+                        >OUT:</span
+                      >
+                      <span th:text="${reservation.checkOutDate}"></span
+                    ></span>
+                  </div>
+                </td>
+
+                <td class="py-4 px-5">
+                  <ul class="space-y-1">
+                    <th:block th:each="rr : ${reservation.reservationRooms}">
+                      <li
+                        th:each="as : ${rr.acquiredServices}"
+                        class="text-[11px] text-woodsmoke/80 flex justify-between gap-4 border-b border-gray-100 pb-1"
+                      >
+                        <span
+                          ><span th:text="${as.quantity}"></span>x
+                          <span th:text="${as.service.name}"></span
+                        ></span>
+                        <span
+                          class="font-semibold text-twine-dark"
+                          th:text="'€' + ${as.subtotal}"
+                        ></span>
+                      </li>
+                    </th:block>
+                    <li
+                      th:if="${reservation.reservationRooms.isEmpty() or reservation.reservationRooms[0].acquiredServices.isEmpty()}"
+                      class="text-[11px] text-woodsmoke/50 italic"
+                    >
+                      Sin servicios extra
+                    </li>
+                  </ul>
+                </td>
+
+                <td class="py-4 px-5">
+                  <span
+                    th:if="${reservation.status == 'CONFIRMED'}"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-wider font-bold bg-blue-50 text-blue-800 border border-blue-200"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                    Confirmada
+                  </span>
+                  <span
+                    th:if="${reservation.status != 'CONFIRMED'}"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-wider font-bold bg-gray-50 text-gray-800 border border-gray-200"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                    <span th:text="${reservation.status}"></span>
+                  </span>
+                </td>
+
+                <td class="py-4 px-5 text-right">
+                  <div class="inline-flex items-center gap-2">
+                    <a
+                      th:href="@{'/admin/reservations/edit/' + ${reservation.id}}"
+                      class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase tracking-[1.5px] font-bold py-2 px-3 rounded-[2px] transition duration-300"
+                      title="Editar Reserva"
+                    >
+                      Editar
+                    </a>
+                    <a
+                      th:href="@{'/admin/reservations/delete/' + ${reservation.id}}"
+                      class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-[10px] uppercase tracking-[1.5px] font-bold py-2 px-3 rounded-[2px] transition duration-300"
+                      onclick="
+                        return confirm(
+                          '¿Estás seguro de que deseas eliminar esta reserva? (Prueba de eliminación en cascada)',
+                        );
+                      "
+                      title="Eliminar Reserva"
+                    >
+                      Eliminar
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <tr th:if="${#lists.isEmpty(reservations)}">
+                <td
+                  colspan="7"
+                  class="py-12 text-center text-woodsmoke/50 italic"
+                >
+                  No se encontraron reservas registradas actualmente.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-lg overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-mirage text-white font-serif text-[10px] tracking-[1.5px] uppercase border-b border-white/10">
-                            <th class="py-4 px-5 font-semibold">ID</th>
-                            <th class="py-4 px-5 font-semibold">Cliente</th>
-                            <th class="py-4 px-5 font-semibold">Habitaciones</th>
-                            <th class="py-4 px-5 font-semibold">Fechas</th>
-                            <th class="py-4 px-5 font-semibold">Servicios (Cuenta)</th>
-                            <th class="py-4 px-5 font-semibold">Estado</th>
-                            <th class="py-4 px-5 font-semibold text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-[#E8E2DA]">
-                        <tr th:each="reservation : ${reservations}" class="hover:bg-pampas/60 transition group">
-                            
-                            <td class="py-4 px-5 font-mono text-twine-dark font-semibold text-[11px]" th:text="'#' + ${#numbers.formatInteger(reservation.id, 3)}"></td>
-
-                            <td class="py-4 px-5">
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-woodsmoke text-[13px]" th:text="${reservation.client.getNombre()}"></span>
-                                    <span class="text-[11px] text-woodsmoke/60" th:text="${reservation.client.email}"></span>
-                                    <span class="text-[11px] text-woodsmoke/60 font-mono" th:text="${reservation.client.phone}"></span>
-                                </div>
-                            </td>
-
-                            <td class="py-4 px-5">
-                                <ul class="space-y-1">
-                                    <li th:each="rr : ${reservation.reservationRooms}" class="text-[11px] text-woodsmoke/80">
-                                        <strong th:text="${rr.room.name}"></strong> (Hab: <span th:text="${rr.room.number}"></span>)
-                                    </li>
-                                </ul>
-                            </td>
-
-                            <td class="py-4 px-5">
-                                <div class="flex flex-col text-[11px] text-woodsmoke/80 space-y-0.5 font-mono">
-                                    <span><span class="text-twine-dark font-bold uppercase text-[9px] tracking-wider">IN:</span> <span th:text="${reservation.checkInDate}"></span></span>
-                                    <span><span class="text-twine-dark font-bold uppercase text-[9px] tracking-wider">OUT:</span> <span th:text="${reservation.checkOutDate}"></span></span>
-                                </div>
-                            </td>
-
-                            <td class="py-4 px-5">
-                                <ul class="space-y-1">
-                                    <th:block th:each="rr : ${reservation.reservationRooms}">
-                                        <li th:each="as : ${rr.acquiredServices}" class="text-[11px] text-woodsmoke/80 flex justify-between gap-4 border-b border-gray-100 pb-1">
-                                            <span><span th:text="${as.quantity}"></span>x <span th:text="${as.service.name}"></span></span>
-                                            <span class="font-semibold text-twine-dark" th:text="'€' + ${as.subtotal}"></span>
-                                        </li>
-                                    </th:block>
-                                    <li th:if="${reservation.reservationRooms.isEmpty() or reservation.reservationRooms[0].acquiredServices.isEmpty()}" class="text-[11px] text-woodsmoke/50 italic">
-                                        Sin servicios extra
-                                    </li>
-                                </ul>
-                            </td>
-
-                            <td class="py-4 px-5">
-                                <span th:if="${reservation.status == 'CONFIRMED'}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-wider font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                    Confirmada
-                                </span>
-                                <span th:if="${reservation.status != 'CONFIRMED'}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-wider font-bold bg-gray-50 text-gray-800 border border-gray-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
-                                    <span th:text="${reservation.status}"></span>
-                                </span>
-                            </td>
-
-                            <td class="py-4 px-5 text-right">
-                                <a
-                                    th:href="@{'/admin/reservations/delete/' + ${reservation.id}}"
-                                    class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-[10px] uppercase tracking-[1.5px] font-bold py-2 px-3 rounded-[2px] transition duration-300"
-                                    onclick="return confirm('¿Estás seguro de que deseas eliminar esta reserva? (Prueba de eliminación en cascada)');"
-                                    title="Eliminar Reserva"
-                                >
-                                    Eliminar
-                                </a>
-                            </td>
-                        </tr>
-
-                        <tr th:if="${#lists.isEmpty(reservations)}">
-                            <td colspan="7" class="py-12 text-center text-woodsmoke/50 italic">
-                                No se encontraron reservas registradas actualmente.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+      </div>
     </main>
 
     <div th:replace="~{admin-fragmentos :: footer-admin}"></div>
-
-</body>
+  </body>
 </html>

@@ -2,6 +2,8 @@ package com.example.demo;
 
 import com.example.demo.entities.*;
 import com.example.demo.repository.*;
+import com.example.demo.service.ReservationManagerService;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +20,13 @@ public class DataInitializer implements CommandLineRunner {
     private final ReservationRepository reservationRepository;
     private final ReservationRoomRepository reservationRoomRepository;
     private final AcquiredServiceRepository acquiredServiceRepository;
+    private final ReservationManagerService reservationService;
 
     public DataInitializer(ClientRepository clientRepository, RoomTypeRepository roomTypeRepository,
             RoomRepository roomRepository, ServiceRepository serviceRepository,
             ReservationRepository reservationRepository,
-            ReservationRoomRepository reservationRoomRepository, AcquiredServiceRepository acquiredServiceRepository) {
+            ReservationRoomRepository reservationRoomRepository, AcquiredServiceRepository acquiredServiceRepository,
+            ReservationManagerService reservationService) {
         this.clientRepository = clientRepository;
         this.roomTypeRepository = roomTypeRepository;
         this.roomRepository = roomRepository;
@@ -30,6 +34,7 @@ public class DataInitializer implements CommandLineRunner {
         this.reservationRepository = reservationRepository;
         this.reservationRoomRepository = reservationRoomRepository;
         this.acquiredServiceRepository = acquiredServiceRepository;
+        this.reservationService = reservationService;
     }
 
     @Override
@@ -84,38 +89,36 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         if (reservationRepository.count() == 0) {
-            List<Client> clients = clientRepository.findAll();
-            List<Room> rooms = roomRepository.findAll();
-            List<Service> services = serviceRepository.findAll();
+        List<Client> clients = clientRepository.findAll();
+        List<Room> rooms = roomRepository.findAll();
+        List<Service> services = serviceRepository.findAll();
 
-            for (int i = 0; i < 5; i++) {
-                Reservation reservation = Reservation.builder()
-                        .client(clients.get(i))
-                        .checkInDate(LocalDate.now().plusDays(i))
-                        .checkOutDate(LocalDate.now().plusDays(i + 3))
-                        .numberOfPeople(2)
-                        .status("CONFIRMED")
-                        .build();
-                reservation = reservationRepository.save(reservation);
+        for (int i = 0; i < 5; i++) {
+            Reservation reservation = Reservation.builder()
+                    .client(clients.get(i))
+                    .checkInDate(LocalDate.now().plusDays(i))
+                    .checkOutDate(LocalDate.now().plusDays(i + 3))
+                    .numberOfPeople(2)
+                    .status("CONFIRMED")
+                    .build();
 
-                ReservationRoom resRoom = ReservationRoom.builder()
-                        .reservation(reservation)
-                        .room(rooms.get(i))
-                        .pricePerNight(rooms.get(i).getPricePerNight())
-                        .build();
-                resRoom = reservationRoomRepository.save(resRoom);
+            ReservationRoom resRoom = ReservationRoom.builder()
+                    .room(rooms.get(i))
+                    .pricePerNight(rooms.get(i).getPricePerNight())
+                    .build();
+            reservation.addReservationRoom(resRoom); 
 
-                AcquiredService acqService = AcquiredService.builder()
-                        .reservationRoom(resRoom)
-                        .service(services.get(i))
-                        .date(LocalDate.now().plusDays(i + 1))
-                        .quantity(2)
-                        .unitPrice(services.get(i).getPrice() == null ? 0 : services.get(i).getPrice())
-                        .build();
-                acqService.calculateSubtotal();
-                acquiredServiceRepository.save(acqService);
-            }
+            AcquiredService acqService = AcquiredService.builder()
+                    .service(services.get(i))
+                    .date(LocalDate.now().plusDays(i + 1))
+                    .quantity(2)
+                    .unitPrice(services.get(i).getPrice() == null ? 0 : services.get(i).getPrice())
+                    .build();
+            acqService.calculateSubtotal();
+            resRoom.addAcquiredService(acqService); 
+            reservationService.save(reservation);
         }
+    }
     }
 
     private String roomImage(int index) {

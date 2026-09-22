@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Reserva (Admin) - Montclair Grand Hotel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              twine: {
+                DEFAULT: "#C59B63",
+                hover: "#A87C49",
+                dark: "#73503C",
+                light: "#D4B07A",
+              },
+              mirage: { DEFAULT: "#141E26", dark: "#0F161C", light: "#1C2A35" },
+              pampas: "#FAF7F2",
+              pampasAlt: "#F0EBE3",
+              woodsmoke: "#111413",
+              silver: "#CAC6C6",
+              ivory: "#FDFBF7",
+            },
+            fontFamily: {
+              serif: ['"Cinzel"', "serif"],
+              sans: ['"Inter"', "sans-serif"],
+              display: ['"Cormorant Garamond"', "serif"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between"
+  >
+    <div th:replace="~{fragmentos :: navbar-admin}"></div>
+
+    <main class="flex-grow max-w-3xl w-full mx-auto p-6 sm:p-8 lg:p-12">
+      <div class="mb-8">
+        <span
+          class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-1"
+          >PANEL DE GESTIÓN</span
+        >
+        <h1
+          class="font-serif text-2xl sm:text-3xl text-woodsmoke tracking-[2px] uppercase"
+          th:text="'Editar Reserva #' + ${reservation.id}"
+        >
+          Editar Reserva
+        </h1>
+      </div>
+
+      <div
+        class="bg-white border border-[#E8E2DA] rounded-[4px] shadow-lg p-8 sm:p-10 relative overflow-hidden"
+      >
+        <div class="absolute top-0 left-0 right-0 h-1 bg-twine"></div>
+
+        <div
+          class="mb-6 p-3 bg-pampas/60 rounded-[2px] border border-[#E8E2DA] text-xs text-woodsmoke/70"
+        >
+          <strong>Habitación asignada:</strong>
+          <span
+            th:text="'#' + ${reservation.reservationRooms[0].room.number} + ' · ' + ${reservation.reservationRooms[0].room.type.name}"
+          ></span>
+          <span class="italic"> (no editable desde aquí)</span>
+        </div>
+
+        <form
+          th:action="@{'/admin/reservations/edit/' + ${reservation.id}}"
+          method="post"
+          class="space-y-6"
+        >
+          <div>
+            <label
+              class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
+              >Cliente *</label
+            >
+            <select
+              name="clientId"
+              required
+              class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+            >
+              <option
+                th:each="c : ${clients}"
+                th:value="${c.id}"
+                th:selected="${c.id == reservation.client.id}"
+                th:text="${c.getNombre()} + ' (' + ${c.email} + ')'"
+              ></option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
+                >Fecha de Entrada *</label
+              >
+              <input
+                type="date"
+                name="checkInDate"
+                th:value="${reservation.checkInDate}"
+                required
+                class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+              />
+            </div>
+            <div>
+              <label
+                class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
+                >Fecha de Salida *</label
+              >
+              <input
+                type="date"
+                name="checkOutDate"
+                th:value="${reservation.checkOutDate}"
+                required
+                class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-1.5"
+              >Cantidad de Huéspedes *</label
+            >
+            <input
+              type="number"
+              name="numberOfPeople"
+              min="1"
+              th:value="${reservation.numberOfPeople}"
+              required
+              class="w-full bg-pampas/60 border border-[#E8E2DA] focus:border-twine focus:ring-1 focus:ring-twine rounded-[2px] p-3 text-xs text-woodsmoke outline-none transition"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block font-sans text-[10px] uppercase tracking-[1.5px] font-bold text-woodsmoke/80 mb-2"
+              >Servicios Adicionales</label
+            >
+            <div class="space-y-1 border border-[#E8E2DA] rounded-[2px] p-3">
+              <label
+                th:each="svc : ${services}"
+                class="flex items-center gap-3 p-2 rounded-[2px] hover:bg-pampas transition cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  name="serviceIds"
+                  th:value="${svc.id}"
+                  th:checked="${selectedServiceIds.contains(svc.id)}"
+                  class="accent-twine"
+                />
+                <span
+                  class="text-xs text-woodsmoke"
+                  th:text="${svc.name}"
+                ></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="pt-2 flex justify-end gap-3">
+            <a
+              th:href="@{/admin/reservations}"
+              class="text-xs font-bold uppercase tracking-widest text-woodsmoke/60 hover:text-woodsmoke px-4 py-3.5"
+              >Cancelar</a
+            >
+            <button
+              type="submit"
+              class="bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-8 rounded-[2px] transition duration-300 shadow-sm"
+            >
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <div th:replace="~{admin-fragmentos :: footer-admin}"></div>
+  </body>
+</html>

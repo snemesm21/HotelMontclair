@@ -2,6 +2,8 @@ package com.example.demo.service;
 
 import com.example.demo.entities.Client;
 import com.example.demo.repository.ClientRepository;
+import com.example.demo.repository.ReservationRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,9 @@ public class ClientServiceImpl implements ClientService {
 
     @Autowired
     private ClientRepository repository;
+
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     @Override
     public List<Client> findAll() {
@@ -101,6 +106,11 @@ public class ClientServiceImpl implements ClientService {
         Client client = repository.findById(id).orElse(null);
         if (client == null) {
             throw new NotFoundException(id);
+        }
+
+        if (reservationRepository.existsByClientId(id)) {
+            throw new IllegalArgumentException(
+                "No se puede eliminar el cliente porque tiene reservas asociadas. Cancela o elimina primero sus reservas.");
         }
         repository.deleteById(id);
     }

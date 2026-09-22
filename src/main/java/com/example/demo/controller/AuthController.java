@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.entities.Client;
 import com.example.demo.service.ClientService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +25,7 @@ public class AuthController {
     public String processLogin(@RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "password", required = false) String password,
-            Model model) {
+            HttpSession session, Model model) {
         try {
             Client client;
             try {
@@ -41,14 +42,21 @@ public class AuthController {
                 return "login";
             }
 
+            session.setAttribute("loggedClient", client);
+
             if (client.isAdmin()) {
                 return "redirect:/admin/rooms";
             }
-
             return "redirect:/profile/" + client.getId();
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error inesperado durante el login: " + e.getMessage());
             return "error";
         }
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
     }
 }

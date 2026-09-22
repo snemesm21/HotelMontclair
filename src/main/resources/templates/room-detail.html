@@ -41,7 +41,9 @@
     <link rel="stylesheet" href="/css/global.css" />
     <link rel="stylesheet" href="/css/pages/index.css" />
   </head>
-  <body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+  <body
+    class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between"
+  >
     <nav
       class="bg-pampas sticky top-0 z-40 w-full border-b border-[rgba(202,198,198,0.5)] shadow-sm"
     >
@@ -176,7 +178,8 @@
             <span
               class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-sm px-3 py-1.5 text-[11px] font-medium text-white/90"
               th:text="${room.type != null ? room.type.name : 'Habitación'}"
-            >Suite</span>
+              >Suite</span
+            >
             <span
               class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-sm px-3 py-1.5 text-[11px] font-medium text-white/90"
             >
@@ -277,7 +280,9 @@
             </div>
 
             <div class="bg-mirage text-white rounded-[3px] p-8 shadow-lg">
-              <div class="grid grid-cols-2 divide-x divide-white/15 text-center">
+              <div
+                class="grid grid-cols-2 divide-x divide-white/15 text-center"
+              >
                 <div class="pr-5">
                   <span
                     class="block font-sans text-[8px] uppercase tracking-[2px] font-bold text-twine mb-2"
@@ -311,11 +316,18 @@
               </div>
               <div class="mt-6 pt-5 border-t border-white/10">
                 <a
-                  href="/#contacto"
+                  th:if="${room.status.name() == 'AVAILABLE'}"
+                  th:href="@{/reservations/new(roomId=${room.id})}"
                   class="block text-center bg-twine hover:bg-twine-hover text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 rounded-[2px] transition-all duration-300 shadow-sm"
                 >
                   RESERVAR ESTA HABITACIÓN
                 </a>
+                <span
+                  th:if="${room.status.name() != 'AVAILABLE'}"
+                  class="block text-center bg-white/10 text-white/50 text-[10px] uppercase tracking-[2px] font-bold py-3.5 rounded-[2px] cursor-default"
+                >
+                  NO DISPONIBLE ACTUALMENTE
+                </span>
               </div>
             </div>
           </div>
