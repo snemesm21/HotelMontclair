@@ -177,3 +177,5 @@ src/main/resources/templates/error.html
 ## DIAGRAMA ENTIDAD / RELACION
 Link: https://dbdiagram.io/d/Montclair-6a9e052c5450bea1be039382
 
+![Uploading image.png…]()
+
