@@ -1,8 +1,4 @@
-﻿/* =========================================
-   SERVICE FORM PAGE STYLES
-   ========================================= */
-
-.form-page-body {
+﻿.form-page-body {
     background-color: #F2EEEB;
     display: flex;
     align-items: center;
@@ -153,4 +149,3 @@
     align-items: center;
     gap: 12px;
 }
-

@@ -1,284 +1,225 @@
 <!doctype html>
 <html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Habitaciones - Montclair Grand Hotel</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habitaciones - Montclair Grand Hotel</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              twine: "#BF925A",
-              "twine-hover": "#73503C",
-              mirage: "#141E26",
-              pampas: "#F2EEEB",
-              woodsmoke: "#111413",
-              silver: "#CAC6C6",
-              ivory: "#FDFBF7",
-            },
-            fontFamily: {
-              serif: ["Cinzel", "serif"],
-              sans: ["Inter", "sans-serif"],
-              display: ["Cormorant Garamond", "serif"],
-            },
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+    rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            twine: "#BF925A",
+            "twine-hover": "#73503C",
+            mirage: "#141E26",
+            pampas: "#F2EEEB",
+            woodsmoke: "#111413",
+            silver: "#CAC6C6",
+            ivory: "#FDFBF7",
+          },
+          fontFamily: {
+            serif: ["Cinzel", "serif"],
+            sans: ["Inter", "sans-serif"],
+            display: ["Cormorant Garamond", "serif"],
           },
         },
-      };
-    </script>
+      },
+    };
+  </script>
 
-    <link rel="stylesheet" href="/css/global.css?v=3" />
-    <link rel="stylesheet" href="/css/pages/index.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-  </head>
-  <body class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
-    <div th:replace="~{fragmentos :: navbar}"></div>
+  <link rel="stylesheet" href="/css/global.css?v=3" />
+  <link rel="stylesheet" href="/css/pages/index.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+</head>
 
-    <section class="bg-mirage text-white pt-20 pb-16 px-6 lg:px-12 relative">
-      <div class="max-w-4xl mx-auto text-center">
-        <span
-          class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-4"
-          >MONTCLAIR GRAND HOTEL</span
-        >
-        <h1
-          class="font-serif text-4xl sm:text-5xl md:text-[54px] font-normal tracking-[2px] leading-tight mb-5"
-        >
-          Habitaciones
-        </h1>
-        <p
-          class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-2xl mx-auto mb-8"
-        >
-          Espacios donde el diseño de vanguardia se encuentra con la calidez del
-          hogar. Cada rincón ha sido pensado para cautivar tus sentidos.
-        </p>
-        <div class="flex items-center justify-center gap-3">
-          <div class="h-[1px] w-14 bg-twine/40"></div>
-          <div class="w-2.5 h-2.5 rotate-45 border border-twine bg-twine"></div>
-          <div class="h-[1px] w-14 bg-twine/40"></div>
-        </div>
+<body
+  class="bg-pampas text-woodsmoke font-sans antialiased selection:bg-twine selection:text-white min-h-screen flex flex-col justify-between">
+  <div th:replace="~{fragmentos :: navbar}"></div>
+
+  <section class="bg-mirage text-white pt-20 pb-16 px-6 lg:px-12 relative">
+    <div class="max-w-4xl mx-auto text-center">
+      <span class="font-sans text-[9px] tracking-[4px] text-twine uppercase font-bold block mb-4">MONTCLAIR GRAND
+        HOTEL</span>
+      <h1 class="font-serif text-4xl sm:text-5xl md:text-[54px] font-normal tracking-[2px] leading-tight mb-5">
+        Habitaciones
+      </h1>
+      <p class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-2xl mx-auto mb-8">
+        Espacios donde el diseño de vanguardia se encuentra con la calidez del
+        hogar. Cada rincón ha sido pensado para cautivar tus sentidos.
+      </p>
+      <div class="flex items-center justify-center gap-3">
+        <div class="h-[1px] w-14 bg-twine/40"></div>
+        <div class="w-2.5 h-2.5 rotate-45 border border-twine bg-twine"></div>
+        <div class="h-[1px] w-14 bg-twine/40"></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="bg-ivory py-16 px-6 lg:px-12 border-b border-[#E8E2DA]">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2
-          class="font-display text-3xl md:text-4xl text-woodsmoke tracking-[1px] mb-6 italic font-medium"
-        >
-          Nuestras habitaciones
-        </h2>
-        <div class="flex items-center justify-center gap-3 mb-8">
-          <div class="h-[1px] w-10 bg-twine/40"></div>
-          <div class="w-2 h-2 rotate-45 border border-twine/60"></div>
-          <div class="h-[1px] w-10 bg-twine/40"></div>
-        </div>
-        <p
-          class="font-sans text-xs md:text-[13px] text-[#555E66] font-light leading-relaxed max-w-3xl mx-auto"
-        >
-          Te abrimos las puertas de nuestras habitaciones y suites, espacios
-          donde el diseño de vanguardia se encuentra con la calidez del hogar.
-          Nuestro equipo ha seleccionado materiales nobles, texturas suaves y
-          una iluminación inteligente para crear atmósferas que se adaptan a tu
-          estado de ánimo. Estamos listos para que vivas una estancia donde la
-          elegancia y el descanso profundo van siempre de la mano.
-        </p>
+  <section class="bg-ivory py-16 px-6 lg:px-12 border-b border-[#E8E2DA]">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="font-display text-3xl md:text-4xl text-woodsmoke tracking-[1px] mb-6 italic font-medium">
+        Nuestras habitaciones
+      </h2>
+      <div class="flex items-center justify-center gap-3 mb-8">
+        <div class="h-[1px] w-10 bg-twine/40"></div>
+        <div class="w-2 h-2 rotate-45 border border-twine/60"></div>
+        <div class="h-[1px] w-10 bg-twine/40"></div>
       </div>
-    </section>
+      <p class="font-sans text-xs md:text-[13px] text-[#555E66] font-light leading-relaxed max-w-3xl mx-auto">
+        Te abrimos las puertas de nuestras habitaciones y suites, espacios
+        donde el diseño de vanguardia se encuentra con la calidez del hogar.
+        Nuestro equipo ha seleccionado materiales nobles, texturas suaves y
+        una iluminación inteligente para crear atmósferas que se adaptan a tu
+        estado de ánimo. Estamos listos para que vivas una estancia donde la
+        elegancia y el descanso profundo van siempre de la mano.
+      </p>
+    </div>
+  </section>
 
-    <main class="bg-pampas py-14 px-6 lg:px-12">
-      <div class="max-w-7xl mx-auto">
-        <!-- Swiper Container -->
-        <div class="swiper mySwiper !pb-14 px-12" style="--swiper-navigation-color: #BF925A; --swiper-pagination-color: #BF925A; --swiper-navigation-size: 24px;">
-          <div class="swiper-wrapper">
-            <article
-              th:each="type : ${roomTypes}"
-              class="swiper-slide h-auto group bg-white rounded-[4px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col border border-[#E8E2DA]/80"
-            >
-            <a
-              th:href="@{'/rooms/type/' + ${type.id}}"
-              class="block relative h-52 overflow-hidden"
-            >
-              <img
-                th:src="${type.imageUrl}"
-                th:alt="${type.name}"
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
+  <main class="bg-pampas py-14 px-6 lg:px-12">
+    <div class="max-w-7xl mx-auto">
+      <div class="swiper mySwiper !pb-14 px-12"
+        style="--swiper-navigation-color: #BF925A; --swiper-pagination-color: #BF925A; --swiper-navigation-size: 24px;">
+        <div class="swiper-wrapper">
+          <article th:each="type : ${roomTypes}"
+            class="swiper-slide h-auto group bg-white rounded-[4px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col border border-[#E8E2DA]/80">
+            <a th:href="@{'/rooms/type/' + ${type.id}}" class="block relative h-52 overflow-hidden">
+              <img th:src="${type.imageUrl}" th:alt="${type.name}"
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div
-                class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              ></div>
+                class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              </div>
             </a>
 
             <div class="p-5 flex flex-col flex-grow">
               <a th:href="@{'/rooms/type/' + ${type.id}}" class="block mb-3">
                 <h3
                   class="font-serif text-sm font-bold text-woodsmoke tracking-[2px] uppercase group-hover:text-twine transition-colors duration-300"
-                  th:text="${type.name}"
-                >
+                  th:text="${type.name}">
                   Suite
                 </h3>
               </a>
 
-              <p
-                class="text-[11px] text-woodsmoke/70 leading-relaxed mb-4 flex-grow"
-                th:text="${type.description}"
-              >
+              <p class="text-[11px] text-woodsmoke/70 leading-relaxed mb-4 flex-grow" th:text="${type.description}">
                 Descripción.
               </p>
 
               <p class="text-[13px] font-bold text-woodsmoke mb-4">
                 <span class="text-[#73503C]">Desde</span>
-                <span
-                  th:text="'€' + ${#numbers.formatDecimal(type.pricePerNight, 1, 2)}"
-                  >€116.52</span
-                >
-                <span class="text-[#73503C] font-normal text-[11px]"
-                  > / noche</span
-                >
+                <span th:text="'€' + ${#numbers.formatDecimal(type.pricePerNight, 1, 2)}">€116.52</span>
+                <span class="text-[#73503C] font-normal text-[11px]"> / noche</span>
               </p>
 
               <div class="pt-3 border-t border-[#E8E2DA]">
-                <a
-                  th:href="@{'/rooms/type/' + ${type.id}}"
-                  class="block text-center border border-twine/70 text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition-all duration-300"
-                >
+                <a th:href="@{'/rooms/type/' + ${type.id}}"
+                  class="block text-center border border-twine/70 text-twine hover:bg-twine hover:text-white text-[9px] uppercase tracking-[2px] font-bold py-2.5 rounded-[2px] transition-all duration-300">
                   Ver Habitaciones
                 </a>
               </div>
             </div>
           </article>
-          </div>
-          <!-- Swiper Pagination y Navegacion -->
-          <div class="swiper-pagination !bottom-0"></div>
-          <div class="swiper-button-next"></div>
-          <div class="swiper-button-prev"></div>
         </div>
-      </div>
-    </main>
-
-    <section class="bg-mirage relative overflow-hidden">
-      <div
-        class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 min-h-[320px]"
-      >
-        <div class="hidden lg:block relative">
-          <img
-            src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80"
-            alt="Suite de lujo"
-            class="w-full h-full object-cover"
-          />
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-transparent to-mirage/70"
-          ></div>
-        </div>
-        <div class="flex flex-col justify-center px-8 lg:px-16 py-16 text-white">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="h-[1px] w-8 bg-twine"></div>
-            <span
-              class="font-sans text-[9px] tracking-[3px] text-twine uppercase font-bold"
-              >EL ARTE DE DESCANSAR</span
-            >
-          </div>
-          <h2
-            class="font-display text-3xl md:text-4xl font-medium italic leading-tight mb-4"
-          >
-            Tu descanso merece un entorno excepcional
-          </h2>
-          <p
-            class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-md mb-8"
-          >
-            Desconecta del mundo en nuestras suites de diseño. Disfruta de
-            sábanas premium, menú de almohadas y un servicio impecable pensado
-            para tu bienestar absoluto.
-          </p>
-          <div>
-            <a
-              href="/#contacto"
-              class="inline-block border border-white/60 hover:bg-twine hover:border-twine text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-8 rounded-[2px] transition-all duration-300"
-            >
-              RESERVA TU ESTANCIA
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div th:replace="~{fragmentos :: footer}"></div>
-
-    <div id="modal-login" class="modal-overlay hidden">
-      <div class="modal-box">
-        <button id="btn-cerrar-login" type="button" class="close-btn">✕</button>
-
-        <div class="modal-header">
-          <span class="modal-subtitle">Acceso Clientes</span>
-          <h3>Iniciar Sesión</h3>
-        </div>
-
-        <form
-          id="form-login"
-          class="modal-form"
-          method="post"
-          action="/login"
-          novalidate
-        >
-          <div class="form-group">
-            <label>Correo Electrónico o Usuario</label>
-            <input
-              type="text"
-              id="login-email"
-              name="email"
-              placeholder="ejemplo@correo.com o demo"
-            />
-            <p class="field-error hidden" data-error-for="login-email">
-              Ingresa un usuario o correo electrónico válido.
-            </p>
-          </div>
-          <div class="form-group">
-            <label>Contraseña</label>
-            <input
-              type="password"
-              id="login-password"
-              name="password"
-              placeholder="••••••••"
-            />
-            <p class="field-error hidden" data-error-for="login-password">
-              Completa este campo.
-            </p>
-          </div>
-          <button type="submit" class="btn btn-primary full-width">
-            Iniciar Sesión
-          </button>
-        </form>
+        <div class="swiper-pagination !bottom-0"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
       </div>
     </div>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script src="/js/login-modal.js"></script>
-    <script>
-      var swiper = new Swiper(".mySwiper", {
-        slidesPerView: 1,
-        spaceBetween: 28,
-        pagination: {
-          el: ".swiper-pagination",
-          clickable: true,
-          dynamicBullets: true,
-        },
-        navigation: {
-          nextEl: ".swiper-button-next",
-          prevEl: ".swiper-button-prev",
-        },
-        breakpoints: {
-          640: { slidesPerView: 2 },
-          1024: { slidesPerView: 4 }
-        },
-      });
-    </script>
-  </body>
+  <section class="bg-mirage relative overflow-hidden">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 min-h-[320px]">
+      <div class="hidden lg:block relative">
+        <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80"
+          alt="Suite de lujo" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent to-mirage/70"></div>
+      </div>
+      <div class="flex flex-col justify-center px-8 lg:px-16 py-16 text-white">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="h-[1px] w-8 bg-twine"></div>
+          <span class="font-sans text-[9px] tracking-[3px] text-twine uppercase font-bold">EL ARTE DE DESCANSAR</span>
+        </div>
+        <h2 class="font-display text-3xl md:text-4xl font-medium italic leading-tight mb-4">
+          Tu descanso merece un entorno excepcional
+        </h2>
+        <p class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-md mb-8">
+          Desconecta del mundo en nuestras suites de diseño. Disfruta de
+          sábanas premium, menú de almohadas y un servicio impecable pensado
+          para tu bienestar absoluto.
+        </p>
+        <div>
+          <a href="/#contacto"
+            class="inline-block border border-white/60 hover:bg-twine hover:border-twine text-white text-[10px] uppercase tracking-[2px] font-bold py-3.5 px-8 rounded-[2px] transition-all duration-300">
+            RESERVA TU ESTANCIA
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div th:replace="~{fragmentos :: footer}"></div>
+
+  <div id="modal-login" class="modal-overlay hidden">
+    <div class="modal-box">
+      <button id="btn-cerrar-login" type="button" class="close-btn">✕</button>
+
+      <div class="modal-header">
+        <span class="modal-subtitle">Acceso Clientes</span>
+        <h3>Iniciar Sesión</h3>
+      </div>
+
+      <form id="form-login" class="modal-form" method="post" action="/login" novalidate>
+        <div class="form-group">
+          <label>Correo Electrónico o Usuario</label>
+          <input type="text" id="login-email" name="email" placeholder="ejemplo@correo.com o demo" />
+          <p class="field-error hidden" data-error-for="login-email">
+            Ingresa un usuario o correo electrónico válido.
+          </p>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="login-password" name="password" placeholder="••••••••" />
+          <p class="field-error hidden" data-error-for="login-password">
+            Completa este campo.
+          </p>
+        </div>
+        <button type="submit" class="btn btn-primary full-width">
+          Iniciar Sesión
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="/js/login-modal.js"></script>
+  <script>
+    var swiper = new Swiper(".mySwiper", {
+      slidesPerView: 1,
+      spaceBetween: 28,
+      pagination: {
+        el: ".swiper-pagination",
+        clickable: true,
+        dynamicBullets: true,
+      },
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
+      },
+      breakpoints: {
+        640: { slidesPerView: 2 },
+        1024: { slidesPerView: 4 }
+      },
+    });
+  </script>
+</body>
+
 </html>

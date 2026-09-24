@@ -1,7 +1,3 @@
-/* =========================================
-   SERVICES TABLE PAGE STYLES (Bootstrap version) corrigiendo los colores por defecto
-   ========================================= */
-
 .table-page-body {
   background-color: #f2eeeb;
   padding: 0;
@@ -60,7 +56,7 @@
   padding: 15px 8px;
 }
 
-.table-hover.services-table > tbody > tr:hover > * {
+.table-hover.services-table>tbody>tr:hover>* {
   --bs-table-accent-bg: rgba(242, 238, 235, 0.5);
   background-color: rgba(242, 238, 235, 0.5);
 }
@@ -152,6 +148,7 @@
   color: var(--twine);
   border-color: rgba(191, 146, 90, 0.4);
 }
+
 .btn-icon-view:hover {
   background-color: var(--twine);
   border-color: var(--twine);

@@ -1,5 +1,3 @@
-// Toggle + validación del modal de login.
-// Se referencia igual en cualquier página que tenga el modal #modal-login en html
 document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("modal-login");
   const btnAbrir = document.getElementById("btn-abrir-login");
@@ -46,10 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Si es válido, se envía el formulario al backend (POST /login)
   });
 
-  // Limpia el error apenas el usuario empieza a corregir
   [
     [emailInput, errorEmail],
     [passwordInput, errorPassword],

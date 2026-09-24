@@ -43,7 +43,8 @@ public class ClientController {
             model.addAttribute("mensaje", e.getMessage());
             return "error";
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("mensaje", "No se pudo registrar: El nombre de usuario o el correo electrónico ya están en uso.");
+            model.addAttribute("mensaje",
+                    "No se pudo registrar: El nombre de usuario o el correo electrónico ya están en uso.");
             return "error";
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error al registrar cliente: " + e.getMessage());
@@ -56,7 +57,7 @@ public class ClientController {
         try {
             Client c = service.findById(id);
             model.addAttribute("client", c);
-            model.addAttribute("isAdmin", true); // Edit is only for admin right now
+            model.addAttribute("isAdmin", true);
             return "client-form";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;
@@ -76,7 +77,8 @@ public class ClientController {
             model.addAttribute("mensaje", e.getMessage());
             return "error";
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("mensaje", "No se pudo actualizar: El nombre de usuario o el correo electrónico ya están en uso.");
+            model.addAttribute("mensaje",
+                    "No se pudo actualizar: El nombre de usuario o el correo electrónico ya están en uso.");
             return "error";
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error al actualizar cliente: " + e.getMessage());
@@ -90,7 +92,8 @@ public class ClientController {
             service.delete(id);
             return "redirect:/clients";
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("mensaje", "No se puede eliminar el cliente porque tiene registros asociados (por ejemplo, reservaciones).");
+            model.addAttribute("mensaje",
+                    "No se puede eliminar el cliente porque tiene registros asociados (por ejemplo, reservaciones).");
             return "error";
         } catch (com.example.demo.errors.NotFoundException e) {
             throw e;

@@ -13,12 +13,10 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(20, 30, 38, 0.9),
-    rgba(20, 30, 38, 0.5),
-    transparent
-  );
+  background: linear-gradient(to right,
+      rgba(20, 30, 38, 0.9),
+      rgba(20, 30, 38, 0.5),
+      transparent);
   background-color: rgba(20, 30, 38, 0.3);
 }
 
@@ -376,12 +374,10 @@
   width: 100%;
   height: 100%;
   background-color: rgba(20, 30, 38, 0.3);
-  background: linear-gradient(
-    to right,
-    rgba(20, 30, 38, 0.9),
-    rgba(20, 30, 38, 0.4),
-    transparent
-  );
+  background: linear-gradient(to right,
+      rgba(20, 30, 38, 0.9),
+      rgba(20, 30, 38, 0.4),
+      transparent);
 }
 
 .gallery-content {
@@ -461,8 +457,6 @@
   display: flex;
 }
 
-/* Mensajes de error propios del login, reemplazan el tooltip
-           nativo del navegador ("Completa este campo"). */
 .field-error {
   display: flex;
   align-items: center;
@@ -476,9 +470,11 @@
   border: 1px solid rgba(140, 74, 47, 0.25);
   border-radius: 2px;
 }
+
 .field-error.hidden {
   display: none;
 }
+
 .form-group input.input-error {
   border-color: #c2593b;
 }

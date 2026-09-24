@@ -1,153 +1,127 @@
 <!doctype html>
 <html lang="es" class="scroll-smooth" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ubicación - Montclair Grand Hotel</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ubicación - Montclair Grand Hotel</title>
 
-    <link rel="stylesheet" href="/css/global.css?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+    rel="stylesheet" />
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              twine: "#BF925A",
-              "twine-hover": "#73503C",
-              mirage: "#141E26",
-              pampas: "#F2EEEB",
-              woodsmoke: "#111413",
-              silver: "#CAC6C6",
-            },
-            fontFamily: {
-              serif: ['"Cinzel"', "serif"],
-              sans: ['"Inter"', "sans-serif"],
-              display: ['"Cormorant Garamond"', "serif"],
-            },
+  <link rel="stylesheet" href="/css/global.css?v=2" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            twine: "#BF925A",
+            "twine-hover": "#73503C",
+            mirage: "#141E26",
+            pampas: "#F2EEEB",
+            woodsmoke: "#111413",
+            silver: "#CAC6C6",
+          },
+          fontFamily: {
+            serif: ['"Cinzel"', "serif"],
+            sans: ['"Inter"', "sans-serif"],
+            display: ['"Cormorant Garamond"', "serif"],
           },
         },
-      };
-    </script>
-  </head>
-  <body
-    class="bg-pampas text-woodsmoke font-sans antialiased flex flex-col min-h-screen"
-  >
-    <div th:replace="~{fragmentos :: navbar}"></div>
+      },
+    };
+  </script>
+</head>
 
-    <!-- Header Section matching the brand style -->
-    <section class="bg-mirage text-white text-center px-6 pt-20 pb-16">
-      <div class="max-w-[900px] mx-auto">
-        <span
-          class="block mb-4 font-sans text-[9px] tracking-[4px] uppercase font-bold text-twine"
-        >
-          MONTCLAIR GRAND HOTEL
-        </span>
+<body class="bg-pampas text-woodsmoke font-sans antialiased flex flex-col min-h-screen">
+  <div th:replace="~{fragmentos :: navbar}"></div>
 
-        <h1
-          class="font-serif font-normal text-white text-4xl sm:text-5xl md:text-[54px] tracking-[2px] leading-tight mb-5 uppercase"
-        >
-          Nuestra Ubicación
-        </h1>
+  <section class="bg-mirage text-white text-center px-6 pt-20 pb-16">
+    <div class="max-w-[900px] mx-auto">
+      <span class="block mb-4 font-sans text-[9px] tracking-[4px] uppercase font-bold text-twine">
+        MONTCLAIR GRAND HOTEL
+      </span>
 
-        <p
-          class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-[670px] mx-auto mb-8"
-        >
-          Situados en el corazón del Mediterráneo, ofreciendo vistas
-          inigualables y acceso directo a lo mejor de Mónaco. Descubra cómo
-          llegar a su escape perfecto.
-        </p>
+      <h1
+        class="font-serif font-normal text-white text-4xl sm:text-5xl md:text-[54px] tracking-[2px] leading-tight mb-5 uppercase">
+        Nuestra Ubicación
+      </h1>
 
-        <div class="flex items-center justify-center gap-3">
-          <div class="h-px w-14 bg-twine/40"></div>
-          <div class="w-2 h-2 rotate-45 border border-twine"></div>
-          <div class="h-px w-14 bg-twine/40"></div>
-        </div>
+      <p class="font-sans text-xs md:text-[13px] text-[#C2C9D1] font-light leading-relaxed max-w-[670px] mx-auto mb-8">
+        Situados en el corazón del Mediterráneo, ofreciendo vistas
+        inigualables y acceso directo a lo mejor de Mónaco. Descubra cómo
+        llegar a su escape perfecto.
+      </p>
+
+      <div class="flex items-center justify-center gap-3">
+        <div class="h-px w-14 bg-twine/40"></div>
+        <div class="w-2 h-2 rotate-45 border border-twine"></div>
+        <div class="h-px w-14 bg-twine/40"></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Main Content -->
-    <main class="bg-[#F5F1EB] py-16 px-6 flex-grow">
-      <div class="max-w-[1152px] mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-          <!-- Information Column -->
-          <div class="lg:col-span-1 space-y-10">
-            <div>
-              <h3 class="font-serif text-2xl text-woodsmoke mb-4">Dirección</h3>
-              <p
-                class="text-woodsmoke/70 text-sm leading-relaxed mb-2 font-light"
-              >
-                Square Beaumarchais<br />
-                MC 98000 Mónaco<br />
-                Principado de Mónaco
-              </p>
-            </div>
-
-            <div>
-              <h3 class="font-serif text-2xl text-woodsmoke mb-4">Contacto</h3>
-              <p
-                class="text-woodsmoke/70 text-sm leading-relaxed mb-2 font-light flex items-center gap-3"
-              >
-                <span class="text-twine font-bold">T.</span> +377 93 12 34 56
-              </p>
-              <p
-                class="text-woodsmoke/70 text-sm leading-relaxed mb-2 font-light flex items-center gap-3"
-              >
-                <span class="text-twine font-bold">E.</span>
-                reservas@montclairhotel.com
-              </p>
-            </div>
-
-            <div>
-              <h3 class="font-serif text-2xl text-woodsmoke mb-4">Llegada</h3>
-              <ul
-                class="text-woodsmoke/70 text-sm leading-relaxed space-y-4 font-light"
-              >
-                <li>
-                  <strong class="text-woodsmoke"
-                    >Desde el Aeropuerto (Niza):</strong
-                  ><br />
-                  A 30 minutos en coche privado o taxi. Disponemos de servicio
-                  de traslado en limusina o helicóptero (7 minutos de vuelo)
-                  previa solicitud.
-                </li>
-                <li>
-                  <strong class="text-woodsmoke">Aparcamiento:</strong><br />
-                  Servicio de valet parking disponible las 24 horas y parking
-                  subterráneo seguro.
-                </li>
-              </ul>
-            </div>
+  <main class="bg-[#F5F1EB] py-16 px-6 flex-grow">
+    <div class="max-w-[1152px] mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+        <div class="lg:col-span-1 space-y-10">
+          <div>
+            <h3 class="font-serif text-2xl text-woodsmoke mb-4">Dirección</h3>
+            <p class="text-woodsmoke/70 text-sm leading-relaxed mb-2 font-light">
+              Square Beaumarchais<br />
+              MC 98000 Mónaco<br />
+              Principado de Mónaco
+            </p>
           </div>
 
-          <!-- Map Column -->
-          <div class="lg:col-span-2">
-            <div
-              class="bg-white p-2 border border-[#E8E2DA] rounded-sm shadow-sm h-[500px] w-full"
-            >
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2882.6514962547144!2d7.423246674951955!3d43.73856614690725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12cdc2885e418b9d%3A0x1c3b26a732b9980b!2sL'Hermitage%2C%2098000%20M%C3%B3naco!5e0!3m2!1ses-419!2sco!4v1789060452170!5m2!1ses-419!2sco"
-                width="100%"
-                height="100%"
-                style="border: 0"
-                allowfullscreen=""
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-              >
-              </iframe>
-            </div>
+          <div>
+            <h3 class="font-serif text-2xl text-woodsmoke mb-4">Contacto</h3>
+            <p class="text-woodsmoke/70 text-sm leading-relaxed mb-2 font-light flex items-center gap-3">
+              <span class="text-twine font-bold">T.</span> +377 93 12 34 56
+            </p>
+            <p class="text-woodsmoke/70 text-sm leading-relaxed mb-2 font-light flex items-center gap-3">
+              <span class="text-twine font-bold">E.</span>
+              reservas@montclairhotel.com
+            </p>
+          </div>
+
+          <div>
+            <h3 class="font-serif text-2xl text-woodsmoke mb-4">Llegada</h3>
+            <ul class="text-woodsmoke/70 text-sm leading-relaxed space-y-4 font-light">
+              <li>
+                <strong class="text-woodsmoke">Desde el Aeropuerto (Niza):</strong><br />
+                A 30 minutos en coche privado o taxi. Disponemos de servicio
+                de traslado en limusina o helicóptero (7 minutos de vuelo)
+                previa solicitud.
+              </li>
+              <li>
+                <strong class="text-woodsmoke">Aparcamiento:</strong><br />
+                Servicio de valet parking disponible las 24 horas y parking
+                subterráneo seguro.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2">
+          <div class="bg-white p-2 border border-[#E8E2DA] rounded-sm shadow-sm h-[500px] w-full">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2882.6514962547144!2d7.423246674951955!3d43.73856614690725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12cdc2885e418b9d%3A0x1c3b26a732b9980b!2sL'Hermitage%2C%2098000%20M%C3%B3naco!5e0!3m2!1ses-419!2sco!4v1789060452170!5m2!1ses-419!2sco"
+              width="100%" height="100%" style="border: 0" allowfullscreen="" loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
           </div>
         </div>
       </div>
-    </main>
+    </div>
+  </main>
 
-    <div th:replace="~{fragmentos :: footer}"></div>
-  </body>
+  <div th:replace="~{fragmentos :: footer}"></div>
+</body>
+
 </html>

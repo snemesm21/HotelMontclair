@@ -12,7 +12,7 @@ public class MainController {
     @Autowired
     private ServiceService serviceService;
 
-    @GetMapping({"/", "/index", "/home"})
+    @GetMapping({ "/", "/index", "/home" })
     public String index(Model model) {
         try {
             model.addAttribute("services", serviceService.searchAll());

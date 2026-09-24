@@ -1,8 +1,4 @@
-﻿/* =========================================
-   ADMIN CARDS PAGE STYLES
-   ========================================= */
-
-.admin-page-body {
+﻿.admin-page-body {
     background-color: #F2EEEB;
     padding: 24px;
     min-height: 100vh;
@@ -95,14 +91,14 @@
     border: 1px solid rgba(202, 198, 198, 0.8);
     border-radius: 3px;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.3s;
 }
 
 .admin-service-card:hover {
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .admin-card-img {
@@ -129,7 +125,7 @@
     font-size: 12px;
     padding: 4px 10px;
     border-radius: 2px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .admin-card-body {
@@ -241,7 +237,7 @@
     border-radius: 3px;
     padding: 48px;
     text-align: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     margin-top: 16px;
 }
 

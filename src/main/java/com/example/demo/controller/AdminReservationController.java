@@ -121,7 +121,8 @@ public class AdminReservationController {
             reservationService.delete(id);
             redirectAttributes.addFlashAttribute("successMessage", "Reserva eliminada con éxito.");
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error de integridad: No se puede eliminar la reserva porque tiene registros asociados que lo impiden.");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Error de integridad: No se puede eliminar la reserva porque tiene registros asociados que lo impiden.");
         } catch (com.example.demo.errors.NotFoundException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (Exception e) {
@@ -144,7 +145,7 @@ public class AdminReservationController {
         model.addAttribute("services", serviceService.searchAll().stream()
                 .filter(s -> !s.isHidden() || selectedServiceIds.contains(s.getId()))
                 .toList());
-        model.addAttribute("selectedServiceIds", selectedServiceIds); // nuevo
+        model.addAttribute("selectedServiceIds", selectedServiceIds);
         return "admin-reservation-edit";
     }
 

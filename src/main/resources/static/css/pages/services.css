@@ -1,13 +1,7 @@
-﻿/* =========================================
-   SERVICES PAGE STYLES
-   ========================================= */
-
-.modal-overlay:not(.hidden) {
+﻿.modal-overlay:not(.hidden) {
   display: flex;
 }
 
-/* Mensajes de error propios, reemplazan el tooltip nativo del
-           navegador ("Completa este campo") que no se puede personalizar. */
 .field-error {
   display: flex;
   align-items: center;
@@ -21,9 +15,11 @@
   border: 1px solid rgba(140, 74, 47, 0.25);
   border-radius: 2px;
 }
+
 .field-error.hidden {
   display: none;
 }
+
 .form-group input.input-error {
   border-color: #c2593b;
 }
