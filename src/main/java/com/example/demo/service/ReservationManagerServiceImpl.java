@@ -10,6 +10,7 @@ import com.example.demo.repository.RoomRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -33,6 +34,7 @@ public class ReservationManagerServiceImpl implements ReservationManagerService 
     }
 
     @Override
+    @Transactional
     public Reservation save(Reservation reservation) {
         Reservation saved = reservationRepository.save(reservation);
 
@@ -47,6 +49,7 @@ public class ReservationManagerServiceImpl implements ReservationManagerService 
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(id));

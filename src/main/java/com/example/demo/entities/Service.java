@@ -17,6 +17,8 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +32,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Entity
 @Table(name = "services")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Service {
 
     @Id
@@ -78,6 +81,9 @@ public class Service {
     
     @Column(length = 500)
     private String secondaryImageUrl;
+    @Column(length = 100)
+    private String icon;
+
     @ElementCollection
     @CollectionTable(name = "service_highlights", joinColumns = @JoinColumn(name = "service_id"))
     private List<Highlight> highlights = new ArrayList<>();
@@ -114,6 +120,7 @@ public class Service {
     @NoArgsConstructor
     @AllArgsConstructor
     @Embeddable
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Highlight {
         private String title;
         private String description;
