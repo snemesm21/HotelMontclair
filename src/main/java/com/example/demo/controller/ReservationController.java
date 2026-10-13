@@ -5,6 +5,9 @@ import com.example.demo.service.ClientService;
 import com.example.demo.service.ReservationManagerService;
 import com.example.demo.service.RoomService;
 import com.example.demo.service.ServiceService;
+
+import io.swagger.v3.oas.annotations.Operation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/reservations", "/reservations"})
+@RequestMapping({"/api/reservations"})
 @CrossOrigin(origins = "http://localhost:4200")
 public class ReservationController {
 
@@ -39,11 +42,13 @@ public class ReservationController {
         public List<Long> serviceIds;
     }
 
+    @Operation (summary = "Obtiene todas las reservas")
     @GetMapping
     public List<Reservation> getAllReservations() {
         return reservationService.searchAll();
     }
 
+    @Operation (summary = "Obtiene una reserva por su ID")
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Reservation res = reservationService.searchById(id);
@@ -51,6 +56,7 @@ public class ReservationController {
         return ResponseEntity.ok(res);
     }
 
+    @Operation (summary = "Obtiene todas las reservas de un cliente por su ID")
     @GetMapping("/client/{clientId}")
     public List<Reservation> getReservationsByClient(@PathVariable Long clientId) {
         return reservationService.searchAll().stream()
@@ -58,6 +64,7 @@ public class ReservationController {
                 .toList();
     }
 
+    @Operation (summary = "Crea una nueva reserva")
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody ReservationRequest req) {
         Client client = clientService.findById(req.clientId);
@@ -105,6 +112,7 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    @Operation (summary = "Elimina una reserva por su ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
         Reservation res = reservationService.searchById(id);
