@@ -119,35 +119,11 @@
 
   <section id="servicios" class="services-section">
     <div class="container services-grid">
-      <div class="service-card">
-        <img src="/Images/Campana de servicio.png" alt="Servicio" />
-        <h3>Servicio Personalizado</h3>
-        <p>
-          Atención 24/7 dedicada a hacer de tu estancia una experiencia
-          perfecta.
-        </p>
-      </div>
-      <div class="service-card">
-        <img src="/Images/Servicio Habitaciones.png" alt="Habitaciones" />
-        <h3>Habitaciones de Lujo</h3>
-        <p>
-          Espacios elegantes diseñados para tu confort y descanso
-          incomparable.
-        </p>
-      </div>
-      <div class="service-card">
-        <img src="/Images/Flor de loto Spa.png" alt="Spa" />
-        <h3>Spa & Bienestar</h3>
-        <p>
-          Relájate y rejuvenece en nuestro spa con tratamientos exclusivos y
-          de primera clase.
-        </p>
-      </div>
-      <div class="service-card">
-        <img src="/Images/Cloche gastromonia exclusiva.png" alt="Gastronomía" />
-        <h3>Gastronomía Exclusiva</h3>
-        <p>
-          Sabores excepcionales en restaurantes que deleitan tus sentidos.
+      <div th:each="service, iterStat : ${services}" th:if="${iterStat.index < 4}" class="service-card">
+        <img th:src="${service.imageUrl}" th:alt="${service.name}" />
+        <h3 th:text="${service.name}">Servicio</h3>
+        <p th:text="${service.description}">
+          Descripción del servicio.
         </p>
       </div>
     </div>
@@ -169,76 +145,21 @@
       </div>
 
       <div class="rooms-grid">
-        <article class="room-card">
-          <img src="/Images/Deluxe Room.png" alt="Deluxe Room" class="room-img" />
+        <article th:each="roomType, iterStat : ${roomTypes}" th:if="${iterStat.index < 3}" class="room-card">
+          <img th:src="${roomType.imageUrl}" th:alt="${roomType.name}" class="room-img" />
           <div class="room-content">
-            <h3>Deluxe Room</h3>
+            <h3 th:text="${roomType.name}">Tipo de habitación</h3>
             <div class="room-features">
-              <span><img src="/Images/Dimensiones habitacion.png" alt="m2" /> 30
-                m²</span>
-              <span><img src="/Images/Servicio Habitaciones.png" alt="Cama" />
-                King Size</span>
-              <span><img src="/Images/Personas por habitacion.png" alt="Personas" />
-                2</span>
+              <span><img src="/Images/Dimensiones habitacion.png" alt="m2" />
+                <span th:text="${roomType.description}">Descripción</span></span>
             </div>
-            <p>
-              Elegancia y confort en un espacio acogedor con vistas
-              inolvidables.
+            <p th:text="${roomType.description}">
+              Descripción del tipo de habitación.
             </p>
             <div class="room-price">
-              Desde <strong>$116,52 €</strong> / noche
+              Desde <strong th:text="'€' + ${#numbers.formatDecimal(roomType.pricePerNight, 1, 2)}">€0.00</strong> / noche
             </div>
-            <button onclick="abrirModalReserva('Deluxe Room', 116.52)" class="btn btn-outline">
-              Reservar
-            </button>
-          </div>
-        </article>
-
-        <article class="room-card">
-          <img src="/Images/Premium Suite.png" alt="Premium Suite" class="room-img" />
-          <div class="room-content">
-            <h3>Premium Suite</h3>
-            <div class="room-features">
-              <span><img src="/Images/Dimensiones habitacion.png" alt="m2" /> 40
-                m²</span>
-              <span><img src="/Images/Servicio Habitaciones.png" alt="Cama" />
-                King Size</span>
-              <span><img src="/Images/Personas por habitacion.png" alt="Personas" />
-                2</span>
-            </div>
-            <p>
-              Amplias suites con sala privada y balcón con vista panorámica.
-            </p>
-            <div class="room-price">
-              Desde <strong>$172,01 €</strong> / noche
-            </div>
-            <button onclick="abrirModalReserva('Premium Suite', 172.01)" class="btn btn-outline">
-              Reservar
-            </button>
-          </div>
-        </article>
-
-        <article class="room-card">
-          <img src="/Images/Grand Suite.png" alt="Grand Suite" class="room-img" />
-          <div class="room-content">
-            <h3>Grand Suite</h3>
-            <div class="room-features">
-              <span><img src="/Images/Dimensiones habitacion.png" alt="m2" /> 60
-                m²</span>
-              <span><img src="/Images/Servicio Habitaciones.png" alt="Cama" />
-                King Size</span>
-              <span><img src="/Images/Personas por habitacion.png" alt="Personas" />
-                4</span>
-            </div>
-            <p>
-              Lujo sofisticado con espacios exclusivos y servicios premium.
-            </p>
-            <div class="room-price">
-              Desde <strong>$255,24 €</strong> / noche
-            </div>
-            <button onclick="abrirModalReserva('Grand Suite', 255.24)" class="btn btn-outline">
-              Reservar
-            </button>
+            <a th:href="@{/rooms/cards}" class="btn btn-outline">Reservar</a>
           </div>
         </article>
       </div>
