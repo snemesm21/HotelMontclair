@@ -44,5 +44,6 @@ public class RoomType {
     private String imageUrl;
 
     @OneToMany(mappedBy = "type")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Room> rooms = new ArrayList<>();
 }

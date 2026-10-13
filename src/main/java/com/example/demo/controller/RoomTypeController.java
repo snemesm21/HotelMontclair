@@ -3,98 +3,50 @@ package com.example.demo.controller;
 import com.example.demo.entities.RoomType;
 import com.example.demo.service.RoomTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@Controller
-@RequestMapping("/admin/room-types")
+@RestController
+@RequestMapping({"/api/room-types", "/room-types"})
+@CrossOrigin(origins = "http://localhost:4200")
 public class RoomTypeController {
 
     @Autowired
-    private RoomTypeService service;
+    private RoomTypeService roomTypeService;
 
     @GetMapping
-    public String list(Model model) {
-        try {
-            List<RoomType> list = service.findAll();
-            model.addAttribute("roomTypes", list);
-            return "room-types";
-        } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al listar tipos de habitación: " + e.getMessage());
-            return "error";
-        }
+    public List<RoomType> getAllRoomTypes() {
+        return roomTypeService.findAll();
     }
 
-    @GetMapping("/add")
-    public String addForm(Model model) {
-        model.addAttribute("roomType", new RoomType());
-        return "room-type-form";
+    @GetMapping("/{id}")
+    public ResponseEntity<RoomType> getRoomTypeById(@PathVariable Long id) {
+        RoomType rt = roomTypeService.findById(id);
+        if (rt == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(rt);
     }
 
-    @PostMapping("/add")
-    public String add(@ModelAttribute RoomType roomType, Model model) {
-        try {
-            service.save(roomType);
-            return "redirect:/admin/room-types";
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("mensaje", "No se pudo guardar: Ya existe un tipo de habitación con el nombre '" + roomType.getName() + "'.");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al guardar tipo de habitación: " + e.getMessage());
-            return "error";
-        }
+    @PostMapping
+    public ResponseEntity<RoomType> createRoomType(@RequestBody RoomType roomType) {
+        roomType.setId(null);
+        RoomType saved = roomTypeService.save(roomType);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @GetMapping("/edit/{id}")
-    public String editForm(@PathVariable Long id, Model model) {
-        try {
-            RoomType rt = service.findById(id);
-            model.addAttribute("roomType", rt);
-            return "room-type-form";
-        } catch (com.example.demo.errors.NotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al cargar tipo de habitación: " + e.getMessage());
-            return "error";
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<RoomType> updateRoomType(@PathVariable Long id, @RequestBody RoomType roomType) {
+        roomType.setId(id);
+        RoomType updated = roomTypeService.save(roomType);
+        return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, @ModelAttribute RoomType roomType, Model model) {
-        try {
-            roomType.setId(id);
-            service.save(roomType);
-            return "redirect:/admin/room-types";
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("mensaje", e.getMessage());
-            return "error";
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("mensaje", "No se pudo actualizar: Ya existe un tipo de habitación con el nombre '" + roomType.getName() + "'.");
-            return "error";
-        } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al actualizar tipo de habitación: " + e.getMessage());
-            return "error";
-        }
-    }
-
-    @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Long id, Model model) {
-        try {
-            service.delete(id);
-            return "redirect:/admin/room-types";
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("mensaje", "No se puede eliminar el tipo de habitación porque hay habitaciones asociadas a él. Por favor, elimine o reasigne las habitaciones primero.");
-            return "error";
-        } catch (com.example.demo.errors.NotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al eliminar tipo de habitación: " + e.getMessage());
-            return "error";
-        }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRoomType(@PathVariable Long id) {
+        roomTypeService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

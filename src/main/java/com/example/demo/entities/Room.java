@@ -93,6 +93,10 @@ public class Room {
         this.status = status;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("roomType")
+    public RoomType getRoomType() { return type; }
+    public void setRoomType(RoomType roomType) { this.type = roomType; }
+
     public Long getTypeId() {
         return typeId != null ? typeId : type == null ? null : type.getId();
     }

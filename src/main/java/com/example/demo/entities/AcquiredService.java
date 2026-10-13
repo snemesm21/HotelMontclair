@@ -33,6 +33,7 @@ public class AcquiredService {
 
     @ManyToOne
     @JoinColumn(name = "reserva_habitacion_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private ReservationRoom reservationRoom;
 
     @ManyToOne

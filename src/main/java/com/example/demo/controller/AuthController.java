@@ -3,51 +3,34 @@ package com.example.demo.controller;
 import com.example.demo.entities.Client;
 import com.example.demo.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
-@Controller
+@RestController
+@RequestMapping({"/api/auth", "/auth"})
+@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     @Autowired
     private ClientService clientService;
 
-    @GetMapping("/login")
-    public String loginForm() {
-        return "login";
+    public static class LoginRequest {
+        public String identifier;
+        public String password;
     }
 
     @PostMapping("/login")
-    public String processLogin(@RequestParam(value = "username", required = false) String username,
-            @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "password", required = false) String password,
-            Model model) {
-        try {
-            Client client;
-            try {
-                client = clientService.login(username, email, password);
-            } catch (IllegalArgumentException e) {
-                model.addAttribute("error", e.getMessage());
-                return "login";
-            }
-
-            if (client == null) {
-                model.addAttribute("error", "Usuario o contraseña incorrectos.");
-                String identifier = (username != null && !username.trim().isEmpty()) ? username.trim() : (email != null ? email.trim() : "");
-                model.addAttribute("username", identifier);
-                return "login";
-            }
-
-            if (client.isAdmin()) {
-                return "redirect:/admin/rooms";
-            }
-            return "redirect:/profile/" + client.getId();
-        } catch (Exception e) {
-            model.addAttribute("mensaje", "Error inesperado durante el login: " + e.getMessage());
-            return "error";
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        if (req == null || req.identifier == null || req.password == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Credenciales incompletas."));
+        }
+        Client client = clientService.login(req.identifier, req.identifier, req.password);
+        if (client != null) {
+            return ResponseEntity.ok(Map.of("success", true, "client", client));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Usuario o contraseAa incorrectos."));
         }
     }
 }

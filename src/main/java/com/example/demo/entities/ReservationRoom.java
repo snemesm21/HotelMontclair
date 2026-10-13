@@ -36,6 +36,7 @@ public class ReservationRoom {
 
     @ManyToOne
     @JoinColumn(name = "reserva_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Reservation reservation;
 
     @ManyToOne
