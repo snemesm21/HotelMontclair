@@ -25,6 +25,11 @@ public class ServicesServiceImpl implements ServiceService {
     }
 
     @Override
+    public Collection<Service> searchByHidden(boolean hidden) {
+        return repo.findByHidden(hidden);
+    }
+
+    @Override
     @Transactional
     public Service save(Service service) {
         return repo.save(service);

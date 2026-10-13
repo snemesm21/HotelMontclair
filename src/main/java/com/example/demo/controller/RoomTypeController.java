@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.entities.Room;
 import com.example.demo.entities.RoomType;
+import com.example.demo.service.RoomService;
 import com.example.demo.service.RoomTypeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,10 +21,19 @@ public class RoomTypeController {
     @Autowired
     private RoomTypeService roomTypeService;
 
+    @Autowired
+    private RoomService roomService;
+
     @Operation (summary = "Obtiene todos los tipos de cuarto")
     @GetMapping
     public List<RoomType> getAllRoomTypes() {
         return roomTypeService.findAll();
+    }
+
+    @Operation(summary = "Obtiene todas las habitaciones que pertenecen a este tipo de habitación")
+    @GetMapping("/{id}/rooms")
+    public List<Room> getRoomsByRoomType(@PathVariable Long id) {
+        return roomService.findByTypeId(id);
     }
 
     @Operation (summary = "Obtiene un tipo de cuarto por su ID")

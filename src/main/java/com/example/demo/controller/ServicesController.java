@@ -26,10 +26,19 @@ public class ServicesController {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    @Operation(summary = "Obtiene todos los servicios")
+    @Operation(summary = "Obtiene todos los servicios (opcionalmente filtrados por hidden)")
     @GetMapping
-    public Collection<Service> getAllServices() {
+    public Collection<Service> getAllServices(@RequestParam(required = false) Boolean hidden) {
+        if (hidden != null) {
+            return serviceService.searchByHidden(hidden);
+        }
         return serviceService.searchAll();
+    }
+
+    @Operation(summary = "Obtiene únicamente los servicios no ocultos (hidden = false)")
+    @GetMapping({"/nothidden", "/not-hidden"})
+    public Collection<Service> getNotHiddenServices() {
+        return serviceService.searchByHidden(false);
     }
 
     @Operation(summary = "Obtiene un servicio por su ID")

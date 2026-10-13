@@ -29,6 +29,11 @@ class MainControllerTest {
             }
 
             @Override
+            public java.util.Collection<com.example.demo.entities.Service> searchByHidden(boolean hidden) {
+                return List.of();
+            }
+
+            @Override
             public com.example.demo.entities.Service save(com.example.demo.entities.Service service) {
                 return service;
             }

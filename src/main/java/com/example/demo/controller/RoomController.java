@@ -24,10 +24,19 @@ public class RoomController {
     @Autowired
     private RoomTypeService roomTypeService;
 
-    @Operation (summary = "Obtiene todos los cuartos")
+    @Operation(summary = "Obtiene todos los cuartos (opcionalmente filtrados por tipo)")
     @GetMapping
-    public List<Room> getAllRooms() {
+    public List<Room> getAllRooms(@RequestParam(required = false) Long typeId) {
+        if (typeId != null) {
+            return roomService.findByTypeId(typeId);
+        }
         return roomService.findAll();
+    }
+
+    @Operation(summary = "Obtiene todas las habitaciones que pertenecen a un tipo de habitación")
+    @GetMapping({"/type/{typeId}", "/type-room/{typeId}", "/room-type/{typeId}"})
+    public List<Room> getRoomsByTypeId(@PathVariable Long typeId) {
+        return roomService.findByTypeId(typeId);
     }
 
     @Operation (summary = "Obtiene un cuarto por su ID")
