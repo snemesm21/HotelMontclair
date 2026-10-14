@@ -32,9 +32,15 @@ public class AuthController {
         }
         Client client = clientService.login(req.identifier, req.identifier, req.password);
         if (client != null) {
-            return ResponseEntity.ok(Map.of("success", true, "client", client));
+            String redirectUrl = client.isAdmin() ? "/admin/rooms" : "/profile/" + client.getId();
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "client", client,
+                "role", client.getRole(),
+                "redirectUrl", redirectUrl
+            ));
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Usuario o contraseAa incorrectos."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Usuario o contraseña incorrectos."));
         }
     }
 }
