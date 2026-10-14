@@ -54,6 +54,11 @@ class RoomControllerTest {
             }
 
             @Override
+            public List<Room> findByStatus(com.example.demo.entities.RoomStatus status) {
+                return List.of();
+            }
+
+            @Override
             public Room save(Room room) {
                 return room;
             }
@@ -76,11 +81,11 @@ class RoomControllerTest {
 
     @Test
     void testGetAllRoomsWithTypeIdParam() {
-        List<Room> filtered = controller.getAllRooms(2L);
+        List<Room> filtered = controller.getAllRooms(2L, null);
         assertEquals(1, filtered.size());
         assertEquals("201", filtered.get(0).getNumber());
 
-        List<Room> all = controller.getAllRooms(null);
+        List<Room> all = controller.getAllRooms(null, null);
         assertEquals(2, all.size());
     }
 }

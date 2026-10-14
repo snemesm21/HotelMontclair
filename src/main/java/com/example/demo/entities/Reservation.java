@@ -1,3 +1,4 @@
+
 package com.example.demo.entities;
 
 import lombok.AllArgsConstructor;
@@ -31,6 +32,7 @@ import java.util.List;
 @Entity
 @Table(name = "reservas")
 public class Reservation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,12 +56,12 @@ public class Reservation {
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ReservationRoom> reservationRooms = new ArrayList<>();
-    
+
     public void addReservationRoom(ReservationRoom room) {
         reservationRooms.add(room);
         room.setReservation(this);
     }
-    
+
     public void removeReservationRoom(ReservationRoom room) {
         reservationRooms.remove(room);
         room.setReservation(null);

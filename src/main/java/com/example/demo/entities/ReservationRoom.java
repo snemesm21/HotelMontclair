@@ -1,5 +1,7 @@
+
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,20 +25,21 @@ import java.util.List;
 
 @Getter
 @Setter
-@ToString(exclude = {"reservation", "acquiredServices"})
+@ToString(exclude = { "reservation", "acquiredServices" })
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "reserva_habitaciones")
 public class ReservationRoom {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "reserva_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private Reservation reservation;
 
     @ManyToOne

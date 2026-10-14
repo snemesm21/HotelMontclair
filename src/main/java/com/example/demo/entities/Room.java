@@ -1,3 +1,4 @@
+
 package com.example.demo.entities;
 
 import lombok.AllArgsConstructor;
@@ -32,6 +33,7 @@ import java.util.List;
 @Entity
 @Table(name = "rooms")
 public class Room {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -52,7 +54,6 @@ public class Room {
     @Column(nullable = false, length = 20)
     private RoomStatus status;
 
-    // Atributos de visualización
     @Column(length = 100)
     private String name;
 
@@ -104,10 +105,11 @@ public class Room {
     }
 
     public Long getTypeId() {
-        return typeId != null ? typeId : (roomType != null ? roomType.getId() : null);
+        return typeId != null
+                ? typeId
+                : (roomType != null ? roomType.getId() : null);
     }
 
-    // Métodos de compatibilidad limpia
     public RoomType getType() {
         return roomType;
     }
