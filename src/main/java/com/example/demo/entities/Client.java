@@ -1,19 +1,18 @@
 package com.example.demo.entities;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Setter
@@ -54,16 +53,5 @@ public class Client {
 
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(username);
-    }
-
-    public String getNombre() {
-        if (firstName != null && !firstName.isBlank()) {
-            return (lastName != null && !lastName.isBlank()) ? firstName + " " + lastName : firstName;
-        }
-        return username != null ? username : "Cliente";
-    }
-
-    public String getFotoUrl() {
-        return (avatarUrl != null && !avatarUrl.isBlank()) ? avatarUrl : "/Images/avatar-default.png";
     }
 }

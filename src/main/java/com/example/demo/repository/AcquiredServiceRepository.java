@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AcquiredServiceRepository extends JpaRepository<AcquiredService, Long> {
+    boolean existsByService_Id(Long serviceId);
 }

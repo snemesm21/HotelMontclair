@@ -56,7 +56,7 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Transactional
     public void delete(Long id) {
         RoomType roomType = repository.findById(id).orElseThrow(() -> new NotFoundException(id));
-        if (roomRepository.existsByType_Id(id)) {
+        if (roomRepository.existsByRoomType_Id(id)) {
             throw new IllegalArgumentException("No se puede eliminar el tipo de habitación porque tiene habitaciones asociadas.");
         }
         repository.deleteById(id);

@@ -1,10 +1,14 @@
 package com.example.demo.entities;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.Column;
+import lombok.Setter;
+import lombok.ToString;
+
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -18,11 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Setter
@@ -60,38 +59,42 @@ public class Service {
     @Column(length = 80)
     private String priceLabel;
 
-    // Detailed Card Attributes
     @Column(length = 1000)
     private String heroDescription;
-    
+
     @Column(length = 100)
     private String tagline;
-    
+
     @Column(length = 200)
     private String headline;
-    
+
     @Column(length = 2000)
     private String fullDescription;
-    
+
     @Column(length = 100)
     private String scheduleNote;
-    
+
     @Column(length = 100)
     private String priceNote;
-    
+
     @Column(length = 500)
     private String secondaryImageUrl;
+
     @Column(length = 100)
     private String icon;
 
     @ElementCollection
     @CollectionTable(name = "service_highlights", joinColumns = @JoinColumn(name = "service_id"))
+    @Builder.Default
     private List<Highlight> highlights = new ArrayList<>();
+
     @ElementCollection
     @CollectionTable(name = "service_gallery_images", joinColumns = @JoinColumn(name = "service_id"))
+    @Builder.Default
     private List<String> galleryImages = new ArrayList<>();
 
-    @Column(nullable = false, columnDefinition = "boolean default false")
+    @Column(nullable = false)
+    @Builder.Default
     private boolean hidden = false;
 
     public Service(Long id, String name, String description, Double price, String imageUrl) {
@@ -114,85 +117,48 @@ public class Service {
         this.imageUrl = imageUrl;
     }
 
-    @Getter
-    @Setter
-    @ToString
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Embeddable
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Highlight {
         private String title;
         private String description;
-    }
 
-    public String getTag() {
-        if (tag != null && !tag.isBlank())
-            return tag;
-        return (id != null) ? String.format("EXPERIENCIA %02d", id) : "EXPERIENCIA";
-    }
+        public Highlight() {
+        }
 
-    public String getSchedule() {
-        if (schedule != null && !schedule.isBlank())
-            return schedule;
-        return "8:00 AM - 10:00 PM";
-    }
+        public Highlight(String title, String description) {
+            this.title = title;
+            this.description = description;
+        }
 
-    public String getPriceLabel() {
-        if (priceLabel != null && !priceLabel.isBlank())
-            return priceLabel;
-        if (price == null || price == 0.0)
-            return "Incluido";
-        return String.format("Desde € %.0f EUR", price);
-    }
+        public String getTitle() {
+            return title;
+        }
 
-    public String getHeroDescription() {
-        if (heroDescription != null && !heroDescription.isBlank())
-            return heroDescription;
-        return description;
-    }
+        public void setTitle(String title) {
+            this.title = title;
+        }
 
-    public String getTagline() {
-        if (tagline != null && !tagline.isBlank())
-            return tagline;
-        return getTag() + " · SIGNATURE EXPERIENCE";
-    }
+        public String getDescription() {
+            return description;
+        }
 
-    public String getHeadline() {
-        if (headline != null && !headline.isBlank())
-            return headline;
-        return "Una experiencia exclusiva diseñada para ti";
-    }
-
-    public String getFullDescription() {
-        if (fullDescription != null && !fullDescription.isBlank())
-            return fullDescription;
-        return description;
-    }
-
-    public String getScheduleNote() {
-        if (scheduleNote != null && !scheduleNote.isBlank())
-            return scheduleNote;
-        return "Todos los días";
-    }
-
-    public String getPriceNote() {
-        if (priceNote != null && !priceNote.isBlank())
-            return priceNote;
-        return "Por persona · reserva previa";
-    }
-
-    public String getSecondaryImageUrl() {
-        if (secondaryImageUrl != null && !secondaryImageUrl.isBlank())
-            return secondaryImageUrl;
-        return imageUrl;
+        public void setDescription(String description) {
+            this.description = description;
+        }
     }
 
     public void addHighlight(String title, String description) {
+        if (this.highlights == null) {
+            this.highlights = new ArrayList<>();
+        }
         this.highlights.add(new Highlight(title, description));
     }
 
     public void addGalleryImage(String url) {
+        if (this.galleryImages == null) {
+            this.galleryImages = new ArrayList<>();
+        }
         this.galleryImages.add(url);
     }
 }

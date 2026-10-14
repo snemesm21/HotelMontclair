@@ -65,6 +65,11 @@ class ServicesControllerTest {
             }
 
             @Override
+            public Service update(Long id, Service service) {
+                return service;
+            }
+
+            @Override
             public void delete(Long id) {
             }
         };

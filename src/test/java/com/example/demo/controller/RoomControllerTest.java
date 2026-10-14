@@ -26,8 +26,8 @@ class RoomControllerTest {
         RoomType type1 = RoomType.builder().id(1L).name("Deluxe").build();
         RoomType type2 = RoomType.builder().id(2L).name("Suite").build();
 
-        roomType1 = Room.builder().id(101L).number("101").type(type1).build();
-        roomType2 = Room.builder().id(201L).number("201").type(type2).build();
+        roomType1 = Room.builder().id(101L).number("101").roomType(type1).build();
+        roomType2 = Room.builder().id(201L).number("201").roomType(type2).build();
 
         RoomService mockRoomService = new RoomService() {
             @Override

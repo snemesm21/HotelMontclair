@@ -19,6 +19,9 @@ public class RoomServiceImpl implements RoomService {
     @Autowired
     private RoomTypeRepository typeRepo;
 
+    @Autowired
+    private com.example.demo.repository.ReservationRoomRepository reservationRoomRepo;
+
     @Override
     public List<Room> findAll() {
         return roomRepo.findAll();
@@ -26,8 +29,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room findById(Long id) {
-        Room room = roomRepo.findById(id).orElseThrow(() -> new NotFoundException(id));
-        return room;
+        return roomRepo.findById(id).orElseThrow(() -> new NotFoundException(id));
     }
 
     @Override
@@ -35,7 +37,7 @@ public class RoomServiceImpl implements RoomService {
         if (typeId == null) {
             return List.of();
         }
-        return roomRepo.findByType_Id(typeId);
+        return roomRepo.findByRoomType_Id(typeId);
     }
 
     @Override
@@ -44,60 +46,41 @@ public class RoomServiceImpl implements RoomService {
         if (room.getNumber() == null || room.getNumber().isBlank()) {
             throw new IllegalArgumentException("El número de habitación es obligatorio.");
         }
+
+        // Asignar RoomType si viene typeId
         if (room.getTypeId() != null) {
             RoomType type = typeRepo.findById(room.getTypeId()).orElse(null);
             if (type != null) {
-                room.setType(type);
+                room.setRoomType(type);
             }
-        } else if (room.getType() == null) {
+        }
+
+        if (room.getRoomType() == null) {
             List<RoomType> types = typeRepo.findAll();
             if (!types.isEmpty()) {
-                room.setType(types.get(0));
+                room.setRoomType(types.get(0));
+            } else {
+                throw new IllegalArgumentException("Debes asignar un tipo de habitación válido.");
             }
-        }
-        // Validar que tenga tipo asignado
-        if (room.getType() == null) {
-            throw new IllegalArgumentException(
-                    "Debes seleccionar un tipo de habitación. Asegúrate de haber creado al menos un tipo antes.");
         }
 
-        if (room.getId() != null) {
-            Room existing = roomRepo.findById(room.getId()).orElse(null);
-            if (existing != null) {
-                if (room.getHighlights() == null || room.getHighlights().isEmpty()) {
-                    room.setHighlights(existing.getHighlights());
-                }
-                if (room.getGalleryImages() == null || room.getGalleryImages().isEmpty()) {
-                    room.setGalleryImages(existing.getGalleryImages());
-                }
-                if (room.getHeroDescription() == null || room.getHeroDescription().isBlank()) {
-                    room.setHeroDescription(existing.getHeroDescription());
-                }
-                if (room.getHeadline() == null || room.getHeadline().isBlank()) {
-                    room.setHeadline(existing.getHeadline());
-                }
-                if (room.getFullDescription() == null || room.getFullDescription().isBlank()) {
-                    room.setFullDescription(existing.getFullDescription());
-                }
-            }
-        }
         // Validar número de habitación duplicado
-        if (room.getNumber() != null && !room.getNumber().isBlank()) {
-            Room existing = roomRepo.findByNumber(room.getNumber()).orElse(null);
-            if (existing != null && !existing.getId().equals(room.getId())) {
-                throw new IllegalArgumentException(
-                        "Ya existe una habitación con el número '" + room.getNumber()
-                                + "'. Por favor elige un número diferente.");
-            }
+        Room existing = roomRepo.findByNumber(room.getNumber().trim()).orElse(null);
+        if (existing != null && !existing.getId().equals(room.getId())) {
+            throw new IllegalArgumentException(
+                    "Ya existe una habitación con el número '" + room.getNumber() + "'.");
         }
-        return roomRepo.save(room);
 
+        return roomRepo.save(room);
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
         Room room = roomRepo.findById(id).orElseThrow(() -> new NotFoundException(id));
-        roomRepo.deleteById(id);
+        if (reservationRoomRepo.existsByRoom_Id(id)) {
+            throw new IllegalArgumentException("No se puede eliminar la habitación porque tiene reservaciones registradas.");
+        }
+        roomRepo.delete(room);
     }
 }
