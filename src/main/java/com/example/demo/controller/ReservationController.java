@@ -24,275 +24,275 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:4200")
 public class ReservationController {
 
-    @Autowired
-    private ReservationManagerService reservationService;
+        @Autowired
+        private ReservationManagerService reservationService;
 
-    @Operation(summary = "Obtiene todas las reservas")
-    @GetMapping
-    public List<Reservation> getAllReservations() {
-        return reservationService.searchAll();
-    }
-
-    @Operation(summary = "Obtiene un resumen de las reservas")
-    @GetMapping("/summary")
-    public List<ReservationDTO> getReservationSummaries() {
-        return reservationService.searchAll()
-                .stream()
-                .map(this::toDTO)
-                .toList();
-    }
-
-    private ReservationDTO toDTO(Reservation reservation) {
-
-        ReservationRoom reservationRoom = null;
-
-        if (reservation.getReservationRooms() != null
-                && !reservation.getReservationRooms().isEmpty()) {
-            reservationRoom = reservation.getReservationRooms().get(0);
+        @Operation(summary = "Obtiene todas las reservas")
+        @GetMapping
+        public List<Reservation> getAllReservations() {
+                return reservationService.searchAll();
         }
 
-        String roomNumber = "";
-        String roomName = "";
-        String roomTypeName = "";
+        @Operation(summary = "Obtiene un resumen de las reservas")
+        @GetMapping("/summary")
+        public List<ReservationDTO> getReservationSummaries() {
+                return reservationService.searchAll()
+                                .stream()
+                                .map(this::toDTO)
+                                .toList();
+        }
 
-        double pricePerNight = 0;
-        double servicesSubtotal = 0;
+        private ReservationDTO toDTO(Reservation reservation) {
 
-        List<ReservationDTO.ServiceDetail> services = new ArrayList<>();
+                ReservationRoom reservationRoom = null;
 
-        if (reservationRoom != null) {
-
-            pricePerNight = reservationRoom.getPricePerNight();
-
-            if (reservationRoom.getRoom() != null) {
-
-                roomNumber = reservationRoom.getRoom().getNumber();
-
-                roomName = reservationRoom.getRoom().getName();
-
-                if (reservationRoom.getRoom().getRoomType() != null) {
-                    roomTypeName = reservationRoom.getRoom()
-                            .getRoomType().getName();
+                if (reservation.getReservationRooms() != null
+                                && !reservation.getReservationRooms().isEmpty()) {
+                        reservationRoom = reservation.getReservationRooms().get(0);
                 }
-            }
 
-            if (reservationRoom.getAcquiredServices() != null) {
+                String roomNumber = "";
+                String roomName = "";
+                String roomTypeName = "";
 
-                for (AcquiredService acquired : reservationRoom.getAcquiredServices()) {
+                double pricePerNight = 0;
+                double servicesSubtotal = 0;
 
-                    String serviceName = "";
+                List<ReservationDTO.ServiceDetail> services = new ArrayList<>();
 
-                    if (acquired.getService() != null) {
-                        serviceName = acquired.getService().getName();
-                    }
+                if (reservationRoom != null) {
 
-                    double subtotal = acquired.getQuantity()
-                            * acquired.getUnitPrice();
+                        pricePerNight = reservationRoom.getPricePerNight();
 
-                    servicesSubtotal += subtotal;
+                        if (reservationRoom.getRoom() != null) {
 
-                    services.add(
-                            ReservationDTO.ServiceDetail.builder()
-                                    .id(acquired.getId())
-                                    .name(serviceName)
-                                    .quantity(acquired.getQuantity())
-                                    .unitPrice(acquired.getUnitPrice())
-                                    .subtotal(subtotal)
-                                    .build());
+                                roomNumber = reservationRoom.getRoom().getNumber();
+
+                                roomName = reservationRoom.getRoom().getName();
+
+                                if (reservationRoom.getRoom().getRoomType() != null) {
+                                        roomTypeName = reservationRoom.getRoom()
+                                                        .getRoomType().getName();
+                                }
+                        }
+
+                        if (reservationRoom.getAcquiredServices() != null) {
+
+                                for (AcquiredService acquired : reservationRoom.getAcquiredServices()) {
+
+                                        String serviceName = "";
+
+                                        if (acquired.getService() != null) {
+                                                serviceName = acquired.getService().getName();
+                                        }
+
+                                        double subtotal = acquired.getQuantity()
+                                                        * acquired.getUnitPrice();
+
+                                        servicesSubtotal += subtotal;
+
+                                        services.add(
+                                                        ReservationDTO.ServiceDetail.builder()
+                                                                        .id(acquired.getId())
+                                                                        .name(serviceName)
+                                                                        .quantity(acquired.getQuantity())
+                                                                        .unitPrice(acquired.getUnitPrice())
+                                                                        .subtotal(subtotal)
+                                                                        .build());
+                                }
+                        }
                 }
-            }
+
+                long nights = ChronoUnit.DAYS.between(
+                                reservation.getCheckInDate(),
+                                reservation.getCheckOutDate());
+
+                if (nights < 1) {
+                        nights = 1;
+                }
+
+                double roomSubtotal = pricePerNight * nights;
+
+                double totalPrice = roomSubtotal + servicesSubtotal;
+
+                return ReservationDTO.builder()
+                                .id(reservation.getId())
+                                .clientFirstName(
+                                                reservation.getClient().getFirstName())
+                                .clientLastName(
+                                                reservation.getClient().getLastName())
+                                .clientEmail(
+                                                reservation.getClient().getEmail())
+                                .clientPhone(
+                                                reservation.getClient().getPhone())
+                                .roomNumber(roomNumber)
+                                .roomName(roomName)
+                                .roomTypeName(roomTypeName)
+                                .pricePerNight(pricePerNight)
+                                .checkInDate(reservation.getCheckInDate())
+                                .checkOutDate(reservation.getCheckOutDate())
+                                .numberOfPeople(reservation.getNumberOfPeople())
+                                .status(reservation.getStatus())
+                                .nights(nights)
+                                .roomSubtotal(roomSubtotal)
+                                .servicesSubtotal(servicesSubtotal)
+                                .totalPrice(totalPrice)
+                                .services(services)
+                                .build();
         }
 
-        long nights = ChronoUnit.DAYS.between(
-                reservation.getCheckInDate(),
-                reservation.getCheckOutDate());
+        @Operation(summary = "Obtiene una reserva por su ID")
+        @GetMapping("/{id}")
+        public ResponseEntity<Reservation> getReservationById(
+                        @PathVariable Long id) {
 
-        if (nights < 1) {
-            nights = 1;
+                Reservation res = reservationService.searchById(id);
+
+                if (res == null) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                return ResponseEntity.ok(res);
         }
 
-        double roomSubtotal = pricePerNight * nights;
+        @Operation(summary = "Obtiene las reservas de un cliente por su ID")
+        @GetMapping("/client/{clientId}")
+        public List<Reservation> getReservationsByClientId(
+                        @PathVariable Long clientId) {
 
-        double totalPrice = roomSubtotal + servicesSubtotal;
-
-        return ReservationDTO.builder()
-                .id(reservation.getId())
-                .clientFirstName(
-                        reservation.getClient().getFirstName())
-                .clientLastName(
-                        reservation.getClient().getLastName())
-                .clientEmail(
-                        reservation.getClient().getEmail())
-                .clientPhone(
-                        reservation.getClient().getPhone())
-                .roomNumber(roomNumber)
-                .roomName(roomName)
-                .roomTypeName(roomTypeName)
-                .pricePerNight(pricePerNight)
-                .checkInDate(reservation.getCheckInDate())
-                .checkOutDate(reservation.getCheckOutDate())
-                .numberOfPeople(reservation.getNumberOfPeople())
-                .status(reservation.getStatus())
-                .nights(nights)
-                .roomSubtotal(roomSubtotal)
-                .servicesSubtotal(servicesSubtotal)
-                .totalPrice(totalPrice)
-                .services(services)
-                .build();
-    }
-
-    @Operation(summary = "Obtiene una reserva por su ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<Reservation> getReservationById(
-            @PathVariable Long id) {
-
-        Reservation res = reservationService.searchById(id);
-
-        if (res == null) {
-            return ResponseEntity.notFound().build();
+                return reservationService.searchByClientId(clientId);
         }
 
-        return ResponseEntity.ok(res);
-    }
+        @Operation(summary = "Crea una nueva reserva")
+        @PostMapping
+        public ResponseEntity<?> createReservation(
+                        @RequestBody Map<String, Object> req) {
 
-    @Operation(summary = "Obtiene las reservas de un cliente por su ID")
-    @GetMapping("/client/{clientId}")
-    public List<Reservation> getReservationsByClientId(
-            @PathVariable Long clientId) {
+                try {
+                        Long clientId = req.get("clientId") != null
+                                        ? Long.valueOf(req.get("clientId").toString())
+                                        : null;
 
-        return reservationService.searchByClientId(clientId);
-    }
+                        Long roomTypeId = req.get("roomTypeId") != null
+                                        ? Long.valueOf(req.get("roomTypeId").toString())
+                                        : null;
 
-    @Operation(summary = "Crea una nueva reserva")
-    @PostMapping
-    public ResponseEntity<?> createReservation(
-            @RequestBody Map<String, Object> req) {
+                        LocalDate checkIn = req.get("checkInDate") != null
+                                        ? LocalDate.parse(
+                                                        req.get("checkInDate").toString())
+                                        : null;
 
-        try {
-            Long clientId = req.get("clientId") != null
-                    ? Long.valueOf(req.get("clientId").toString())
-                    : null;
+                        LocalDate checkOut = req.get("checkOutDate") != null
+                                        ? LocalDate.parse(
+                                                        req.get("checkOutDate").toString())
+                                        : null;
 
-            Long roomId = req.get("roomId") != null
-                    ? Long.valueOf(req.get("roomId").toString())
-                    : null;
+                        int people = req.get("numberOfPeople") != null
+                                        ? Integer.parseInt(
+                                                        req.get("numberOfPeople").toString())
+                                        : 1;
 
-            LocalDate checkIn = req.get("checkInDate") != null
-                    ? LocalDate.parse(
-                            req.get("checkInDate").toString())
-                    : null;
+                        List<Long> serviceIds = null;
 
-            LocalDate checkOut = req.get("checkOutDate") != null
-                    ? LocalDate.parse(
-                            req.get("checkOutDate").toString())
-                    : null;
+                        if (req.get("serviceIds") instanceof List<?> rawList) {
+                                serviceIds = rawList.stream()
+                                                .map(s -> Long.valueOf(s.toString()))
+                                                .toList();
+                        }
 
-            int people = req.get("numberOfPeople") != null
-                    ? Integer.parseInt(
-                            req.get("numberOfPeople").toString())
-                    : 1;
+                        Reservation saved = reservationService.createReservation(
+                                        clientId,
+                                        roomTypeId,
+                                        checkIn,
+                                        checkOut,
+                                        people,
+                                        serviceIds);
 
-            List<Long> serviceIds = null;
+                        return ResponseEntity
+                                        .status(HttpStatus.CREATED)
+                                        .body(saved);
 
-            if (req.get("serviceIds") instanceof List<?> rawList) {
-                serviceIds = rawList.stream()
-                        .map(s -> Long.valueOf(s.toString()))
-                        .toList();
-            }
+                } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest()
+                                        .body(e.getMessage());
 
-            Reservation saved = reservationService.createReservation(
-                    clientId,
-                    roomId,
-                    checkIn,
-                    checkOut,
-                    people,
-                    serviceIds);
-
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(saved);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(e.getMessage());
-
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al crear reserva: " + e.getMessage());
+                } catch (Exception e) {
+                        return ResponseEntity
+                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body("Error al crear reserva: " + e.getMessage());
+                }
         }
-    }
 
-    @Operation(summary = "Actualiza una reserva existente por su ID")
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateReservation(
-            @PathVariable Long id,
-            @RequestBody Map<String, Object> req) {
+        @Operation(summary = "Actualiza una reserva existente por su ID")
+        @PutMapping("/{id}")
+        public ResponseEntity<?> updateReservation(
+                        @PathVariable Long id,
+                        @RequestBody Map<String, Object> req) {
 
-        try {
-            Long clientId = req.get("clientId") != null
-                    ? Long.valueOf(req.get("clientId").toString())
-                    : null;
+                try {
+                        Long clientId = req.get("clientId") != null
+                                        ? Long.valueOf(req.get("clientId").toString())
+                                        : null;
 
-            Long roomId = req.get("roomId") != null
-                    ? Long.valueOf(req.get("roomId").toString())
-                    : null;
+                        Long roomTypeId = req.get("roomTypeId") != null
+                                        ? Long.valueOf(req.get("roomTypeId").toString())
+                                        : null;
 
-            LocalDate checkIn = req.get("checkInDate") != null
-                    ? LocalDate.parse(
-                            req.get("checkInDate").toString())
-                    : null;
+                        LocalDate checkIn = req.get("checkInDate") != null
+                                        ? LocalDate.parse(
+                                                        req.get("checkInDate").toString())
+                                        : null;
 
-            LocalDate checkOut = req.get("checkOutDate") != null
-                    ? LocalDate.parse(
-                            req.get("checkOutDate").toString())
-                    : null;
+                        LocalDate checkOut = req.get("checkOutDate") != null
+                                        ? LocalDate.parse(
+                                                        req.get("checkOutDate").toString())
+                                        : null;
 
-            int people = req.get("numberOfPeople") != null
-                    ? Integer.parseInt(
-                            req.get("numberOfPeople").toString())
-                    : 1;
+                        int people = req.get("numberOfPeople") != null
+                                        ? Integer.parseInt(
+                                                        req.get("numberOfPeople").toString())
+                                        : 1;
 
-            List<Long> serviceIds = null;
+                        List<Long> serviceIds = null;
 
-            if (req.get("serviceIds") instanceof List<?> rawList) {
-                serviceIds = rawList.stream()
-                        .map(s -> Long.valueOf(s.toString()))
-                        .toList();
-            }
+                        if (req.get("serviceIds") instanceof List<?> rawList) {
+                                serviceIds = rawList.stream()
+                                                .map(s -> Long.valueOf(s.toString()))
+                                                .toList();
+                        }
 
-            Reservation updated = reservationService.updateReservation(
-                    id,
-                    clientId,
-                    roomId,
-                    checkIn,
-                    checkOut,
-                    people,
-                    serviceIds);
+                        Reservation updated = reservationService.updateReservation(
+                                        id,
+                                        clientId,
+                                        roomTypeId,
+                                        checkIn,
+                                        checkOut,
+                                        people,
+                                        serviceIds);
 
-            if (updated == null) {
-                return ResponseEntity.notFound().build();
-            }
+                        if (updated == null) {
+                                return ResponseEntity.notFound().build();
+                        }
 
-            return ResponseEntity.ok(updated);
+                        return ResponseEntity.ok(updated);
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(e.getMessage());
+                } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest()
+                                        .body(e.getMessage());
 
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al actualizar reserva: " + e.getMessage());
+                } catch (Exception e) {
+                        return ResponseEntity
+                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body("Error al actualizar reserva: " + e.getMessage());
+                }
         }
-    }
 
-    @Operation(summary = "Elimina una reserva por su ID")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReservation(
-            @PathVariable Long id) {
+        @Operation(summary = "Elimina una reserva por su ID")
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteReservation(
+                        @PathVariable Long id) {
 
-        reservationService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
+                reservationService.delete(id);
+                return ResponseEntity.noContent().build();
+        }
 }

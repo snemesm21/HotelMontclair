@@ -13,6 +13,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -51,6 +53,7 @@ public class Room {
     @JoinColumn(name = "type_id", nullable = false)
     private RoomType roomType;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private RoomStatus status;
 
@@ -94,7 +97,12 @@ public class Room {
     @Builder.Default
     private List<String> galleryImages = new ArrayList<>();
 
-    public Room(Long id, String number, int floor, Long typeId, RoomStatus status) {
+    public Room(
+            Long id,
+            String number,
+            int floor,
+            Long typeId,
+            RoomStatus status) {
         this.id = id;
         this.number = number;
         this.floor = floor;
@@ -120,6 +128,7 @@ public class Room {
 
     @Embeddable
     public static class Highlight {
+
         private String title;
         private String description;
 
@@ -152,13 +161,16 @@ public class Room {
         if (this.highlights == null) {
             this.highlights = new ArrayList<>();
         }
-        this.highlights.add(new Highlight(title, description));
+
+        this.highlights.add(
+                new Highlight(title, description));
     }
 
     public void addGalleryImage(String url) {
         if (this.galleryImages == null) {
             this.galleryImages = new ArrayList<>();
         }
+
         this.galleryImages.add(url);
     }
 }
