@@ -1,4 +1,3 @@
-
 package com.example.demo.service;
 
 import com.example.demo.entities.*;
@@ -6,6 +5,7 @@ import com.example.demo.errors.NotFoundException;
 import com.example.demo.repository.ClientRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.RoomRepository;
+import com.example.demo.repository.ReservationRoomRepository;
 import com.example.demo.repository.ServiceRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @Service
 public class ReservationManagerServiceImpl
@@ -25,6 +27,9 @@ public class ReservationManagerServiceImpl
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private ReservationRoomRepository reservationRoomRepository;
 
     @Autowired
     private ClientRepository clientRepository;
@@ -78,6 +83,7 @@ public class ReservationManagerServiceImpl
             int numberOfPeople,
             Long excludeReservationId,
             Long preferredRoomId) {
+
         if (roomTypeId == null) {
             throw new IllegalArgumentException(
                     "El tipo de habitación es obligatorio.");
@@ -90,13 +96,28 @@ public class ReservationManagerServiceImpl
 
         validateDates(checkInDate, checkOutDate);
 
-        List<Room> availableRooms = roomRepository.findAvailableRooms(
-                roomTypeId,
-                RoomStatus.AVAILABLE,
-                numberOfPeople,
-                checkInDate,
-                checkOutDate,
-                excludeReservationId);
+        // Consulta 1: habitaciones candidatas
+        List<Room> candidateRooms = roomRepository
+                .findByRoomType_IdAndStatusAndCapacityGreaterThanEqualOrderByIdAsc(
+                        roomTypeId,
+                        RoomStatus.AVAILABLE,
+                        numberOfPeople);
+
+        // Consulta 2: habitaciones ocupadas
+        Set<Long> occupiedRoomIds = new HashSet<>(
+                reservationRoomRepository.findOccupiedRoomIds(
+                        checkInDate,
+                        checkOutDate,
+                        excludeReservationId));
+
+        // Filtrar habitaciones ocupadas
+        List<Room> availableRooms = new ArrayList<>();
+
+        for (Room room : candidateRooms) {
+            if (!occupiedRoomIds.contains(room.getId())) {
+                availableRooms.add(room);
+            }
+        }
 
         if (availableRooms.isEmpty()) {
             throw new IllegalArgumentException(
@@ -104,6 +125,7 @@ public class ReservationManagerServiceImpl
                             + "para las fechas y cantidad de huéspedes seleccionados.");
         }
 
+        // Priorizar la habitación actual si sigue disponible
         if (preferredRoomId != null) {
             for (Room room : availableRooms) {
                 if (preferredRoomId.equals(room.getId())) {
@@ -119,27 +141,31 @@ public class ReservationManagerServiceImpl
             ReservationRoom reservationRoom,
             List<Long> serviceIds,
             LocalDate checkInDate) {
+
         if (serviceIds == null) {
             return;
         }
 
         for (Long serviceId : serviceIds) {
-            com.example.demo.entities.Service service = serviceRepository.findById(serviceId)
-                    .orElseThrow(
-                            () -> new IllegalArgumentException(
-                                    "El servicio con ID "
-                                            + serviceId
-                                            + " no existe."));
 
-            AcquiredService acquiredService = AcquiredService.builder()
-                    .service(service)
-                    .date(checkInDate)
-                    .quantity(1)
-                    .unitPrice(
-                            service.getPrice() != null
-                                    ? service.getPrice()
-                                    : 0.0)
-                    .build();
+            com.example.demo.entities.Service service =
+                    serviceRepository.findById(serviceId)
+                            .orElseThrow(
+                                    () -> new IllegalArgumentException(
+                                            "El servicio con ID "
+                                                    + serviceId
+                                                    + " no existe."));
+
+            AcquiredService acquiredService =
+                    AcquiredService.builder()
+                            .service(service)
+                            .date(checkInDate)
+                            .quantity(1)
+                            .unitPrice(
+                                    service.getPrice() != null
+                                            ? service.getPrice()
+                                            : 0.0)
+                            .build();
 
             reservationRoom.addAcquiredService(acquiredService);
         }
@@ -154,6 +180,7 @@ public class ReservationManagerServiceImpl
             LocalDate checkOutDate,
             int numberOfPeople,
             List<Long> serviceIds) {
+
         if (clientId == null) {
             throw new IllegalArgumentException(
                     "El cliente es obligatorio.");
@@ -180,11 +207,12 @@ public class ReservationManagerServiceImpl
                 .reservationRooms(new ArrayList<>())
                 .build();
 
-        ReservationRoom reservationRoom = ReservationRoom.builder()
-                .room(room)
-                .pricePerNight(room.getPricePerNight())
-                .acquiredServices(new ArrayList<>())
-                .build();
+        ReservationRoom reservationRoom =
+                ReservationRoom.builder()
+                        .room(room)
+                        .pricePerNight(room.getPricePerNight())
+                        .acquiredServices(new ArrayList<>())
+                        .build();
 
         addServices(
                 reservationRoom,
@@ -206,7 +234,9 @@ public class ReservationManagerServiceImpl
             LocalDate checkOutDate,
             int numberOfPeople,
             List<Long> serviceIds) {
-        Reservation reservation = reservationRepository.findById(id).orElse(null);
+
+        Reservation reservation =
+                reservationRepository.findById(id).orElse(null);
 
         if (reservation == null) {
             return null;
@@ -231,7 +261,8 @@ public class ReservationManagerServiceImpl
         if (reservation.getReservationRooms() != null
                 && !reservation.getReservationRooms().isEmpty()) {
 
-            reservationRoom = reservation.getReservationRooms().get(0);
+            reservationRoom =
+                    reservation.getReservationRooms().get(0);
 
         } else {
             reservationRoom = ReservationRoom.builder()
@@ -299,7 +330,9 @@ public class ReservationManagerServiceImpl
     @Override
     @Transactional
     public void delete(Long id) {
-        Reservation reservation = reservationRepository.findById(id).orElse(null);
+
+        Reservation reservation =
+                reservationRepository.findById(id).orElse(null);
 
         if (reservation != null) {
             reservationRepository.delete(reservation);
