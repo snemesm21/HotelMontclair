@@ -20,17 +20,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByStatus(RoomStatus status);
 
-    // Primera consulta: habitaciones que cumplen los requisitos básicos.
+    // Consulta de habitaciones que cumplen los requisitos básicos de tipo, estado y capacidad
     List<Room> findByRoomType_IdAndStatusAndCapacityGreaterThanEqualOrderByIdAsc(
             Long roomTypeId,
             RoomStatus status,
             int numberOfPeople);
-
-    default boolean existsByType_Id(Long id) {
-        return existsByRoomType_Id(id);
-    }
-
-    default List<Room> findByType_Id(Long typeId) {
-        return findByRoomType_Id(typeId);
-    }
 }

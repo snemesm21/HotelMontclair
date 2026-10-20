@@ -1,6 +1,6 @@
-
 package com.example.demo.service;
 
+import com.example.demo.dto.ReservationDTO;
 import com.example.demo.entities.Reservation;
 
 import java.time.LocalDate;
@@ -9,6 +9,8 @@ import java.util.List;
 public interface ReservationManagerService {
 
     List<Reservation> searchAll();
+
+    List<ReservationDTO> getReservationSummaries();
 
     Reservation searchById(Long id);
 

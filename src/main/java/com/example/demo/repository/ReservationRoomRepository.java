@@ -16,12 +16,12 @@ public interface ReservationRoomRepository
 
     boolean existsByRoom_Id(Long roomId);
 
-    // Segunda consulta: habitaciones ocupadas en el periodo.
     @Query("""
             SELECT DISTINCT rr.room.id
             FROM ReservationRoom rr
             JOIN rr.reservation r
             WHERE r.id <> :excludeReservationId
+              AND (r.status IS NULL OR UPPER(r.status) <> 'CANCELLED')
               AND r.checkInDate < :checkOutDate
               AND r.checkOutDate > :checkInDate
             """)
