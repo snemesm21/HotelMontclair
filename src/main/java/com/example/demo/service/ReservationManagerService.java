@@ -7,8 +7,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Interfaz del servicio de gestión de reservas del hotel.
- * Define la lógica de negocio para crear, actualizar, cancelar,
+ * Interfaz del servicio de gestion de reservas del hotel.
+ * Define la logica de negocio para crear, actualizar, cancelar,
  * activar estancias, liquidar cuentas y finalizar estancias.
  */
 public interface ReservationManagerService {
@@ -48,7 +48,9 @@ public interface ReservationManagerService {
 
     /**
      * Cancela una reserva (cambia su estado a CANCELLED).
-     * No la elimina físicamente, permitiendo que el usuario conserve su historial.
+     * No la elimina fisicamente, permitiendo que el usuario conserve su historial.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
      */
     ReservationDTO cancelReservation(Long id);
 
@@ -59,7 +61,7 @@ public interface ReservationManagerService {
 
     /**
      * Finaliza la estancia del cliente (estado INACTIVE).
-     * REGLA DE NEGOCIO: Solo se permite si la cuenta está vacía/pagada (paid == true).
+     * REGLA DE NEGOCIO: Solo se permite si la cuenta esta vacia/pagada (paid == true).
      */
     ReservationDTO finishStay(Long id);
 
@@ -68,4 +70,11 @@ public interface ReservationManagerService {
      * Limpia la cuenta del cliente dejando el saldo pendiente en 0.
      */
     ReservationDTO payStayAccount(Long id);
+
+    /**
+     * Asigna un servicio consumido a una habitacion durante la estancia.
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * no se debe poder asignar ningun servicio.
+     */
+    ReservationDTO assignServiceToRoom(Long roomId, Long serviceId, int quantity);
 }

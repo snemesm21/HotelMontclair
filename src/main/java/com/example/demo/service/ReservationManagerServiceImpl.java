@@ -643,6 +643,11 @@ public class ReservationManagerServiceImpl
     /**
      * Eliminación de reserva. Por requisito de negocio del historial de reservas,
      * no se elimina físicamente de la base de datos, sino que se cancela lógicamente.
+    /**
+     * Eliminacion de reserva. Por requisito de negocio del historial de reservas,
+     * no se elimina fisicamente de la base de datos, sino que se cancela logicamente.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
      */
     @Override
     @Transactional
@@ -655,13 +660,28 @@ public class ReservationManagerServiceImpl
                 reservationRepository.findById(id).orElse(null);
 
         if (reservation != null) {
+            if (STATUS_ACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+                throw new IllegalStateException("Solo se pueden cancelar reservas que todavia no estan activas.");
+            }
+            if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+                throw new IllegalStateException("No se puede cancelar una estancia que ya ha finalizado.");
+            }
+            if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+                throw new IllegalStateException("La reserva ya ha sido cancelada.");
+            }
+            if (reservation.getCheckInDate() == null || !reservation.getCheckInDate().isAfter(LocalDate.now())) {
+                throw new IllegalStateException(
+                        "Solo se pueden cancelar reservas cuya fecha de inicio sea posterior a la fecha actual (" + LocalDate.now() + ").");
+            }
             reservation.setStatus(STATUS_CANCELLED);
             reservationRepository.save(reservation);
         }
     }
 
     /**
-     * Cancela la reserva cambiando su estado a CANCELLED y liberando la habitación para el inventario.
+     * Cancela la reserva cambiando su estado a CANCELLED y liberando la habitacion para el inventario.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
      */
     @Override
     @Transactional
@@ -673,8 +693,22 @@ public class ReservationManagerServiceImpl
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(id));
 
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("La reserva ya ha sido cancelada.");
+        }
+
+        if (STATUS_ACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("Solo se pueden cancelar reservas que todavia no estan activas.");
+        }
+
         if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
-            throw new IllegalArgumentException("No se puede cancelar una estancia que ya ha finalizado.");
+            throw new IllegalStateException("No se puede cancelar una estancia que ya ha finalizado.");
+        }
+
+        // Regla 4: la fecha de inicio debe ser posterior a la fecha actual
+        if (reservation.getCheckInDate() == null || !reservation.getCheckInDate().isAfter(LocalDate.now())) {
+            throw new IllegalStateException(
+                    "Solo se pueden cancelar reservas cuya fecha de inicio sea posterior a la fecha actual (" + LocalDate.now() + ").");
         }
 
         reservation.setStatus(STATUS_CANCELLED);
@@ -683,7 +717,7 @@ public class ReservationManagerServiceImpl
     }
 
     /**
-     * Activa la estancia del cliente (Check-in / Huésped llega a su reserva).
+     * Activa la estancia del cliente (Check-in / Huesped llega a su reserva).
      * Estado pasa a ACTIVE.
      */
     @Override
@@ -711,7 +745,7 @@ public class ReservationManagerServiceImpl
 
     /**
      * Finaliza la estancia del cliente (Check-out). Estado pasa a INACTIVE.
-     * REGLA ESTRICTA DE NEGOCIO: Solo se permite si la cuenta está vacía / ya pagó (paid == true).
+     * REGLA ESTRICTA DE NEGOCIO: Solo se permite si la cuenta esta vacia / ya pago (paid == true).
      */
     @Override
     @Transactional
@@ -727,11 +761,11 @@ public class ReservationManagerServiceImpl
             throw new IllegalArgumentException("No se puede finalizar una reserva cancelada.");
         }
 
-        // VALIDACIÓN CRÍTICA DE NEGOCIO: Cuenta debe estar en 0 (pagada)
+        // VALIDACION CRITICA DE NEGOCIO: Cuenta debe estar en 0 (pagada)
         if (!reservation.isPaid()) {
             throw new IllegalStateException(
-                    "No se permite finalizar la estadía del cliente porque la cuenta no ha sido pagada. "
-                    + "Debe registrar el pago de la cuenta antes de dar salida al huésped.");
+                    "No se permite finalizar la estadia del cliente porque la cuenta no ha sido pagada. "
+                    + "Debe registrar el pago de la cuenta antes de dar salida al huesped.");
         }
 
         reservation.setStatus(STATUS_INACTIVE);
@@ -760,6 +794,68 @@ public class ReservationManagerServiceImpl
         // Se limpia la cuenta del cliente
         reservation.setPaid(true);
         Reservation saved = reservationRepository.save(reservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Asigna un servicio consumido a una habitacion durante la estancia.
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * no se debe poder asignar ningun servicio.
+     */
+    @Override
+    @Transactional
+    public ReservationDTO assignServiceToRoom(Long roomId, Long serviceId, int quantity) {
+        if (roomId == null) {
+            throw new IllegalArgumentException("El ID de la habitacion es obligatorio.");
+        }
+        if (serviceId == null) {
+            throw new IllegalArgumentException("El ID del servicio es obligatorio.");
+        }
+        if (quantity <= 0) {
+            quantity = 1;
+        }
+
+        // REGLA 5: Verificar que en la habitacion haya una reserva ACTIVA
+        List<Reservation> activeReservations = reservationRepository.findActiveReservationsByRoomId(roomId);
+        if (activeReservations == null || activeReservations.isEmpty()) {
+            throw new IllegalStateException(
+                    "En caso de que en la habitacion no haya ninguna reserva activa, no se debe poder asignar ningun servicio.");
+        }
+
+        Reservation activeReservation = activeReservations.get(0);
+
+        // Buscar la ReservationRoom correspondiente a esta habitacion
+        ReservationRoom targetRoom = activeReservation.getReservationRooms().stream()
+                .filter(rr -> rr.getRoom() != null && roomId.equals(rr.getRoom().getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (targetRoom == null) {
+            throw new IllegalStateException(
+                    "No se encontro la habitacion " + roomId + " asociada a la reserva activa " + activeReservation.getId() + ".");
+        }
+
+        com.example.demo.entities.Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new IllegalArgumentException("El servicio con ID " + serviceId + " no existe."));
+
+        if (service.isHidden()) {
+            throw new IllegalArgumentException(
+                    "El servicio '" + service.getName() + "' no se encuentra disponible actualmente.");
+        }
+
+        AcquiredService acquiredService = AcquiredService.builder()
+                .service(service)
+                .date(LocalDate.now())
+                .quantity(quantity)
+                .unitPrice(service.getPrice() != null ? service.getPrice() : 0.0)
+                .build();
+
+        targetRoom.addAcquiredService(acquiredService);
+
+        // Al agregar un servicio adicional consumido en la estancia, la cuenta tiene saldo pendiente
+        activeReservation.setPaid(false);
+
+        Reservation saved = reservationRepository.save(activeReservation);
         return toDTO(saved);
     }
 }

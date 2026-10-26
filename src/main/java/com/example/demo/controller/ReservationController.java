@@ -217,8 +217,11 @@ public class ReservationController {
     }
 
     /**
+    /**
      * Cancela una reserva (PATCH /api/reservations/{id}/cancel).
      * Pone la reserva como cancelada para no eliminarla de la base de datos y mantener el historial.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
      */
     @Operation(summary = "Cancela una reserva (la pasa a estado CANCELADA en lugar de eliminarla)")
     @PatchMapping("/{id}/cancel")
@@ -226,6 +229,8 @@ public class ReservationController {
         try {
             ReservationDTO updated = reservationService.cancelReservation(id);
             return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (NotFoundException e) {
@@ -237,13 +242,46 @@ public class ReservationController {
     }
 
     /**
-     * Elimina una reserva (DELETE /api/reservations/{id}).
-     * Implementa la lógica de historial: no se borra físicamente, sino que se cancela lógicamente.
+     * Asigna un servicio consumido a una habitacion (POST /api/reservations/rooms/{roomId}/services).
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * no se debe poder asignar ningun servicio.
      */
-    @Operation(summary = "Cancela lógicamente una reserva por su ID para conservar el historial")
+    @Operation(summary = "Asigna un servicio consumido a una habitacion (requiere reserva activa)")
+    @PostMapping("/rooms/{roomId}/services")
+    public ResponseEntity<?> assignServiceToRoom(
+            @PathVariable Long roomId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            if (!body.containsKey("serviceId")) {
+                return ResponseEntity.badRequest().body(Map.of("message", "El serviceId es obligatorio."));
+            }
+            Long serviceId = Long.valueOf(body.get("serviceId").toString());
+            int quantity = body.containsKey("quantity") ? Integer.parseInt(body.get("quantity").toString()) : 1;
+
+            ReservationDTO updated = reservationService.assignServiceToRoom(roomId, serviceId, quantity);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al asignar servicio: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina una reserva (DELETE /api/reservations/{id}).
+     * Implementa la logica de historial: no se borra fisicamente, sino que se cancela logicamente.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
+     */
+    @Operation(summary = "Cancela logicamente una reserva por su ID para conservar el historial")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        reservationService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteReservation(@PathVariable Long id) {
+        try {
+            reservationService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

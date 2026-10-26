@@ -21,6 +21,9 @@ public class RoomController {
     @Autowired
     private RoomService roomService;
 
+    @Autowired
+    private com.example.demo.service.ReservationManagerService reservationService;
+
     //Lista habitaciones con filtros opcionales (GET /api/rooms). Combinaciones posibles: sin parámetros (todas), solo `typeId`, solo `status`, o ambos a la vez.
     @Operation(summary = "Obtiene todas las habitaciones, opcionalmente filtradas por tipo o estado")
     @GetMapping
@@ -95,5 +98,31 @@ public class RoomController {
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
         roomService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+    /**
+     * Asigna un servicio consumido a una habitacion (POST /api/rooms/{roomId}/services).
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * no se debe poder asignar ningun servicio.
+     */
+    @Operation(summary = "Asigna un servicio consumido a una habitacion (requiere reserva activa)")
+    @PostMapping("/{roomId}/services")
+    public ResponseEntity<?> assignServiceToRoom(
+            @PathVariable Long roomId,
+            @RequestBody java.util.Map<String, Object> body) {
+        try {
+            if (!body.containsKey("serviceId")) {
+                return ResponseEntity.badRequest().body(java.util.Map.of("message", "El serviceId es obligatorio."));
+            }
+            Long serviceId = Long.valueOf(body.get("serviceId").toString());
+            int quantity = body.containsKey("quantity") ? Integer.parseInt(body.get("quantity").toString()) : 1;
+
+            com.example.demo.dto.ReservationDTO updated = reservationService.assignServiceToRoom(roomId, serviceId, quantity);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("message", "Error al asignar servicio: " + e.getMessage()));
+        }
     }
 }
