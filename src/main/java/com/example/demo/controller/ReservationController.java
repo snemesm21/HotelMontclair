@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+//Controlador REST de reservas (/api/reservations). Usa ReservationManagerService, que coordina cliente, tipo de habitación y servicios.
 @RestController
 @RequestMapping("/api/reservations")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -22,18 +23,21 @@ public class ReservationController {
     @Autowired
     private ReservationManagerService reservationService;
 
+    //Lista todas las reservas con su detalle completo (GET /api/reservations).
     @Operation(summary = "Obtiene todas las reservas")
     @GetMapping
     public List<Reservation> getAllReservations() {
         return reservationService.searchAll();
     }
 
+    //Lista las reservas en formato resumido (GET /api/reservations/summary). Devuelve un DTO plano, pensado para la tabla del panel de administración.
     @Operation(summary = "Obtiene un resumen de las reservas")
     @GetMapping("/summary")
     public List<ReservationDTO> getReservationSummaries() {
         return reservationService.getReservationSummaries();
     }
 
+    //Busca una reserva por id (GET /api/reservations/{id}).
     @Operation(summary = "Obtiene una reserva por su ID")
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
@@ -44,12 +48,15 @@ public class ReservationController {
         return ResponseEntity.ok(res);
     }
 
+    //Lista las reservas de un cliente (GET /api/reservations/client/{clientId}).
     @Operation(summary = "Obtiene las reservas de un cliente por su ID")
     @GetMapping("/client/{clientId}")
     public List<Reservation> getReservationsByClientId(@PathVariable Long clientId) {
         return reservationService.searchByClientId(clientId);
     }
 
+    /*Crea una reserva (POST /api/reservations). Recibe un DTO de solicitud con ids (cliente, tipo de habitación y servicios),
+    no la entidad completa; el servicio busca y asigna la habitación.*/
     @Operation(summary = "Crea una nueva reserva")
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody ReservationRequestDTO req) {
@@ -81,6 +88,7 @@ public class ReservationController {
         }
     }
 
+    //Actualiza una reserva (PUT /api/reservations/{id}). Usa el mismo DTO y el mismo manejo de errores que la creación.
     @Operation(summary = "Actualiza una reserva existente por su ID")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateReservation(
@@ -119,6 +127,7 @@ public class ReservationController {
         }
     }
 
+    //Elimina una reserva (DELETE /api/reservations/{id}).
     @Operation(summary = "Elimina una reserva por su ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
