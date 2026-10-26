@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.ReservationDTO;
 import com.example.demo.dto.ReservationRequestDTO;
 import com.example.demo.entities.Reservation;
+import com.example.demo.errors.NotFoundException;
 import com.example.demo.service.ReservationManagerService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,7 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-//Controlador REST de reservas (/api/reservations). Usa ReservationManagerService, que coordina cliente, tipo de habitación y servicios.
+/**
+ * Controlador REST de reservas (/api/reservations).
+ * Diseñado con arquitectura en capas.
+ * Devuelve DTOs planos (ReservationDTO) sin objetos anidados ni grafos circulares hacia el frontend.
+ * Maneja el ciclo de vida: activación de estadía, pago/limpieza de cuenta y finalización de estadía.
+ */
 @RestController
 @RequestMapping("/api/reservations")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -23,40 +29,53 @@ public class ReservationController {
     @Autowired
     private ReservationManagerService reservationService;
 
-    //Lista todas las reservas con su detalle completo (GET /api/reservations).
-    @Operation(summary = "Obtiene todas las reservas")
+    /**
+     * Lista todas las reservas en formato plano DTO (GET /api/reservations).
+     * Evita devolver objetos anidados circulares hacia el front.
+     */
+    @Operation(summary = "Obtiene todas las reservas en formato DTO")
     @GetMapping
-    public List<Reservation> getAllReservations() {
-        return reservationService.searchAll();
+    public List<ReservationDTO> getAllReservations() {
+        return reservationService.getReservationSummaries();
     }
 
-    //Lista las reservas en formato resumido (GET /api/reservations/summary). Devuelve un DTO plano, pensado para la tabla del panel de administración.
+    /**
+     * Lista las reservas en formato resumido DTO (GET /api/reservations/summary).
+     * Diseñado para las tablas de administración y listados de usuario.
+     */
     @Operation(summary = "Obtiene un resumen de las reservas")
     @GetMapping("/summary")
     public List<ReservationDTO> getReservationSummaries() {
         return reservationService.getReservationSummaries();
     }
 
-    //Busca una reserva por id (GET /api/reservations/{id}).
+    /**
+     * Busca una reserva por id (GET /api/reservations/{id}) devolviendo su DTO plano.
+     */
     @Operation(summary = "Obtiene una reserva por su ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
-        Reservation res = reservationService.searchById(id);
-        if (res == null) {
+    public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
+        ReservationDTO dto = reservationService.findSummaryById(id);
+        if (dto == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(dto);
     }
 
-    //Lista las reservas de un cliente (GET /api/reservations/client/{clientId}).
-    @Operation(summary = "Obtiene las reservas de un cliente por su ID")
+    /**
+     * Lista las reservas de un cliente para su historial (GET /api/reservations/client/{clientId}).
+     * Devuelve DTOs planos con datos completos de fecha, importes y estado.
+     */
+    @Operation(summary = "Obtiene el historial de reservas de un cliente por su ID")
     @GetMapping("/client/{clientId}")
-    public List<Reservation> getReservationsByClientId(@PathVariable Long clientId) {
-        return reservationService.searchByClientId(clientId);
+    public List<ReservationDTO> getReservationsByClientId(@PathVariable Long clientId) {
+        return reservationService.getSummariesByClientId(clientId);
     }
 
-    /*Crea una reserva (POST /api/reservations). Recibe un DTO de solicitud con ids (cliente, tipo de habitación y servicios),
-    no la entidad completa; el servicio busca y asigna la habitación.*/
+    /**
+     * Crea una nueva reserva (POST /api/reservations).
+     * Recibe ReservationRequestDTO y devuelve el DTO plano resultante.
+     */
     @Operation(summary = "Crea una nueva reserva")
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody ReservationRequestDTO req) {
@@ -69,15 +88,17 @@ public class ReservationController {
                     req.getNumberOfPeople(),
                     req.getServiceIds());
 
+            ReservationDTO dto = reservationService.findSummaryById(saved.getId());
+
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(saved);
+                    .body(dto != null ? dto : saved);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
 
-        } catch (com.example.demo.errors.NotFoundException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage()));
 
@@ -88,7 +109,9 @@ public class ReservationController {
         }
     }
 
-    //Actualiza una reserva (PUT /api/reservations/{id}). Usa el mismo DTO y el mismo manejo de errores que la creación.
+    /**
+     * Actualiza una reserva existente (PUT /api/reservations/{id}).
+     */
     @Operation(summary = "Actualiza una reserva existente por su ID")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateReservation(
@@ -110,13 +133,15 @@ public class ReservationController {
                         .body(Map.of("message", "No se encontró la reserva con ID " + id));
             }
 
-            return ResponseEntity.ok(updated);
+            ReservationDTO dto = reservationService.findSummaryById(updated.getId());
+
+            return ResponseEntity.ok(dto != null ? dto : updated);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
 
-        } catch (com.example.demo.errors.NotFoundException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage()));
 
@@ -127,8 +152,95 @@ public class ReservationController {
         }
     }
 
-    //Elimina una reserva (DELETE /api/reservations/{id}).
-    @Operation(summary = "Elimina una reserva por su ID")
+    /**
+     * Activa la estadía de un cliente cuando este llega al hotel (PATCH /api/reservations/{id}/activate).
+     * El estado pasa a ACTIVE.
+     */
+    @Operation(summary = "Activa la estadía de un cliente (cambia estado a ACTIVO)")
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<?> activateStay(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.activateStay(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al activar estadía: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Paga la cuenta de una estadía (PATCH /api/reservations/{id}/pay).
+     * Limpia la cuenta del cliente (paid = true, saldo pendiente = 0.0).
+     */
+    @Operation(summary = "Paga la cuenta de una estadía (se limpia la cuenta del cliente)")
+    @PatchMapping("/{id}/pay")
+    public ResponseEntity<?> payStay(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.payStayAccount(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al pagar cuenta: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Finaliza la estadía de un cliente (PATCH /api/reservations/{id}/finish).
+     * Estado pasa a INACTIVE.
+     * REGLA DE NEGOCIO: Solo se permite realizar este procedimiento si la cuenta está vacía (ya pagó).
+     */
+    @Operation(summary = "Acaba la estadía de un cliente (cambia estado a INACTIVO; requiere cuenta pagada)")
+    @PatchMapping("/{id}/finish")
+    public ResponseEntity<?> finishStay(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.finishStay(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            // Rechazo de negocio cuando la cuenta no está saldada
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al finalizar estadía: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Cancela una reserva (PATCH /api/reservations/{id}/cancel).
+     * Pone la reserva como cancelada para no eliminarla de la base de datos y mantener el historial.
+     */
+    @Operation(summary = "Cancela una reserva (la pasa a estado CANCELADA en lugar de eliminarla)")
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.cancelReservation(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al cancelar reserva: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina una reserva (DELETE /api/reservations/{id}).
+     * Implementa la lógica de historial: no se borra físicamente, sino que se cancela lógicamente.
+     */
+    @Operation(summary = "Cancela lógicamente una reserva por su ID para conservar el historial")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
         reservationService.delete(id);
