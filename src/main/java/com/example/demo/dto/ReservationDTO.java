@@ -15,7 +15,7 @@ import lombok.Setter;
  * Evita devolver entidades JPA con objetos anidados cíclicos o dependientes de sesión de Hibernate.
  * Proporciona campos planos para clientes, habitaciones, totales calculados,
  * el nuevo estado de estancia (CONFIRMED, ACTIVE, INACTIVE, CANCELLED) y
- * el estado financiero de la cuenta (paid / pendingBalance).
+ * el estado financiero de la cuenta (paid / paidAmount / pendingBalance).
  */
 @Getter
 @Setter
@@ -54,13 +54,16 @@ public class ReservationDTO {
     // Indicador de cuenta pagada (true: cuenta limpia / pagada, false: saldo pendiente)
     private boolean paid;
 
+    // Monto ya abonado por el cliente
+    private double paidAmount;
+
     // Cálculos de noches y precios
     private long nights;
     private double roomSubtotal;
     private double servicesSubtotal;
     private double totalPrice;
 
-    // Saldo pendiente de pago (0.0 si paid es true; igual a totalPrice si aún no se paga)
+    // Saldo pendiente de pago (0.0 si paid es true; igual a totalPrice - paidAmount si aún hay saldo)
     private double pendingBalance;
 
     // Lista plana de servicios adicionales

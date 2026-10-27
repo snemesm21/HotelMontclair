@@ -217,7 +217,6 @@ public class ReservationController {
     }
 
     /**
-    /**
      * Cancela una reserva (PATCH /api/reservations/{id}/cancel).
      * Pone la reserva como cancelada para no eliminarla de la base de datos y mantener el historial.
      * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
@@ -265,6 +264,27 @@ public class ReservationController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Error al asignar servicio: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina un servicio contratado de la cuenta de una reserva (DELETE /api/reservations/{id}/services/{acquiredServiceId}).
+     */
+    @Operation(summary = "Elimina un servicio contratado de la cuenta de una reserva")
+    @DeleteMapping("/{id}/services/{acquiredServiceId}")
+    public ResponseEntity<?> removeServiceFromReservation(
+            @PathVariable Long id,
+            @PathVariable Long acquiredServiceId) {
+        try {
+            ReservationDTO updated = reservationService.removeServiceFromReservation(id, acquiredServiceId);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al eliminar servicio de la cuenta: " + e.getMessage()));
         }
     }
 

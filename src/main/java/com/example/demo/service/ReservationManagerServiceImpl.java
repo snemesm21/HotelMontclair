@@ -206,8 +206,15 @@ public class ReservationManagerServiceImpl
             clientPhone = reservation.getClient().getPhone();
         }
 
-        boolean isPaid = reservation.isPaid();
-        double pendingBalance = isPaid ? 0.0 : totalPrice;
+        double paidAmount = reservation.getPaidAmount();
+        if (reservation.isPaid() && paidAmount <= 0.0) {
+            paidAmount = totalPrice;
+        }
+        double pendingBalance = Math.max(0.0, Math.round((totalPrice - paidAmount) * 100.0) / 100.0);
+        boolean isPaid = pendingBalance <= 0.009;
+        if (isPaid) {
+            pendingBalance = 0.0;
+        }
 
         ReservationDTO.ClientSummary clientSummary = ReservationDTO.ClientSummary.builder()
                 .id(clientId)
@@ -257,6 +264,7 @@ public class ReservationManagerServiceImpl
                 .numberOfPeople(reservation.getNumberOfPeople())
                 .status(reservation.getStatus())
                 .paid(isPaid)
+                .paidAmount(paidAmount)
                 .pendingBalance(pendingBalance)
                 .nights(nights)
                 .roomSubtotal(roomSubtotal)
@@ -266,6 +274,43 @@ public class ReservationManagerServiceImpl
                 .client(clientSummary)
                 .reservationRooms(resRoomSummaries)
                 .build();
+    }
+
+    /**
+     * Calcula el importe total actual (habitación + servicios contratados) de una reserva.
+     */
+    private double calculateTotalPrice(Reservation reservation) {
+        if (reservation == null) {
+            return 0.0;
+        }
+        double pricePerNight = 0.0;
+        double servicesSubtotal = 0.0;
+        if (reservation.getReservationRooms() != null && !reservation.getReservationRooms().isEmpty()) {
+            ReservationRoom rr = reservation.getReservationRooms().get(0);
+            pricePerNight = rr.getPricePerNight();
+            if (rr.getAcquiredServices() != null) {
+                for (AcquiredService acq : rr.getAcquiredServices()) {
+                    servicesSubtotal += acq.getQuantity() * acq.getUnitPrice();
+                }
+            }
+        }
+        long nights = 1;
+        if (reservation.getCheckInDate() != null && reservation.getCheckOutDate() != null) {
+            nights = ChronoUnit.DAYS.between(reservation.getCheckInDate(), reservation.getCheckOutDate());
+            if (nights < 1) {
+                nights = 1;
+            }
+        }
+        return Math.round(((pricePerNight * nights) + servicesSubtotal) * 100.0) / 100.0;
+    }
+
+    /**
+     * Sincroniza el estado booleano 'paid' según el monto abonado ('paidAmount') y el total actual.
+     */
+    private void syncPaymentStatus(Reservation reservation) {
+        double total = calculateTotalPrice(reservation);
+        double pending = Math.max(0.0, Math.round((total - reservation.getPaidAmount()) * 100.0) / 100.0);
+        reservation.setPaid(pending <= 0.009);
     }
 
     @Override
@@ -637,6 +682,8 @@ public class ReservationManagerServiceImpl
                     finalCheckIn);
         }
 
+        syncPaymentStatus(reservation);
+
         return reservationRepository.save(reservation);
     }
 
@@ -762,6 +809,7 @@ public class ReservationManagerServiceImpl
         }
 
         // VALIDACION CRITICA DE NEGOCIO: Cuenta debe estar en 0 (pagada)
+        syncPaymentStatus(reservation);
         if (!reservation.isPaid()) {
             throw new IllegalStateException(
                     "No se permite finalizar la estadia del cliente porque la cuenta no ha sido pagada. "
@@ -775,7 +823,7 @@ public class ReservationManagerServiceImpl
 
     /**
      * Paga la cuenta de la estancia.
-     * Limpia la cuenta del cliente (paid = true, saldo pendiente = 0.0).
+     * Limpia la cuenta del cliente abonando el total actual (paidAmount = totalPrice, paid = true, saldo pendiente = 0.0).
      */
     @Override
     @Transactional
@@ -791,7 +839,9 @@ public class ReservationManagerServiceImpl
             throw new IllegalArgumentException("No se puede liquidar la cuenta de una reserva cancelada.");
         }
 
-        // Se limpia la cuenta del cliente
+        // Se registra el monto total abonado y se limpia la cuenta del cliente
+        double currentTotal = calculateTotalPrice(reservation);
+        reservation.setPaidAmount(currentTotal);
         reservation.setPaid(true);
         Reservation saved = reservationRepository.save(reservation);
         return toDTO(saved);
@@ -852,10 +902,66 @@ public class ReservationManagerServiceImpl
 
         targetRoom.addAcquiredService(acquiredService);
 
-        // Al agregar un servicio adicional consumido en la estancia, la cuenta tiene saldo pendiente
-        activeReservation.setPaid(false);
+        // Solo queda pendiente el monto de los nuevos consumos respecto a lo ya abonado (paidAmount)
+        syncPaymentStatus(activeReservation);
 
         Reservation saved = reservationRepository.save(activeReservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Elimina un servicio contratado de la cuenta de una reserva.
+     */
+    @Override
+    @Transactional
+    public ReservationDTO removeServiceFromReservation(Long reservationId, Long acquiredServiceId) {
+        if (reservationId == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+        if (acquiredServiceId == null) {
+            throw new IllegalArgumentException("El ID del servicio contratado es obligatorio.");
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException(reservationId));
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("No se pueden eliminar servicios de una reserva cancelada.");
+        }
+
+        if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("No se pueden eliminar servicios de una estadía que ya ha finalizado.");
+        }
+
+        boolean removed = false;
+        if (reservation.getReservationRooms() != null) {
+            for (ReservationRoom rr : reservation.getReservationRooms()) {
+                if (rr.getAcquiredServices() != null) {
+                    AcquiredService toRemove = rr.getAcquiredServices().stream()
+                            .filter(acq -> acquiredServiceId.equals(acq.getId()))
+                            .findFirst()
+                            .orElse(null);
+                    if (toRemove != null) {
+                        rr.removeAcquiredService(toRemove);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!removed) {
+            throw new IllegalArgumentException(
+                    "El servicio contratado con ID " + acquiredServiceId + " no pertenece a esta reserva.");
+        }
+
+        double newTotal = calculateTotalPrice(reservation);
+        if (reservation.getPaidAmount() > newTotal) {
+            reservation.setPaidAmount(newTotal);
+        }
+        syncPaymentStatus(reservation);
+
+        Reservation saved = reservationRepository.save(reservation);
         return toDTO(saved);
     }
 }

@@ -38,8 +38,10 @@ public class AuthController {
         }
         Client client = clientService.login(req.identifier, req.identifier, req.password);
         if (client != null) {
-            //Los administradores van al panel de habitaciones; los clientes, a su perfil.
-            String redirectUrl = client.isAdmin() ? "/admin/rooms" : "/profile/" + client.getId();
+            //Los administradores van al panel de habitaciones; los operarios al portal de operador; los clientes, a su perfil.
+            String redirectUrl = client.isAdmin()
+                    ? "/admin/rooms"
+                    : (client.isOperator() ? "/operator/reservations" : "/profile/" + client.getId());
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "client", client,

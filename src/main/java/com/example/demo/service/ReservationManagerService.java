@@ -77,4 +77,9 @@ public interface ReservationManagerService {
      * no se debe poder asignar ningun servicio.
      */
     ReservationDTO assignServiceToRoom(Long roomId, Long serviceId, int quantity);
+
+    /**
+     * Elimina un servicio contratado de la cuenta de una reserva.
+     */
+    ReservationDTO removeServiceFromReservation(Long reservationId, Long acquiredServiceId);
 }
