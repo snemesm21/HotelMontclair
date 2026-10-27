@@ -245,6 +245,28 @@ public class ReservationController {
      * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
      * no se debe poder asignar ningun servicio.
      */
+    /**
+     * Obtiene la reserva activa asociada al numero de habitacion (GET /api/reservations/room/{roomNumber}/active).
+     * Regla de negocio: Devuelve la unica estadia activa actual de la habitacion.
+     */
+    @Operation(summary = "Obtiene la reserva activa asociada a un numero de habitacion")
+    @GetMapping("/room/{roomNumber}/active")
+    public ResponseEntity<?> getActiveReservationByRoomNumber(@PathVariable String roomNumber) {
+        try {
+            ReservationDTO dto = reservationService.findActiveSummaryByRoomNumber(roomNumber);
+            if (dto == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "No se encontro ninguna estadia ACTIVA para la habitacion " + roomNumber + "."));
+            }
+            return ResponseEntity.ok(dto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al buscar reserva activa por habitacion: " + e.getMessage()));
+        }
+    }
+
     @Operation(summary = "Asigna un servicio consumido a una habitacion (requiere reserva activa)")
     @PostMapping("/rooms/{roomId}/services")
     public ResponseEntity<?> assignServiceToRoom(

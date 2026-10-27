@@ -785,6 +785,20 @@ public class ReservationManagerServiceImpl
             throw new IllegalArgumentException("No se puede activar una reserva cuya estancia ya ha finalizado.");
         }
 
+        // REGLA DE NEGOCIO: Una habitacion fisica solo puede tener UNA estadia activa a la vez.
+        if (reservation.getReservationRooms() != null) {
+            for (com.example.demo.entities.ReservationRoom rr : reservation.getReservationRooms()) {
+                if (rr.getRoom() != null) {
+                    List<Reservation> active = reservationRepository.findActiveReservationsByRoomId(rr.getRoom().getId());
+                    boolean alreadyOccupied = active != null && active.stream().anyMatch(r -> !r.getId().equals(id));
+                    if (alreadyOccupied) {
+                        String num = rr.getRoom().getNumber() != null ? rr.getRoom().getNumber() : String.valueOf(rr.getRoom().getId());
+                        throw new IllegalStateException("No se puede activar la estadia. La habitacion #" + num + " ya tiene una estadia activa en este momento.");
+                    }
+                }
+            }
+        }
+
         reservation.setStatus(STATUS_ACTIVE);
         Reservation saved = reservationRepository.save(reservation);
         return toDTO(saved);
@@ -872,6 +886,7 @@ public class ReservationManagerServiceImpl
                     "En caso de que en la habitacion no haya ninguna reserva activa, no se debe poder asignar ningun servicio.");
         }
 
+        // Regla de negocio: Una habitacion solo puede tener una reserva activa a la vez
         Reservation activeReservation = activeReservations.get(0);
 
         // Buscar la ReservationRoom correspondiente a esta habitacion
@@ -907,6 +922,21 @@ public class ReservationManagerServiceImpl
 
         Reservation saved = reservationRepository.save(activeReservation);
         return toDTO(saved);
+    }
+
+    /**
+     * Obtiene la reserva activa asociada al numero de habitacion (e.g. "101").
+     * Regla de negocio: Solo puede existir como maximo UNA reserva activa para una habitacion.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public ReservationDTO findActiveSummaryByRoomNumber(String roomNumber) {
+        if (roomNumber == null || roomNumber.isBlank()) {
+            throw new IllegalArgumentException("El numero de habitacion es obligatorio.");
+        }
+        return reservationRepository.findActiveReservationByRoomNumber(roomNumber.trim())
+                .map(this::toDTO)
+                .orElse(null);
     }
 
     /**

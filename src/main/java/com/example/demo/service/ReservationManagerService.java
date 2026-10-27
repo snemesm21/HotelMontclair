@@ -56,6 +56,7 @@ public interface ReservationManagerService {
 
     /**
      * Activa la estancia del cliente cuando este llega al hotel (estado ACTIVE).
+     * REGLA DE NEGOCIO: No se puede activar si la habitacion ya tiene otra estadia activa.
      */
     ReservationDTO activateStay(Long id);
 
@@ -77,6 +78,12 @@ public interface ReservationManagerService {
      * no se debe poder asignar ningun servicio.
      */
     ReservationDTO assignServiceToRoom(Long roomId, Long serviceId, int quantity);
+
+    /**
+     * Obtiene la reserva activa asociada al numero de habitacion (e.g. "101").
+     * Devuelve el DTO de la unica estadia actualmente activa en esa habitacion.
+     */
+    ReservationDTO findActiveSummaryByRoomNumber(String roomNumber);
 
     /**
      * Elimina un servicio contratado de la cuenta de una reserva.

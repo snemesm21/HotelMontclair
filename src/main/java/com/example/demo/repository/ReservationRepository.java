@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repositorio Spring Data JPA para la entidad Reservation.
@@ -28,4 +29,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
               AND UPPER(r.status) = 'ACTIVE'
             """)
     List<Reservation> findActiveReservationsByRoomId(@Param("roomId") Long roomId);
+
+    /**
+     * Busca la unica reserva con estado ACTIVE asociada al numero de habitacion (e.g. "101", "205").
+     * Regla de negocio: Una habitacion fisica solo puede tener a lo sumo UNA reserva activa al mismo tiempo.
+     */
+    @Query("""
+            SELECT DISTINCT r FROM Reservation r
+            JOIN r.reservationRooms rr
+            WHERE UPPER(TRIM(rr.room.number)) = UPPER(TRIM(:roomNumber))
+              AND UPPER(r.status) = 'ACTIVE'
+            """)
+    Optional<Reservation> findActiveReservationByRoomNumber(@Param("roomNumber") String roomNumber);
 }
