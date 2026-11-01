@@ -42,6 +42,8 @@ public class DataInitializer implements CommandLineRunner {
         if (clientRepository.count() == 0) {
             clientRepository.save(new Client(null, "admin", "admin", "admin@hotelmontclair.com",
                     "Administrador", "Montclair", null, "+34 910 000 001", "ADMIN"));
+            clientRepository.save(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
+                    "Operario", "Montclair", null, "+34 910 000 002", "OPERATOR"));
             clientRepository.save(new Client(null, "demo", "demo", "demo@example.com",
                     "Demo", "User", null, "+34 612 345 678", "CLIENT"));
             for (int index = 3; index <= 10; index++) {
@@ -52,6 +54,9 @@ public class DataInitializer implements CommandLineRunner {
             clientRepository.save(new Client(null, "cliente11", "cliente11",
                     "cliente11@example.com", "Cliente", "Montclair", null,
                     "+34 612 345 611", "CLIENT"));
+        } else if (clientRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("operario", "operario@hotelmontclair.com").isEmpty()) {
+            clientRepository.save(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
+                    "Operario", "Montclair", null, "+34 910 000 002", "OPERATOR"));
         }
 
         if (roomTypeRepository.count() == 0) {

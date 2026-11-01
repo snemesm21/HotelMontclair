@@ -1,11 +1,13 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ReservationDTO;
 import com.example.demo.entities.*;
 import com.example.demo.errors.NotFoundException;
 import com.example.demo.repository.ClientRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.RoomRepository;
 import com.example.demo.repository.ReservationRoomRepository;
+import com.example.demo.repository.RoomTypeRepository;
 import com.example.demo.repository.ServiceRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,20 +15,42 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * Implementación del servicio de gestión de reservas del hotel.
+ * Coordina las entidades Client, Room, RoomType, Reservation, ReservationRoom y Service.
+ * Cumple con la arquitectura en capas y evita devolver grafos anidados circulares usando ReservationDTO.
+ */
 @Service
 public class ReservationManagerServiceImpl
         implements ReservationManagerService {
+
+    // Constantes de negocio
+    private static final int MAX_STAY_NIGHTS = 30;
+    private static final int MAX_ADVANCE_YEARS = 1;
+    private static final int MIN_GUESTS = 1;
+    private static final int MAX_GUESTS = 10;
+    private static final Long NEW_RESERVATION_EXCLUDE_ID = -1L;
+
+    // Estados de ciclo de vida de la reserva
+    public static final String STATUS_CONFIRMED = "CONFIRMED";
+    public static final String STATUS_ACTIVE = "ACTIVE";
+    public static final String STATUS_INACTIVE = "INACTIVE";
+    public static final String STATUS_CANCELLED = "CANCELLED";
 
     @Autowired
     private ReservationRepository reservationRepository;
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private RoomTypeRepository roomTypeRepository;
 
     @Autowired
     private ReservationRoomRepository reservationRoomRepository;
@@ -43,8 +67,25 @@ public class ReservationManagerServiceImpl
     }
 
     @Override
+    public List<ReservationDTO> getReservationSummaries() {
+        return reservationRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Override
     public Reservation searchById(Long id) {
         return reservationRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public ReservationDTO findSummaryById(Long id) {
+        if (id == null) {
+            return null;
+        }
+        Reservation reservation = reservationRepository.findById(id).orElse(null);
+        return reservation != null ? toDTO(reservation) : null;
     }
 
     @Override
@@ -52,8 +93,224 @@ public class ReservationManagerServiceImpl
         if (clientId == null) {
             return List.of();
         }
-
         return reservationRepository.findByClientId(clientId);
+    }
+
+    @Override
+    public List<ReservationDTO> getSummariesByClientId(Long clientId) {
+        if (clientId == null) {
+            return List.of();
+        }
+        return reservationRepository.findByClientId(clientId)
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    /**
+     * Mapea una entidad Reservation a su correspondiente ReservationDTO plano.
+     * Calcula noches, subtotales, saldo pendiente y estado financiero de la cuenta.
+     */
+    private ReservationDTO toDTO(Reservation reservation) {
+        ReservationRoom reservationRoom = null;
+
+        if (reservation.getReservationRooms() != null
+                && !reservation.getReservationRooms().isEmpty()) {
+            reservationRoom = reservation.getReservationRooms().get(0);
+        }
+
+        Long roomId = null;
+        String roomNumber = "";
+        String roomName = "";
+        String roomTypeName = "";
+        Long roomTypeId = null;
+
+        double pricePerNight = 0;
+        double servicesSubtotal = 0;
+
+        List<ReservationDTO.ServiceDetail> services = new ArrayList<>();
+        List<ReservationDTO.AcquiredServiceSummary> acquiredSummaries = new ArrayList<>();
+
+        if (reservationRoom != null) {
+            pricePerNight = reservationRoom.getPricePerNight();
+
+            if (reservationRoom.getRoom() != null) {
+                roomId = reservationRoom.getRoom().getId();
+                roomNumber = reservationRoom.getRoom().getNumber();
+                roomName = reservationRoom.getRoom().getName();
+
+                if (reservationRoom.getRoom().getRoomType() != null) {
+                    roomTypeId = reservationRoom.getRoom().getRoomType().getId();
+                    roomTypeName = reservationRoom.getRoom().getRoomType().getName();
+                }
+            }
+
+            if (reservationRoom.getAcquiredServices() != null) {
+                for (AcquiredService acquired : reservationRoom.getAcquiredServices()) {
+                    String serviceName = "";
+                    Long sId = null;
+
+                    if (acquired.getService() != null) {
+                        sId = acquired.getService().getId();
+                        serviceName = acquired.getService().getName();
+                    }
+
+                    double subtotal = acquired.getQuantity() * acquired.getUnitPrice();
+                    servicesSubtotal += subtotal;
+
+                    services.add(
+                            ReservationDTO.ServiceDetail.builder()
+                                    .id(acquired.getId())
+                                    .name(serviceName)
+                                    .quantity(acquired.getQuantity())
+                                    .unitPrice(acquired.getUnitPrice())
+                                    .subtotal(subtotal)
+                                    .build());
+
+                    acquiredSummaries.add(
+                            ReservationDTO.AcquiredServiceSummary.builder()
+                                    .id(acquired.getId())
+                                    .quantity(acquired.getQuantity())
+                                    .unitPrice(acquired.getUnitPrice())
+                                    .service(ReservationDTO.ServiceItemSummary.builder()
+                                            .id(sId)
+                                            .name(serviceName)
+                                            .build())
+                                    .build());
+                }
+            }
+        }
+
+        long nights = ChronoUnit.DAYS.between(
+                reservation.getCheckInDate(),
+                reservation.getCheckOutDate());
+
+        if (nights < 1) {
+            nights = 1;
+        }
+
+        double roomSubtotal = pricePerNight * nights;
+        double totalPrice = roomSubtotal + servicesSubtotal;
+
+        Long clientId = null;
+        String clientFirstName = "";
+        String clientLastName = "";
+        String clientEmail = "";
+        String clientPhone = "";
+
+        if (reservation.getClient() != null) {
+            clientId = reservation.getClient().getId();
+            clientFirstName = reservation.getClient().getFirstName();
+            clientLastName = reservation.getClient().getLastName();
+            clientEmail = reservation.getClient().getEmail();
+            clientPhone = reservation.getClient().getPhone();
+        }
+
+        double paidAmount = reservation.getPaidAmount();
+        if (reservation.isPaid() && paidAmount <= 0.0) {
+            paidAmount = totalPrice;
+        }
+        double pendingBalance = Math.max(0.0, Math.round((totalPrice - paidAmount) * 100.0) / 100.0);
+        boolean isPaid = pendingBalance <= 0.009;
+        if (isPaid) {
+            pendingBalance = 0.0;
+        }
+
+        ReservationDTO.ClientSummary clientSummary = ReservationDTO.ClientSummary.builder()
+                .id(clientId)
+                .firstName(clientFirstName)
+                .lastName(clientLastName)
+                .email(clientEmail)
+                .phone(clientPhone)
+                .build();
+
+        List<ReservationDTO.ReservationRoomSummary> resRoomSummaries = new ArrayList<>();
+        if (reservationRoom != null) {
+            ReservationDTO.RoomSummary rSummary = ReservationDTO.RoomSummary.builder()
+                    .id(roomId)
+                    .number(roomNumber)
+                    .name(roomName)
+                    .pricePerNight(pricePerNight)
+                    .roomType(ReservationDTO.RoomTypeSummary.builder()
+                            .id(roomTypeId)
+                            .name(roomTypeName)
+                            .build())
+                    .build();
+
+            resRoomSummaries.add(
+                    ReservationDTO.ReservationRoomSummary.builder()
+                            .id(reservationRoom.getId())
+                            .pricePerNight(pricePerNight)
+                            .room(rSummary)
+                            .acquiredServices(acquiredSummaries)
+                            .build());
+        }
+
+        return ReservationDTO.builder()
+                .id(reservation.getId())
+                .clientId(clientId)
+                .clientFirstName(clientFirstName)
+                .clientLastName(clientLastName)
+                .clientEmail(clientEmail)
+                .clientPhone(clientPhone)
+                .roomId(roomId)
+                .roomNumber(roomNumber)
+                .roomName(roomName)
+                .roomTypeName(roomTypeName)
+                .roomTypeId(roomTypeId)
+                .pricePerNight(pricePerNight)
+                .checkInDate(reservation.getCheckInDate())
+                .checkOutDate(reservation.getCheckOutDate())
+                .numberOfPeople(reservation.getNumberOfPeople())
+                .status(reservation.getStatus())
+                .paid(isPaid)
+                .paidAmount(paidAmount)
+                .pendingBalance(pendingBalance)
+                .nights(nights)
+                .roomSubtotal(roomSubtotal)
+                .servicesSubtotal(servicesSubtotal)
+                .totalPrice(totalPrice)
+                .services(services)
+                .client(clientSummary)
+                .reservationRooms(resRoomSummaries)
+                .build();
+    }
+
+    /**
+     * Calcula el importe total actual (habitación + servicios contratados) de una reserva.
+     */
+    private double calculateTotalPrice(Reservation reservation) {
+        if (reservation == null) {
+            return 0.0;
+        }
+        double pricePerNight = 0.0;
+        double servicesSubtotal = 0.0;
+        if (reservation.getReservationRooms() != null && !reservation.getReservationRooms().isEmpty()) {
+            ReservationRoom rr = reservation.getReservationRooms().get(0);
+            pricePerNight = rr.getPricePerNight();
+            if (rr.getAcquiredServices() != null) {
+                for (AcquiredService acq : rr.getAcquiredServices()) {
+                    servicesSubtotal += acq.getQuantity() * acq.getUnitPrice();
+                }
+            }
+        }
+        long nights = 1;
+        if (reservation.getCheckInDate() != null && reservation.getCheckOutDate() != null) {
+            nights = ChronoUnit.DAYS.between(reservation.getCheckInDate(), reservation.getCheckOutDate());
+            if (nights < 1) {
+                nights = 1;
+            }
+        }
+        return Math.round(((pricePerNight * nights) + servicesSubtotal) * 100.0) / 100.0;
+    }
+
+    /**
+     * Sincroniza el estado booleano 'paid' según el monto abonado ('paidAmount') y el total actual.
+     */
+    private void syncPaymentStatus(Reservation reservation) {
+        double total = calculateTotalPrice(reservation);
+        double pending = Math.max(0.0, Math.round((total - reservation.getPaidAmount()) * 100.0) / 100.0);
+        reservation.setPaid(pending <= 0.009);
     }
 
     @Override
@@ -62,17 +319,63 @@ public class ReservationManagerServiceImpl
         return reservationRepository.save(reservation);
     }
 
+    private void validateNumberOfPeople(int numberOfPeople) {
+        if (numberOfPeople < MIN_GUESTS) {
+            throw new IllegalArgumentException(
+                    "El número de huéspedes debe ser de al menos " + MIN_GUESTS + " persona.");
+        }
+
+        if (numberOfPeople > MAX_GUESTS) {
+            throw new IllegalArgumentException(
+                    "El número máximo de huéspedes permitido es de " + MAX_GUESTS + " personas por habitación.");
+        }
+    }
+
     private void validateDates(
+            LocalDate checkInDate,
+            LocalDate checkOutDate) {
+        validateDateRules(checkInDate, checkOutDate);
+
+        if (checkInDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "La fecha de entrada no puede ser anterior a la fecha actual.");
+        }
+    }
+
+    private void validateDatesForUpdate(
+            LocalDate checkInDate,
+            LocalDate checkOutDate,
+            LocalDate originalCheckIn) {
+        validateDateRules(checkInDate, checkOutDate);
+
+        if (!checkInDate.equals(originalCheckIn) && checkInDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "La nueva fecha de entrada no puede ser anterior a la fecha actual.");
+        }
+    }
+
+    private void validateDateRules(
             LocalDate checkInDate,
             LocalDate checkOutDate) {
         if (checkInDate == null || checkOutDate == null) {
             throw new IllegalArgumentException(
-                    "Las fechas son obligatorias.");
+                    "Las fechas de entrada y salida son obligatorias.");
         }
 
         if (!checkOutDate.isAfter(checkInDate)) {
             throw new IllegalArgumentException(
-                    "La fecha de salida debe ser posterior a la de entrada.");
+                    "La fecha de salida debe ser posterior a la fecha de entrada (mínimo 1 noche de estancia).");
+        }
+
+        long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+        if (nights > MAX_STAY_NIGHTS) {
+            throw new IllegalArgumentException(
+                    "La estancia máxima permitida es de " + MAX_STAY_NIGHTS + " noches consecutivas.");
+        }
+
+        if (checkInDate.isAfter(LocalDate.now().plusYears(MAX_ADVANCE_YEARS))) {
+            throw new IllegalArgumentException(
+                    "No se pueden realizar reservas con más de un año de anticipación.");
         }
     }
 
@@ -89,21 +392,28 @@ public class ReservationManagerServiceImpl
                     "El tipo de habitación es obligatorio.");
         }
 
-        if (numberOfPeople < 1) {
+        if (!roomTypeRepository.existsById(roomTypeId)) {
             throw new IllegalArgumentException(
-                    "Debe haber al menos un huésped.");
+                    "El tipo de habitación seleccionado no existe.");
         }
 
-        validateDates(checkInDate, checkOutDate);
+        validateNumberOfPeople(numberOfPeople);
+        validateDateRules(checkInDate, checkOutDate);
 
-        // Consulta 1: habitaciones candidatas
+        // Consulta 1: habitaciones candidatas del tipo solicitado y con capacidad
         List<Room> candidateRooms = roomRepository
                 .findByRoomType_IdAndStatusAndCapacityGreaterThanEqualOrderByIdAsc(
                         roomTypeId,
                         RoomStatus.AVAILABLE,
                         numberOfPeople);
 
-        // Consulta 2: habitaciones ocupadas
+        if (candidateRooms.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "No hay habitaciones disponibles de este tipo con capacidad suficiente ("
+                            + numberOfPeople + " personas) o en estado DISPONIBLE.");
+        }
+
+        // Consulta 2: habitaciones ocupadas en el rango de fechas
         Set<Long> occupiedRoomIds = new HashSet<>(
                 reservationRoomRepository.findOccupiedRoomIds(
                         checkInDate,
@@ -121,8 +431,8 @@ public class ReservationManagerServiceImpl
 
         if (availableRooms.isEmpty()) {
             throw new IllegalArgumentException(
-                    "No hay habitaciones disponibles de este tipo "
-                            + "para las fechas y cantidad de huéspedes seleccionados.");
+                    "No hay disponibilidad para el tipo de habitación seleccionado "
+                            + "en las fechas solicitadas.");
         }
 
         // Priorizar la habitación actual si sigue disponible
@@ -142,11 +452,22 @@ public class ReservationManagerServiceImpl
             List<Long> serviceIds,
             LocalDate checkInDate) {
 
-        if (serviceIds == null) {
+        if (serviceIds == null || serviceIds.isEmpty()) {
             return;
         }
 
+        Set<Long> uniqueIds = new HashSet<>();
         for (Long serviceId : serviceIds) {
+            if (serviceId != null && !uniqueIds.add(serviceId)) {
+                throw new IllegalArgumentException(
+                        "No se pueden agregar servicios adicionales duplicados (ID: " + serviceId + ").");
+            }
+        }
+
+        for (Long serviceId : serviceIds) {
+            if (serviceId == null) {
+                continue;
+            }
 
             com.example.demo.entities.Service service =
                     serviceRepository.findById(serviceId)
@@ -155,6 +476,11 @@ public class ReservationManagerServiceImpl
                                             "El servicio con ID "
                                                     + serviceId
                                                     + " no existe."));
+
+            if (service.isHidden()) {
+                throw new IllegalArgumentException(
+                        "El servicio '" + service.getName() + "' no se encuentra disponible actualmente.");
+            }
 
             AcquiredService acquiredService =
                     AcquiredService.builder()
@@ -190,12 +516,15 @@ public class ReservationManagerServiceImpl
                 .orElseThrow(
                         () -> new NotFoundException(clientId));
 
+        validateDates(checkInDate, checkOutDate);
+        validateNumberOfPeople(numberOfPeople);
+
         Room room = findAvailableRoom(
                 roomTypeId,
                 checkInDate,
                 checkOutDate,
                 numberOfPeople,
-                -1L,
+                NEW_RESERVATION_EXCLUDE_ID,
                 null);
 
         Reservation reservation = Reservation.builder()
@@ -203,7 +532,8 @@ public class ReservationManagerServiceImpl
                 .checkInDate(checkInDate)
                 .checkOutDate(checkOutDate)
                 .numberOfPeople(numberOfPeople)
-                .status("CONFIRMED")
+                .status(STATUS_CONFIRMED)
+                .paid(false)
                 .reservationRooms(new ArrayList<>())
                 .build();
 
@@ -235,11 +565,30 @@ public class ReservationManagerServiceImpl
             int numberOfPeople,
             List<Long> serviceIds) {
 
+        if (id == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+
         Reservation reservation =
                 reservationRepository.findById(id).orElse(null);
 
         if (reservation == null) {
             return null;
+        }
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalArgumentException(
+                    "No se puede modificar una reserva que ha sido cancelada.");
+        }
+
+        if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalArgumentException(
+                    "No se puede modificar una reserva cuya estancia ya ha finalizado.");
+        }
+
+        if (reservation.getCheckOutDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "No se puede modificar una reserva cuya estancia ya ha finalizado.");
         }
 
         LocalDate finalCheckIn = checkInDate != null
@@ -250,11 +599,20 @@ public class ReservationManagerServiceImpl
                 ? checkOutDate
                 : reservation.getCheckOutDate();
 
+        if (checkInDate != null && !checkInDate.equals(reservation.getCheckInDate())) {
+            if (reservation.getCheckInDate().isBefore(LocalDate.now())) {
+                throw new IllegalArgumentException(
+                        "No se puede modificar la fecha de entrada de una reserva que ya ha comenzado.");
+            }
+        }
+
+        validateDatesForUpdate(finalCheckIn, finalCheckOut, reservation.getCheckInDate());
+
         int finalNumberOfPeople = numberOfPeople > 0
                 ? numberOfPeople
                 : reservation.getNumberOfPeople();
 
-        validateDates(finalCheckIn, finalCheckOut);
+        validateNumberOfPeople(finalNumberOfPeople);
 
         ReservationRoom reservationRoom;
 
@@ -324,18 +682,316 @@ public class ReservationManagerServiceImpl
                     finalCheckIn);
         }
 
+        syncPaymentStatus(reservation);
+
         return reservationRepository.save(reservation);
     }
 
+    /**
+     * Eliminación de reserva. Por requisito de negocio del historial de reservas,
+     * no se elimina físicamente de la base de datos, sino que se cancela lógicamente.
+    /**
+     * Eliminacion de reserva. Por requisito de negocio del historial de reservas,
+     * no se elimina fisicamente de la base de datos, sino que se cancela logicamente.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
+     */
     @Override
     @Transactional
     public void delete(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
 
         Reservation reservation =
                 reservationRepository.findById(id).orElse(null);
 
         if (reservation != null) {
-            reservationRepository.delete(reservation);
+            if (STATUS_ACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+                throw new IllegalStateException("Solo se pueden cancelar reservas que todavia no estan activas.");
+            }
+            if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+                throw new IllegalStateException("No se puede cancelar una estancia que ya ha finalizado.");
+            }
+            if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+                throw new IllegalStateException("La reserva ya ha sido cancelada.");
+            }
+            if (reservation.getCheckInDate() == null || !reservation.getCheckInDate().isAfter(LocalDate.now())) {
+                throw new IllegalStateException(
+                        "Solo se pueden cancelar reservas cuya fecha de inicio sea posterior a la fecha actual (" + LocalDate.now() + ").");
+            }
+            reservation.setStatus(STATUS_CANCELLED);
+            reservationRepository.save(reservation);
         }
+    }
+
+    /**
+     * Cancela la reserva cambiando su estado a CANCELLED y liberando la habitacion para el inventario.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
+     */
+    @Override
+    @Transactional
+    public ReservationDTO cancelReservation(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("La reserva ya ha sido cancelada.");
+        }
+
+        if (STATUS_ACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("Solo se pueden cancelar reservas que todavia no estan activas.");
+        }
+
+        if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("No se puede cancelar una estancia que ya ha finalizado.");
+        }
+
+        // Regla 4: la fecha de inicio debe ser posterior a la fecha actual
+        if (reservation.getCheckInDate() == null || !reservation.getCheckInDate().isAfter(LocalDate.now())) {
+            throw new IllegalStateException(
+                    "Solo se pueden cancelar reservas cuya fecha de inicio sea posterior a la fecha actual (" + LocalDate.now() + ").");
+        }
+
+        reservation.setStatus(STATUS_CANCELLED);
+        Reservation saved = reservationRepository.save(reservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Activa la estancia del cliente (Check-in / Huesped llega a su reserva).
+     * Estado pasa a ACTIVE.
+     */
+    @Override
+    @Transactional
+    public ReservationDTO activateStay(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalArgumentException("No se puede activar una reserva que ha sido cancelada.");
+        }
+
+        if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalArgumentException("No se puede activar una reserva cuya estancia ya ha finalizado.");
+        }
+
+        // REGLA DE NEGOCIO: Una habitacion fisica solo puede tener UNA estadia activa a la vez.
+        if (reservation.getReservationRooms() != null) {
+            for (com.example.demo.entities.ReservationRoom rr : reservation.getReservationRooms()) {
+                if (rr.getRoom() != null) {
+                    List<Reservation> active = reservationRepository.findActiveReservationsByRoomId(rr.getRoom().getId());
+                    boolean alreadyOccupied = active != null && active.stream().anyMatch(r -> !r.getId().equals(id));
+                    if (alreadyOccupied) {
+                        String num = rr.getRoom().getNumber() != null ? rr.getRoom().getNumber() : String.valueOf(rr.getRoom().getId());
+                        throw new IllegalStateException("No se puede activar la estadia. La habitacion #" + num + " ya tiene una estadia activa en este momento.");
+                    }
+                }
+            }
+        }
+
+        reservation.setStatus(STATUS_ACTIVE);
+        Reservation saved = reservationRepository.save(reservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Finaliza la estancia del cliente (Check-out). Estado pasa a INACTIVE.
+     * REGLA ESTRICTA DE NEGOCIO: Solo se permite si la cuenta esta vacia / ya pago (paid == true).
+     */
+    @Override
+    @Transactional
+    public ReservationDTO finishStay(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalArgumentException("No se puede finalizar una reserva cancelada.");
+        }
+
+        // VALIDACION CRITICA DE NEGOCIO: Cuenta debe estar en 0 (pagada)
+        syncPaymentStatus(reservation);
+        if (!reservation.isPaid()) {
+            throw new IllegalStateException(
+                    "No se permite finalizar la estadia del cliente porque la cuenta no ha sido pagada. "
+                    + "Debe registrar el pago de la cuenta antes de dar salida al huesped.");
+        }
+
+        reservation.setStatus(STATUS_INACTIVE);
+        Reservation saved = reservationRepository.save(reservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Paga la cuenta de la estancia.
+     * Limpia la cuenta del cliente abonando el total actual (paidAmount = totalPrice, paid = true, saldo pendiente = 0.0).
+     */
+    @Override
+    @Transactional
+    public ReservationDTO payStayAccount(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalArgumentException("No se puede liquidar la cuenta de una reserva cancelada.");
+        }
+
+        // Se registra el monto total abonado y se limpia la cuenta del cliente
+        double currentTotal = calculateTotalPrice(reservation);
+        reservation.setPaidAmount(currentTotal);
+        reservation.setPaid(true);
+        Reservation saved = reservationRepository.save(reservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Asigna un servicio consumido a una habitacion durante la estancia.
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * no se debe poder asignar ningun servicio.
+     */
+    @Override
+    @Transactional
+    public ReservationDTO assignServiceToRoom(Long roomId, Long serviceId, int quantity) {
+        if (roomId == null) {
+            throw new IllegalArgumentException("El ID de la habitacion es obligatorio.");
+        }
+        if (serviceId == null) {
+            throw new IllegalArgumentException("El ID del servicio es obligatorio.");
+        }
+        if (quantity <= 0) {
+            quantity = 1;
+        }
+
+        // REGLA 5: Verificar que en la habitacion haya una reserva ACTIVA
+        List<Reservation> activeReservations = reservationRepository.findActiveReservationsByRoomId(roomId);
+        if (activeReservations == null || activeReservations.isEmpty()) {
+            throw new IllegalStateException(
+                    "En caso de que en la habitacion no haya ninguna reserva activa, no se debe poder asignar ningun servicio.");
+        }
+
+        // Regla de negocio: Una habitacion solo puede tener una reserva activa a la vez
+        Reservation activeReservation = activeReservations.get(0);
+
+        // Buscar la ReservationRoom correspondiente a esta habitacion
+        ReservationRoom targetRoom = activeReservation.getReservationRooms().stream()
+                .filter(rr -> rr.getRoom() != null && roomId.equals(rr.getRoom().getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (targetRoom == null) {
+            throw new IllegalStateException(
+                    "No se encontro la habitacion " + roomId + " asociada a la reserva activa " + activeReservation.getId() + ".");
+        }
+
+        com.example.demo.entities.Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new IllegalArgumentException("El servicio con ID " + serviceId + " no existe."));
+
+        if (service.isHidden()) {
+            throw new IllegalArgumentException(
+                    "El servicio '" + service.getName() + "' no se encuentra disponible actualmente.");
+        }
+
+        AcquiredService acquiredService = AcquiredService.builder()
+                .service(service)
+                .date(LocalDate.now())
+                .quantity(quantity)
+                .unitPrice(service.getPrice() != null ? service.getPrice() : 0.0)
+                .build();
+
+        targetRoom.addAcquiredService(acquiredService);
+
+        // Solo queda pendiente el monto de los nuevos consumos respecto a lo ya abonado (paidAmount)
+        syncPaymentStatus(activeReservation);
+
+        Reservation saved = reservationRepository.save(activeReservation);
+        return toDTO(saved);
+    }
+
+    /**
+     * Obtiene la reserva activa asociada al numero de habitacion (e.g. "101").
+     * Regla de negocio: Solo puede existir como maximo UNA reserva activa para una habitacion.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public ReservationDTO findActiveSummaryByRoomNumber(String roomNumber) {
+        if (roomNumber == null || roomNumber.isBlank()) {
+            throw new IllegalArgumentException("El numero de habitacion es obligatorio.");
+        }
+        return reservationRepository.findActiveReservationByRoomNumber(roomNumber.trim())
+                .map(this::toDTO)
+                .orElse(null);
+    }
+
+    /**
+     * Elimina un servicio contratado de la cuenta de una reserva.
+     */
+    @Override
+    @Transactional
+    public ReservationDTO removeServiceFromReservation(Long reservationId, Long acquiredServiceId) {
+        if (reservationId == null) {
+            throw new IllegalArgumentException("El ID de la reserva es obligatorio.");
+        }
+        if (acquiredServiceId == null) {
+            throw new IllegalArgumentException("El ID del servicio contratado es obligatorio.");
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException(reservationId));
+
+        if (STATUS_CANCELLED.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("No se pueden eliminar servicios de una reserva cancelada.");
+        }
+
+        if (STATUS_INACTIVE.equalsIgnoreCase(reservation.getStatus())) {
+            throw new IllegalStateException("No se pueden eliminar servicios de una estadía que ya ha finalizado.");
+        }
+
+        boolean removed = false;
+        if (reservation.getReservationRooms() != null) {
+            for (ReservationRoom rr : reservation.getReservationRooms()) {
+                if (rr.getAcquiredServices() != null) {
+                    AcquiredService toRemove = rr.getAcquiredServices().stream()
+                            .filter(acq -> acquiredServiceId.equals(acq.getId()))
+                            .findFirst()
+                            .orElse(null);
+                    if (toRemove != null) {
+                        rr.removeAcquiredService(toRemove);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!removed) {
+            throw new IllegalArgumentException(
+                    "El servicio contratado con ID " + acquiredServiceId + " no pertenece a esta reserva.");
+        }
+
+        double newTotal = calculateTotalPrice(reservation);
+        if (reservation.getPaidAmount() > newTotal) {
+            reservation.setPaidAmount(newTotal);
+        }
+        syncPaymentStatus(reservation);
+
+        Reservation saved = reservationRepository.save(reservation);
+        return toDTO(saved);
     }
 }

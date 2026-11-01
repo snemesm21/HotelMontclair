@@ -54,4 +54,8 @@ public class Client {
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(username);
     }
+
+    public boolean isOperator() {
+        return "OPERATOR".equalsIgnoreCase(role) || "OPERARIO".equalsIgnoreCase(role) || "operario".equalsIgnoreCase(username);
+    }
 }

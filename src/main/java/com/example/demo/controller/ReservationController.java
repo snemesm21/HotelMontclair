@@ -1,10 +1,9 @@
-
 package com.example.demo.controller;
 
 import com.example.demo.dto.ReservationDTO;
-import com.example.demo.entities.AcquiredService;
+import com.example.demo.dto.ReservationRequestDTO;
 import com.example.demo.entities.Reservation;
-import com.example.demo.entities.ReservationRoom;
+import com.example.demo.errors.NotFoundException;
 import com.example.demo.service.ReservationManagerService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,286 +12,318 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST de reservas (/api/reservations).
+ * Diseñado con arquitectura en capas.
+ * Devuelve DTOs planos (ReservationDTO) sin objetos anidados ni grafos circulares hacia el frontend.
+ * Maneja el ciclo de vida: activación de estadía, pago/limpieza de cuenta y finalización de estadía.
+ */
 @RestController
 @RequestMapping("/api/reservations")
 @CrossOrigin(origins = "http://localhost:4200")
 public class ReservationController {
 
-        @Autowired
-        private ReservationManagerService reservationService;
+    @Autowired
+    private ReservationManagerService reservationService;
 
-        @Operation(summary = "Obtiene todas las reservas")
-        @GetMapping
-        public List<Reservation> getAllReservations() {
-                return reservationService.searchAll();
+    /**
+     * Lista todas las reservas en formato plano DTO (GET /api/reservations).
+     * Evita devolver objetos anidados circulares hacia el front.
+     */
+    @Operation(summary = "Obtiene todas las reservas en formato DTO")
+    @GetMapping
+    public List<ReservationDTO> getAllReservations() {
+        return reservationService.getReservationSummaries();
+    }
+
+    /**
+     * Lista las reservas en formato resumido DTO (GET /api/reservations/summary).
+     * Diseñado para las tablas de administración y listados de usuario.
+     */
+    @Operation(summary = "Obtiene un resumen de las reservas")
+    @GetMapping("/summary")
+    public List<ReservationDTO> getReservationSummaries() {
+        return reservationService.getReservationSummaries();
+    }
+
+    /**
+     * Busca una reserva por id (GET /api/reservations/{id}) devolviendo su DTO plano.
+     */
+    @Operation(summary = "Obtiene una reserva por su ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
+        ReservationDTO dto = reservationService.findSummaryById(id);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.ok(dto);
+    }
 
-        @Operation(summary = "Obtiene un resumen de las reservas")
-        @GetMapping("/summary")
-        public List<ReservationDTO> getReservationSummaries() {
-                return reservationService.searchAll()
-                                .stream()
-                                .map(this::toDTO)
-                                .toList();
+    /**
+     * Lista las reservas de un cliente para su historial (GET /api/reservations/client/{clientId}).
+     * Devuelve DTOs planos con datos completos de fecha, importes y estado.
+     */
+    @Operation(summary = "Obtiene el historial de reservas de un cliente por su ID")
+    @GetMapping("/client/{clientId}")
+    public List<ReservationDTO> getReservationsByClientId(@PathVariable Long clientId) {
+        return reservationService.getSummariesByClientId(clientId);
+    }
+
+    /**
+     * Crea una nueva reserva (POST /api/reservations).
+     * Recibe ReservationRequestDTO y devuelve el DTO plano resultante.
+     */
+    @Operation(summary = "Crea una nueva reserva")
+    @PostMapping
+    public ResponseEntity<?> createReservation(@RequestBody ReservationRequestDTO req) {
+        try {
+            Reservation saved = reservationService.createReservation(
+                    req.getClientId(),
+                    req.getRoomTypeId(),
+                    req.getCheckInDate(),
+                    req.getCheckOutDate(),
+                    req.getNumberOfPeople(),
+                    req.getServiceIds());
+
+            ReservationDTO dto = reservationService.findSummaryById(saved.getId());
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(dto != null ? dto : saved);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al crear reserva: " + e.getMessage()));
         }
+    }
 
-        private ReservationDTO toDTO(Reservation reservation) {
+    /**
+     * Actualiza una reserva existente (PUT /api/reservations/{id}).
+     */
+    @Operation(summary = "Actualiza una reserva existente por su ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateReservation(
+            @PathVariable Long id,
+            @RequestBody ReservationRequestDTO req) {
 
-                ReservationRoom reservationRoom = null;
+        try {
+            Reservation updated = reservationService.updateReservation(
+                    id,
+                    req.getClientId(),
+                    req.getRoomTypeId(),
+                    req.getCheckInDate(),
+                    req.getCheckOutDate(),
+                    req.getNumberOfPeople(),
+                    req.getServiceIds());
 
-                if (reservation.getReservationRooms() != null
-                                && !reservation.getReservationRooms().isEmpty()) {
-                        reservationRoom = reservation.getReservationRooms().get(0);
-                }
+            if (updated == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "No se encontró la reserva con ID " + id));
+            }
 
-                String roomNumber = "";
-                String roomName = "";
-                String roomTypeName = "";
+            ReservationDTO dto = reservationService.findSummaryById(updated.getId());
 
-                double pricePerNight = 0;
-                double servicesSubtotal = 0;
+            return ResponseEntity.ok(dto != null ? dto : updated);
 
-                List<ReservationDTO.ServiceDetail> services = new ArrayList<>();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
 
-                if (reservationRoom != null) {
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
 
-                        pricePerNight = reservationRoom.getPricePerNight();
-
-                        if (reservationRoom.getRoom() != null) {
-
-                                roomNumber = reservationRoom.getRoom().getNumber();
-
-                                roomName = reservationRoom.getRoom().getName();
-
-                                if (reservationRoom.getRoom().getRoomType() != null) {
-                                        roomTypeName = reservationRoom.getRoom()
-                                                        .getRoomType().getName();
-                                }
-                        }
-
-                        if (reservationRoom.getAcquiredServices() != null) {
-
-                                for (AcquiredService acquired : reservationRoom.getAcquiredServices()) {
-
-                                        String serviceName = "";
-
-                                        if (acquired.getService() != null) {
-                                                serviceName = acquired.getService().getName();
-                                        }
-
-                                        double subtotal = acquired.getQuantity()
-                                                        * acquired.getUnitPrice();
-
-                                        servicesSubtotal += subtotal;
-
-                                        services.add(
-                                                        ReservationDTO.ServiceDetail.builder()
-                                                                        .id(acquired.getId())
-                                                                        .name(serviceName)
-                                                                        .quantity(acquired.getQuantity())
-                                                                        .unitPrice(acquired.getUnitPrice())
-                                                                        .subtotal(subtotal)
-                                                                        .build());
-                                }
-                        }
-                }
-
-                long nights = ChronoUnit.DAYS.between(
-                                reservation.getCheckInDate(),
-                                reservation.getCheckOutDate());
-
-                if (nights < 1) {
-                        nights = 1;
-                }
-
-                double roomSubtotal = pricePerNight * nights;
-
-                double totalPrice = roomSubtotal + servicesSubtotal;
-
-                return ReservationDTO.builder()
-                                .id(reservation.getId())
-                                .clientFirstName(
-                                                reservation.getClient().getFirstName())
-                                .clientLastName(
-                                                reservation.getClient().getLastName())
-                                .clientEmail(
-                                                reservation.getClient().getEmail())
-                                .clientPhone(
-                                                reservation.getClient().getPhone())
-                                .roomNumber(roomNumber)
-                                .roomName(roomName)
-                                .roomTypeName(roomTypeName)
-                                .pricePerNight(pricePerNight)
-                                .checkInDate(reservation.getCheckInDate())
-                                .checkOutDate(reservation.getCheckOutDate())
-                                .numberOfPeople(reservation.getNumberOfPeople())
-                                .status(reservation.getStatus())
-                                .nights(nights)
-                                .roomSubtotal(roomSubtotal)
-                                .servicesSubtotal(servicesSubtotal)
-                                .totalPrice(totalPrice)
-                                .services(services)
-                                .build();
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al actualizar reserva: " + e.getMessage()));
         }
+    }
 
-        @Operation(summary = "Obtiene una reserva por su ID")
-        @GetMapping("/{id}")
-        public ResponseEntity<Reservation> getReservationById(
-                        @PathVariable Long id) {
-
-                Reservation res = reservationService.searchById(id);
-
-                if (res == null) {
-                        return ResponseEntity.notFound().build();
-                }
-
-                return ResponseEntity.ok(res);
+    /**
+     * Activa la estadía de un cliente cuando este llega al hotel (PATCH /api/reservations/{id}/activate).
+     * El estado pasa a ACTIVE.
+     */
+    @Operation(summary = "Activa la estadía de un cliente (cambia estado a ACTIVO)")
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<?> activateStay(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.activateStay(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al activar estadía: " + e.getMessage()));
         }
+    }
 
-        @Operation(summary = "Obtiene las reservas de un cliente por su ID")
-        @GetMapping("/client/{clientId}")
-        public List<Reservation> getReservationsByClientId(
-                        @PathVariable Long clientId) {
-
-                return reservationService.searchByClientId(clientId);
+    /**
+     * Paga la cuenta de una estadía (PATCH /api/reservations/{id}/pay).
+     * Limpia la cuenta del cliente (paid = true, saldo pendiente = 0.0).
+     */
+    @Operation(summary = "Paga la cuenta de una estadía (se limpia la cuenta del cliente)")
+    @PatchMapping("/{id}/pay")
+    public ResponseEntity<?> payStay(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.payStayAccount(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al pagar cuenta: " + e.getMessage()));
         }
+    }
 
-        @Operation(summary = "Crea una nueva reserva")
-        @PostMapping
-        public ResponseEntity<?> createReservation(
-                        @RequestBody Map<String, Object> req) {
-
-                try {
-                        Long clientId = req.get("clientId") != null
-                                        ? Long.valueOf(req.get("clientId").toString())
-                                        : null;
-
-                        Long roomTypeId = req.get("roomTypeId") != null
-                                        ? Long.valueOf(req.get("roomTypeId").toString())
-                                        : null;
-
-                        LocalDate checkIn = req.get("checkInDate") != null
-                                        ? LocalDate.parse(
-                                                        req.get("checkInDate").toString())
-                                        : null;
-
-                        LocalDate checkOut = req.get("checkOutDate") != null
-                                        ? LocalDate.parse(
-                                                        req.get("checkOutDate").toString())
-                                        : null;
-
-                        int people = req.get("numberOfPeople") != null
-                                        ? Integer.parseInt(
-                                                        req.get("numberOfPeople").toString())
-                                        : 1;
-
-                        List<Long> serviceIds = null;
-
-                        if (req.get("serviceIds") instanceof List<?> rawList) {
-                                serviceIds = rawList.stream()
-                                                .map(s -> Long.valueOf(s.toString()))
-                                                .toList();
-                        }
-
-                        Reservation saved = reservationService.createReservation(
-                                        clientId,
-                                        roomTypeId,
-                                        checkIn,
-                                        checkOut,
-                                        people,
-                                        serviceIds);
-
-                        return ResponseEntity
-                                        .status(HttpStatus.CREATED)
-                                        .body(saved);
-
-                } catch (IllegalArgumentException e) {
-                        return ResponseEntity.badRequest()
-                                        .body(e.getMessage());
-
-                } catch (Exception e) {
-                        return ResponseEntity
-                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body("Error al crear reserva: " + e.getMessage());
-                }
+    /**
+     * Finaliza la estadía de un cliente (PATCH /api/reservations/{id}/finish).
+     * Estado pasa a INACTIVE.
+     * REGLA DE NEGOCIO: Solo se permite realizar este procedimiento si la cuenta está vacía (ya pagó).
+     */
+    @Operation(summary = "Acaba la estadía de un cliente (cambia estado a INACTIVO; requiere cuenta pagada)")
+    @PatchMapping("/{id}/finish")
+    public ResponseEntity<?> finishStay(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.finishStay(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            // Rechazo de negocio cuando la cuenta no está saldada
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al finalizar estadía: " + e.getMessage()));
         }
+    }
 
-        @Operation(summary = "Actualiza una reserva existente por su ID")
-        @PutMapping("/{id}")
-        public ResponseEntity<?> updateReservation(
-                        @PathVariable Long id,
-                        @RequestBody Map<String, Object> req) {
-
-                try {
-                        Long clientId = req.get("clientId") != null
-                                        ? Long.valueOf(req.get("clientId").toString())
-                                        : null;
-
-                        Long roomTypeId = req.get("roomTypeId") != null
-                                        ? Long.valueOf(req.get("roomTypeId").toString())
-                                        : null;
-
-                        LocalDate checkIn = req.get("checkInDate") != null
-                                        ? LocalDate.parse(
-                                                        req.get("checkInDate").toString())
-                                        : null;
-
-                        LocalDate checkOut = req.get("checkOutDate") != null
-                                        ? LocalDate.parse(
-                                                        req.get("checkOutDate").toString())
-                                        : null;
-
-                        int people = req.get("numberOfPeople") != null
-                                        ? Integer.parseInt(
-                                                        req.get("numberOfPeople").toString())
-                                        : 1;
-
-                        List<Long> serviceIds = null;
-
-                        if (req.get("serviceIds") instanceof List<?> rawList) {
-                                serviceIds = rawList.stream()
-                                                .map(s -> Long.valueOf(s.toString()))
-                                                .toList();
-                        }
-
-                        Reservation updated = reservationService.updateReservation(
-                                        id,
-                                        clientId,
-                                        roomTypeId,
-                                        checkIn,
-                                        checkOut,
-                                        people,
-                                        serviceIds);
-
-                        if (updated == null) {
-                                return ResponseEntity.notFound().build();
-                        }
-
-                        return ResponseEntity.ok(updated);
-
-                } catch (IllegalArgumentException e) {
-                        return ResponseEntity.badRequest()
-                                        .body(e.getMessage());
-
-                } catch (Exception e) {
-                        return ResponseEntity
-                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body("Error al actualizar reserva: " + e.getMessage());
-                }
+    /**
+     * Cancela una reserva (PATCH /api/reservations/{id}/cancel).
+     * Pone la reserva como cancelada para no eliminarla de la base de datos y mantener el historial.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
+     */
+    @Operation(summary = "Cancela una reserva (la pasa a estado CANCELADA en lugar de eliminarla)")
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
+        try {
+            ReservationDTO updated = reservationService.cancelReservation(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al cancelar reserva: " + e.getMessage()));
         }
+    }
 
-        @Operation(summary = "Elimina una reserva por su ID")
-        @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteReservation(
-                        @PathVariable Long id) {
-
-                reservationService.delete(id);
-                return ResponseEntity.noContent().build();
+    /**
+     * Asigna un servicio consumido a una habitacion (POST /api/reservations/rooms/{roomId}/services).
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * no se debe poder asignar ningun servicio.
+     */
+    /**
+     * Obtiene la reserva activa asociada al numero de habitacion (GET /api/reservations/room/{roomNumber}/active).
+     * Regla de negocio: Devuelve la unica estadia activa actual de la habitacion.
+     */
+    @Operation(summary = "Obtiene la reserva activa asociada a un numero de habitacion")
+    @GetMapping("/room/{roomNumber}/active")
+    public ResponseEntity<?> getActiveReservationByRoomNumber(@PathVariable String roomNumber) {
+        try {
+            ReservationDTO dto = reservationService.findActiveSummaryByRoomNumber(roomNumber);
+            if (dto == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "No se encontro ninguna estadia ACTIVA para la habitacion " + roomNumber + "."));
+            }
+            return ResponseEntity.ok(dto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al buscar reserva activa por habitacion: " + e.getMessage()));
         }
+    }
+
+    @Operation(summary = "Asigna un servicio consumido a una habitacion (requiere reserva activa)")
+    @PostMapping("/rooms/{roomId}/services")
+    public ResponseEntity<?> assignServiceToRoom(
+            @PathVariable Long roomId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            if (!body.containsKey("serviceId")) {
+                return ResponseEntity.badRequest().body(Map.of("message", "El serviceId es obligatorio."));
+            }
+            Long serviceId = Long.valueOf(body.get("serviceId").toString());
+            int quantity = body.containsKey("quantity") ? Integer.parseInt(body.get("quantity").toString()) : 1;
+
+            ReservationDTO updated = reservationService.assignServiceToRoom(roomId, serviceId, quantity);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al asignar servicio: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina un servicio contratado de la cuenta de una reserva (DELETE /api/reservations/{id}/services/{acquiredServiceId}).
+     */
+    @Operation(summary = "Elimina un servicio contratado de la cuenta de una reserva")
+    @DeleteMapping("/{id}/services/{acquiredServiceId}")
+    public ResponseEntity<?> removeServiceFromReservation(
+            @PathVariable Long id,
+            @PathVariable Long acquiredServiceId) {
+        try {
+            ReservationDTO updated = reservationService.removeServiceFromReservation(id, acquiredServiceId);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al eliminar servicio de la cuenta: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina una reserva (DELETE /api/reservations/{id}).
+     * Implementa la logica de historial: no se borra fisicamente, sino que se cancela logicamente.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * es decir que su fecha de inicio es posterior a la fecha actual.
+     */
+    @Operation(summary = "Cancela logicamente una reserva por su ID para conservar el historial")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReservation(@PathVariable Long id) {
+        try {
+            reservationService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
 }
