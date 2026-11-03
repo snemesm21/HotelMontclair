@@ -20,5 +20,4 @@ public interface RoomService {
 
     void delete(Long id);
 
-    Room UpdateActualStatus(String number, String actualStatus);
 }
