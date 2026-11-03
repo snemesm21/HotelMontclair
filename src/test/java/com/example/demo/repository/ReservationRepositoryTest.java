@@ -1,20 +1,27 @@
+
 package com.example.demo.repository;
 
 import com.example.demo.entities.Client;
 import com.example.demo.entities.Reservation;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
+@ActiveProfiles("test")
 class ReservationRepositoryTest {
 
     @Autowired
@@ -23,13 +30,14 @@ class ReservationRepositoryTest {
     @Autowired
     private ClientRepository clientRepository;
 
+    @Autowired
+    private TestEntityManager entityManager;
+
     private Client client;
     private Reservation reservation;
 
     @BeforeEach
     void setUp() {
-        reservationRepository.deleteAll();
-        clientRepository.deleteAll();
 
         client = clientRepository.save(Client.builder()
                 .username("repositoryUser")
@@ -41,74 +49,239 @@ class ReservationRepositoryTest {
                 .role("CLIENT")
                 .build());
 
-        reservation = reservationRepository.save(Reservation.builder()
-                .client(client)
-                .checkInDate(LocalDate.of(2026, 12, 10))
-                .checkOutDate(LocalDate.of(2026, 12, 15))
-                .numberOfPeople(2)
-                .status("CONFIRMED")
-                .build());
+        reservation = reservationRepository.save(
+                Reservation.builder()
+                        .client(client)
+                        .checkInDate(LocalDate.of(2026, 12, 10))
+                        .checkOutDate(LocalDate.of(2026, 12, 15))
+                        .numberOfPeople(2)
+                        .status("CONFIRMED")
+                        .build());
+
+        entityManager.flush();
+        entityManager.clear();
     }
+
+    // PRUEBA 1: CREATE
 
     @Test
     void reservationRepository_save_shouldReturnReservation() {
-        assertNotNull(reservation.getId());
-        assertEquals("CONFIRMED", reservation.getStatus());
+
+        // Arrange
+        Reservation newReservation = Reservation.builder()
+                .client(client)
+                .checkInDate(LocalDate.of(2027, 1, 10))
+                .checkOutDate(LocalDate.of(2027, 1, 15))
+                .numberOfPeople(3)
+                .status("CONFIRMED")
+                .build();
+
+        // Act
+        Reservation saved =
+                reservationRepository.save(newReservation);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Reservation result = reservationRepository
+                .findById(saved.getId())
+                .orElse(null);
+
+        // Assert
+        assertNotNull(saved.getId());
+        assertNotNull(result);
+        assertEquals("CONFIRMED", result.getStatus());
+        assertEquals(3, result.getNumberOfPeople());
+        assertEquals(client.getId(), result.getClient().getId());
     }
+
+    // PRUEBA 2: READ ALL
 
     @Test
     void reservationRepository_findAll_shouldReturnReservation() {
-        List<Reservation> reservations = reservationRepository.findAll();
+
+        // Arrange
+        Long expectedId = reservation.getId();
+
+        // Act
+        List<Reservation> reservations =
+                reservationRepository.findAll();
+
+        // Assert
+        assertNotNull(reservations);
         assertEquals(1, reservations.size());
-        assertEquals(reservation.getId(), reservations.get(0).getId());
+        assertEquals(expectedId, reservations.get(0).getId());
     }
+
+    // PRUEBA 3: READ BY ID
 
     @Test
     void reservationRepository_findById_shouldReturnReservation() {
-        Reservation result = reservationRepository.findById(reservation.getId()).orElse(null);
-        assertNotNull(result);
-        assertEquals(reservation.getId(), result.getId());
+
+        // Arrange
+        Long id = reservation.getId();
+
+        // Act
+        Optional<Reservation> result =
+                reservationRepository.findById(id);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(id, result.get().getId());
+        assertEquals("CONFIRMED", result.get().getStatus());
     }
+
+    // PRUEBA 4: UPDATE
 
     @Test
     void reservationRepository_update_shouldReturnUpdatedReservation() {
-        reservation.setStatus("CANCELLED");
-        Reservation updated = reservationRepository.save(reservation);
 
+        // Arrange
+        Reservation existing = reservationRepository
+                .findById(reservation.getId())
+                .orElseThrow();
+
+        existing.setStatus("CANCELLED");
+
+        // Act
+        reservationRepository.save(existing);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Reservation updated = reservationRepository
+                .findById(reservation.getId())
+                .orElse(null);
+
+        // Assert
+        assertNotNull(updated);
         assertEquals("CANCELLED", updated.getStatus());
     }
 
+    // PRUEBA 5: DELETE
+
     @Test
     void reservationRepository_delete_shouldRemoveReservation() {
-        reservationRepository.deleteById(reservation.getId());
-        assertTrue(reservationRepository.findById(reservation.getId()).isEmpty());
+
+        // Arrange
+        Long id = reservation.getId();
+
+        // Act
+        reservationRepository.deleteById(id);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Reservation> result =
+                reservationRepository.findById(id);
+
+        // Assert
+        assertTrue(result.isEmpty());
     }
+
+    // PRUEBA 6: QUERY POR CLIENTE
 
     @Test
     void reservationRepository_findByClientId_shouldReturnReservation() {
-        assertEquals(1, reservationRepository.findByClientId(client.getId()).size());
+
+        // Arrange
+        Long clientId = client.getId();
+
+        // Act
+        List<Reservation> result =
+                reservationRepository.findByClientId(clientId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(clientId, result.get(0).getClient().getId());
+        assertEquals(reservation.getId(), result.get(0).getId());
     }
+
+    // PRUEBA 7: QUERY POR ESTADO
 
     @Test
     void reservationRepository_findByStatus_shouldReturnReservation() {
-        assertEquals(1, reservationRepository.findByStatus("CONFIRMED").size());
+
+        // Arrange
+        String status = "CONFIRMED";
+
+        // Act
+        List<Reservation> result =
+                reservationRepository.findByStatus(status);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(status, result.get(0).getStatus());
     }
+
+    // PRUEBA 8: QUERY POR FECHA DE ENTRADA
 
     @Test
     void reservationRepository_findByCheckInDateBetween_shouldReturnReservation() {
-        assertEquals(1, reservationRepository.findByCheckInDateBetween(
-                LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 31)).size());
+
+        // Arrange
+        LocalDate start = LocalDate.of(2026, 12, 1);
+        LocalDate end = LocalDate.of(2026, 12, 31);
+
+        // Act
+        List<Reservation> result =
+                reservationRepository.findByCheckInDateBetween(
+                        start, end);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+
+        LocalDate checkIn = result.get(0).getCheckInDate();
+
+        assertFalse(checkIn.isBefore(start));
+        assertFalse(checkIn.isAfter(end));
     }
+
+    // PRUEBA 9: QUERY POR FECHA DE SALIDA
 
     @Test
     void reservationRepository_findByCheckOutDateBetween_shouldReturnReservation() {
-        assertEquals(1, reservationRepository.findByCheckOutDateBetween(
-                LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 31)).size());
+
+        // Arrange
+        LocalDate start = LocalDate.of(2026, 12, 1);
+        LocalDate end = LocalDate.of(2026, 12, 31);
+
+        // Act
+        List<Reservation> result =
+                reservationRepository.findByCheckOutDateBetween(
+                        start, end);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+
+        LocalDate checkOut = result.get(0).getCheckOutDate();
+
+        assertFalse(checkOut.isBefore(start));
+        assertFalse(checkOut.isAfter(end));
     }
+
+    // PRUEBA 10: QUERY POR CLIENTE Y ESTADO
 
     @Test
     void reservationRepository_findByClientIdAndStatus_shouldReturnReservation() {
-        assertEquals(1, reservationRepository.findByClientIdAndStatus(
-                client.getId(), "CONFIRMED").size());
+
+        // Arrange
+        Long clientId = client.getId();
+        String status = "CONFIRMED";
+
+        // Act
+        List<Reservation> result =
+                reservationRepository.findByClientIdAndStatus(
+                        clientId, status);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(clientId, result.get(0).getClient().getId());
+        assertEquals(status, result.get(0).getStatus());
     }
 }
