@@ -81,6 +81,20 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- SELENIUM Y WEBDRIVERMANAGER (E2E TESTING) -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.26.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>5.9.2</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- PRUEBAS DE REPOSITORIO CON @DataJpaTest -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

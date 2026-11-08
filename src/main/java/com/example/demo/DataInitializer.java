@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
 
 
 @Component
-@Profile("default")
+@Profile({"default", "test"})
 public class DataInitializer implements CommandLineRunner {
     private final ClientRepository clientRepository;
     private final RoomTypeRepository roomTypeRepository;
@@ -121,7 +121,7 @@ public class DataInitializer implements CommandLineRunner {
 
             for (int i = 0; i < 5; i++) {
                 Reservation reservation = Reservation.builder()
-                        .client(clients.get(i))
+                        .client(clients.get(i + 2))
                         .checkInDate(LocalDate.now().plusDays(i))
                         .checkOutDate(LocalDate.now().plusDays(i + 3))
                         .numberOfPeople(2)
