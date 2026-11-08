@@ -19,7 +19,7 @@ public class GoogleTokenValidatorImpl implements GoogleTokenValidator {
     private final NimbusJwtDecoder decoder;
 
     public GoogleTokenValidatorImpl(
-            @Value("${hotelmontclair.google.client-id}") String clientId,
+            @Value("${hotelmontclair.google.client-id:${GOOGLE_CLIENT_ID:}}") String clientId,
             @Value("${hotelmontclair.google.issuer:https://accounts.google.com}") String issuer,
             @Value("${hotelmontclair.google.jwks-uri:https://www.googleapis.com/oauth2/v3/certs}") String jwksUri) {
         this.clientId = clientId;

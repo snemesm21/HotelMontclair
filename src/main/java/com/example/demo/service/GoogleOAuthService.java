@@ -35,8 +35,8 @@ public class GoogleOAuthService {
     private final ConcurrentHashMap<String, PendingFlow> flows = new ConcurrentHashMap<>();
 
     public GoogleOAuthService(
-            @Value("${hotelmontclair.google.client-id}") String clientId,
-            @Value("${hotelmontclair.google.client-secret}") String clientSecret,
+            @Value("${hotelmontclair.google.client-id:${GOOGLE_CLIENT_ID:}}") String clientId,
+            @Value("${hotelmontclair.google.client-secret:${GOOGLE_CLIENT_SECRET:}}") String clientSecret,
             @Value("${hotelmontclair.google.authorization-uri:https://accounts.google.com/o/oauth2/v2/auth}") String authorizationUri,
             @Value("${hotelmontclair.google.token-uri:https://oauth2.googleapis.com/token}") String tokenUri,
             @Value("${hotelmontclair.google.redirect-uri:http://localhost:8080/login/oauth2/code/google}")             String redirectUri,

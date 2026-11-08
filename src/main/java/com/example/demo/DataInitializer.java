@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
 
 
 @Component
-@Profile({"default", "test"})
+@Profile({"dev", "default", "test"})
 public class DataInitializer implements CommandLineRunner {
     private final ClientRepository clientRepository;
     private final RoomTypeRepository roomTypeRepository;
