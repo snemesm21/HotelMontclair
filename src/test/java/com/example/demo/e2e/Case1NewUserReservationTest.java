@@ -135,8 +135,7 @@ public class Case1NewUserReservationTest {
 
         Assertions.assertThat(habitacion1).isNotEmpty();
 
-        // 5. Segunda reserva que se intercepta con las fechas de la primera
-        // (solapamiento)
+        // 5. Segunda reserva que se intercepta con las fechas de la primera (solapamiento)
         LocalDate checkIn2 = fechaHoy.plusDays(8);
         LocalDate checkOut2 = fechaHoy.plusDays(11);
 
@@ -150,8 +149,7 @@ public class Case1NewUserReservationTest {
         btnReservar2.click();
 
         // Esperar que la lista de reservas aumente en 1 con el lambda
-        wait.until(
-                driver -> driver.findElements(By.className("reservation-card-item")).size() == listaInicial.size() + 1);
+        wait.until(driver -> driver.findElements(By.className("reservation-card-item")).size() == listaInicial.size() + 1);
 
         List<WebElement> listaFinal = driver.findElements(By.className("reservation-card-item"));
         Assertions.assertThat(listaFinal.size()).isEqualTo(listaInicial.size() + 1);

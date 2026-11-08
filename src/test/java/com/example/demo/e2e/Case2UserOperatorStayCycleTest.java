@@ -75,8 +75,7 @@ public class Case2UserOperatorStayCycleTest {
         WebElement btnLogin = driver.findElement(By.id("login-submit-btn"));
         btnLogin.click();
 
-        // 2. Revisa sus proximas reservas y aparece una que realizo tiempo atras que
-        // esta sin iniciar
+        // 2. Revisa sus proximas reservas y aparece una que realizo tiempo atras que esta sin iniciar
         wait.until(ExpectedConditions.urlContains("/profile/"));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("reservation-card-item")));
 
@@ -128,15 +127,13 @@ public class Case2UserOperatorStayCycleTest {
         selectServicio.selectByIndex(0);
         btnAgregarServicio.click();
 
-        wait.until(driver -> driver.findElements(By.className("service-account-item"))
-                .size() == serviciosIniciales.size() + 1);
+        wait.until(driver -> driver.findElements(By.className("service-account-item")).size() == serviciosIniciales.size() + 1);
 
         // Servicio 2
         selectServicio.selectByIndex(1);
         driver.findElement(By.id("btn-confirm-add-service")).click();
 
-        wait.until(driver -> driver.findElements(By.className("service-account-item"))
-                .size() == serviciosIniciales.size() + 2);
+        wait.until(driver -> driver.findElements(By.className("service-account-item")).size() == serviciosIniciales.size() + 2);
 
         List<WebElement> serviciosFinales = driver.findElements(By.className("service-account-item"));
         Assertions.assertThat(serviciosFinales.size()).isEqualTo(serviciosIniciales.size() + 2);
