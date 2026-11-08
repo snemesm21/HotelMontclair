@@ -40,23 +40,22 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (clientRepository.count() == 0) {
-            clientRepository.save(new Client(null, "admin", "admin", "admin@hotelmontclair.com",
-                    "Administrador", "Montclair", null, "+34 910 000 001", "ADMIN"));
-            clientRepository.save(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
-                    "Operario", "Montclair", null, "+34 910 000 002", "OPERATOR"));
-            clientRepository.save(new Client(null, "demo", "demo", "demo@example.com",
-                    "Demo", "User", null, "+34 612 345 678", "CLIENT"));
+            clientRepository.save(Client.builder().username("admin").password("admin").email("admin@hotelmontclair.com")
+                    .firstName("Administrador").lastName("Montclair").phone("+34 910 000 001").role("ADMIN").authProvider("LOCAL").build());
+            clientRepository.save(Client.builder().username("operario").password("operario").email("operario@hotelmontclair.com")
+                    .firstName("Operario").lastName("Montclair").phone("+34 910 000 002").role("OPERATOR").authProvider("LOCAL").build());
+            clientRepository.save(Client.builder().username("demo").password("demo").email("demo@example.com")
+                    .firstName("Demo").lastName("User").phone("+34 612 345 678").role("CLIENT").authProvider("LOCAL").build());
             for (int index = 3; index <= 10; index++) {
-                clientRepository.save(new Client(null, "cliente" + index, "cliente" + index,
-                        "cliente" + index + "@example.com", "Cliente", "Montclair", null,
-                        "+34 612 345 6" + String.format("%02d", index), "CLIENT"));
+                clientRepository.save(Client.builder().username("cliente" + index).password("cliente" + index)
+                        .email("cliente" + index + "@example.com").firstName("Cliente").lastName("Montclair")
+                        .phone("+34 612 345 6" + String.format("%02d", index)).role("CLIENT").authProvider("LOCAL").build());
             }
-            clientRepository.save(new Client(null, "cliente11", "cliente11",
-                    "cliente11@example.com", "Cliente", "Montclair", null,
-                    "+34 612 345 611", "CLIENT"));
+            clientRepository.save(Client.builder().username("cliente11").password("cliente11").email("cliente11@example.com")
+                    .firstName("Cliente").lastName("Montclair").phone("+34 612 345 611").role("CLIENT").authProvider("LOCAL").build());
         } else if (clientRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("operario", "operario@hotelmontclair.com").isEmpty()) {
-            clientRepository.save(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
-                    "Operario", "Montclair", null, "+34 910 000 002", "OPERATOR"));
+            clientRepository.save(Client.builder().username("operario").password("operario").email("operario@hotelmontclair.com")
+                    .firstName("Operario").lastName("Montclair").phone("+34 910 000 002").role("OPERATOR").authProvider("LOCAL").build());
         }
 
         if (roomTypeRepository.count() == 0) {

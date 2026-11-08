@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -72,6 +73,7 @@ public class RoomController {
     //Crea una habitación (POST /api/rooms). Se pone el id en null para que la base de datos genere uno nuevo.
     @Operation(summary = "Crea un nuevo cuarto")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Room> createRoom(@RequestBody Room room) {
         room.setId(null);
         Room saved = roomService.save(room);
@@ -82,6 +84,7 @@ public class RoomController {
     //Actualiza una habitación (PUT /api/rooms/{id}). El id de la URL manda sobre el del cuerpo.
     @Operation(summary = "Actualiza un cuarto existente por su ID")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Room> updateRoom(
             @PathVariable Long id,
             @RequestBody Room room) {
@@ -95,6 +98,7 @@ public class RoomController {
     //Elimina una habitación (DELETE /api/rooms/{id}).
     @Operation(summary = "Elimina un cuarto por su ID")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
         roomService.delete(id);
         return ResponseEntity.noContent().build();
@@ -106,6 +110,7 @@ public class RoomController {
      */
     @Operation(summary = "Asigna un servicio consumido a una habitacion (requiere reserva activa)")
     @PostMapping("/{roomId}/services")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> assignServiceToRoom(
             @PathVariable Long roomId,
             @RequestBody java.util.Map<String, Object> body) {
