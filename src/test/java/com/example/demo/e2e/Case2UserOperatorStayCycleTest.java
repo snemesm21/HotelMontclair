@@ -119,6 +119,7 @@ public class Case2UserOperatorStayCycleTest {
 
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("service-option")));
         List<WebElement> serviciosIniciales = driver.findElements(By.className("service-account-item"));
+        String montoInicial = driver.findElement(By.id("modal-total-account-price")).getText();
 
         Select selectServicio = new Select(driver.findElement(By.id("select-service-modal")));
         WebElement btnAgregarServicio = driver.findElement(By.id("btn-confirm-add-service"));
@@ -138,6 +139,9 @@ public class Case2UserOperatorStayCycleTest {
         List<WebElement> serviciosFinales = driver.findElements(By.className("service-account-item"));
         Assertions.assertThat(serviciosFinales.size()).isEqualTo(serviciosIniciales.size() + 2);
 
+        String montoTotalConServicios = driver.findElement(By.id("modal-total-account-price")).getText();
+        Assertions.assertThat(montoTotalConServicios).isNotEqualTo(montoInicial);
+
         WebElement btnCerrarModalServicios = driver.findElement(By.id("btn-close-service-modal"));
         btnCerrarModalServicios.click();
 
@@ -146,10 +150,10 @@ public class Case2UserOperatorStayCycleTest {
         WebElement btnPagar = driver.findElement(By.className("btn-pagar-cuenta"));
         btnPagar.click();
 
-        // Verificar el monto a pagar en el modal
+        // Verificar que el monto a pagar en el modal sea el apropiado (incluyendo los 2 servicios agregados)
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id("modal-description")));
         WebElement descripcionModal = driver.findElement(By.id("modal-description"));
-        Assertions.assertThat(descripcionModal.getText()).containsIgnoringCase("pago total");
+        Assertions.assertThat(descripcionModal.getText()).contains(montoTotalConServicios);
 
         // Confirmar el pago
         driver.findElement(By.id("modal-confirm-btn")).click();

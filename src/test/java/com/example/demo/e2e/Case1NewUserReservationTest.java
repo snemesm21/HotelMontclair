@@ -145,6 +145,12 @@ public class Case1NewUserReservationTest {
         Select selectTipo2 = new Select(driver.findElement(By.id("booking-roomTypeId")));
         selectTipo2.selectByIndex(0);
 
+        // Verificar que la primera habitacion asignada NO este disponible en estas fechas solapadas
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("room-unavailable-badge")));
+        WebElement disponibilidadHab1 = driver.findElement(By.className("room-unavailable-badge"));
+        Assertions.assertThat(disponibilidadHab1.getText()).contains(habitacion1);
+        Assertions.assertThat(disponibilidadHab1.getText()).containsIgnoringCase("No disponible");
+
         WebElement btnReservar2 = driver.findElement(By.id("btn-confirmar-reserva"));
         btnReservar2.click();
 
