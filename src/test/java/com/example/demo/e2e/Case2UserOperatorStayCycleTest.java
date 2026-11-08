@@ -75,7 +75,8 @@ public class Case2UserOperatorStayCycleTest {
         WebElement btnLogin = driver.findElement(By.id("login-submit-btn"));
         btnLogin.click();
 
-        // 2. Revisa sus proximas reservas y aparece una que realizo tiempo atras que esta sin iniciar
+        // 2. Revisa sus proximas reservas y aparece una que realizo tiempo atras que
+        // esta sin iniciar
         wait.until(ExpectedConditions.urlContains("/profile/"));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("reservation-card-item")));
 
@@ -110,20 +111,16 @@ public class Case2UserOperatorStayCycleTest {
         WebElement btnConfirmarModal = driver.findElement(By.id("modal-confirm-btn"));
         btnConfirmarModal.click();
 
-        // Esperar a que la primera fila cambie a estado Activa
-        wait.until(d -> {
-            try {
-                return d.findElement(By.className("res-row-status")).getText().toLowerCase().contains("activa");
-            } catch (Exception e) {
-                return false;
-            }
-        });
+        // Esperar a que la reserva cambie a estado Activa
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("status-activa")));
 
         // 5. Agrega 2 servicios a esta reserva
         WebElement btnContratar = driver.findElement(By.className("btn-contratar-servicio"));
         btnContratar.click();
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#select-service-modal option")));
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("service-option")));
+        List<WebElement> serviciosIniciales = driver.findElements(By.className("service-account-item"));
+
         Select selectServicio = new Select(driver.findElement(By.id("select-service-modal")));
         WebElement btnAgregarServicio = driver.findElement(By.id("btn-confirm-add-service"));
 
@@ -131,27 +128,18 @@ public class Case2UserOperatorStayCycleTest {
         selectServicio.selectByIndex(0);
         btnAgregarServicio.click();
 
-        // Esperar a que termine de procesar el servicio 1
-        wait.until(d -> {
-            try {
-                return d.findElement(By.id("btn-confirm-add-service")).isEnabled();
-            } catch (Exception e) {
-                return false;
-            }
-        });
+        wait.until(driver -> driver.findElements(By.className("service-account-item"))
+                .size() == serviciosIniciales.size() + 1);
 
         // Servicio 2
         selectServicio.selectByIndex(1);
         driver.findElement(By.id("btn-confirm-add-service")).click();
 
-        // Esperar a que termine de procesar el servicio 2
-        wait.until(d -> {
-            try {
-                return d.findElement(By.id("btn-confirm-add-service")).isEnabled();
-            } catch (Exception e) {
-                return false;
-            }
-        });
+        wait.until(driver -> driver.findElements(By.className("service-account-item"))
+                .size() == serviciosIniciales.size() + 2);
+
+        List<WebElement> serviciosFinales = driver.findElements(By.className("service-account-item"));
+        Assertions.assertThat(serviciosFinales.size()).isEqualTo(serviciosIniciales.size() + 2);
 
         WebElement btnCerrarModalServicios = driver.findElement(By.id("btn-close-service-modal"));
         btnCerrarModalServicios.click();
@@ -169,15 +157,8 @@ public class Case2UserOperatorStayCycleTest {
         // Confirmar el pago
         driver.findElement(By.id("modal-confirm-btn")).click();
 
-        // Esperar a que la cuenta este pagada en la primera fila (el boton de pagar desaparece de esa fila)
-        wait.until(d -> {
-            try {
-                WebElement primeraFila = d.findElement(By.className("reservation-table-row"));
-                return primeraFila.findElements(By.className("btn-pagar-cuenta")).isEmpty();
-            } catch (Exception e) {
-                return false;
-            }
-        });
+        // Esperar a que aparezca la etiqueta de cuenta pagada
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("cuenta-pagada-badge")));
 
         // 7. La reserva se da por finalizada (checkout)
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("btn-finalizar-estadia")));
@@ -187,16 +168,10 @@ public class Case2UserOperatorStayCycleTest {
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id("modal-confirm-btn")));
         driver.findElement(By.id("modal-confirm-btn")).click();
 
-        // Verificar que el estado en la primera fila cambie a Inactiva
-        wait.until(d -> {
-            try {
-                return d.findElement(By.className("res-row-status")).getText().toLowerCase().contains("inactiva");
-            } catch (Exception e) {
-                return false;
-            }
-        });
+        // Verificar que el estado cambie a Inactiva
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("status-inactiva")));
 
-        WebElement estadoFinalTabla = driver.findElement(By.className("res-row-status"));
+        WebElement estadoFinalTabla = driver.findElement(By.className("status-inactiva"));
         Assertions.assertThat(estadoFinalTabla.getText()).containsIgnoringCase("Inactiva");
 
         // 8. Verificar que en la pestana del usuario se vea finalizada y pagada

@@ -115,7 +115,7 @@ public class Case1NewUserReservationTest {
 
         driver.get(BASE_URL + "/reservations/book?checkIn=" + checkIn1 + "&checkOut=" + checkOut1);
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#booking-roomTypeId option")));
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("room-type-option")));
         Select selectTipo1 = new Select(driver.findElement(By.id("booking-roomTypeId")));
         selectTipo1.selectByIndex(0);
 
@@ -126,36 +126,38 @@ public class Case1NewUserReservationTest {
         wait.until(ExpectedConditions.urlContains("/profile/"));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("reservation-card-item")));
 
-        List<WebElement> listaReservas1 = driver.findElements(By.className("reservation-card-item"));
-        Assertions.assertThat(listaReservas1.size()).isEqualTo(1);
+        List<WebElement> listaInicial = driver.findElements(By.className("reservation-card-item"));
+        Assertions.assertThat(listaInicial.size()).isEqualTo(1);
 
-        WebElement tarjeta1 = listaReservas1.get(0);
+        WebElement tarjeta1 = listaInicial.get(0);
         String habitacion1 = tarjeta1.findElement(By.className("res-card-room-number"))
                 .getText().replace("(Hab. ", "").replace(")", "").trim();
 
         Assertions.assertThat(habitacion1).isNotEmpty();
 
-        // 5. Segunda reserva que se intercepta con las fechas de la primera (solapamiento)
+        // 5. Segunda reserva que se intercepta con las fechas de la primera
+        // (solapamiento)
         LocalDate checkIn2 = fechaHoy.plusDays(8);
         LocalDate checkOut2 = fechaHoy.plusDays(11);
 
         driver.get(BASE_URL + "/reservations/book?checkIn=" + checkIn2 + "&checkOut=" + checkOut2);
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#booking-roomTypeId option")));
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("room-type-option")));
         Select selectTipo2 = new Select(driver.findElement(By.id("booking-roomTypeId")));
         selectTipo2.selectByIndex(0);
 
         WebElement btnReservar2 = driver.findElement(By.id("btn-confirmar-reserva"));
         btnReservar2.click();
 
-        // Esperar que la lista de reservas aumente a 2 con el lambda
-        wait.until(driver -> driver.findElements(By.className("reservation-card-item")).size() == 2);
+        // Esperar que la lista de reservas aumente en 1 con el lambda
+        wait.until(
+                driver -> driver.findElements(By.className("reservation-card-item")).size() == listaInicial.size() + 1);
 
-        List<WebElement> listaReservas2 = driver.findElements(By.className("reservation-card-item"));
-        Assertions.assertThat(listaReservas2.size()).isEqualTo(2);
+        List<WebElement> listaFinal = driver.findElements(By.className("reservation-card-item"));
+        Assertions.assertThat(listaFinal.size()).isEqualTo(listaInicial.size() + 1);
 
         // Obtener la habitacion de la segunda reserva (la ultima de la lista)
-        WebElement tarjeta2 = listaReservas2.get(listaReservas2.size() - 1);
+        WebElement tarjeta2 = listaFinal.get(listaFinal.size() - 1);
         String habitacion2 = tarjeta2.findElement(By.className("res-card-room-number"))
                 .getText().replace("(Hab. ", "").replace(")", "").trim();
 
