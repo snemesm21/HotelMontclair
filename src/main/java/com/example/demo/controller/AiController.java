@@ -24,7 +24,7 @@ import java.util.Map;
 @Tag(name = "AI Concierge", description = "Endpoints para el agente de IA y asistente virtual conectado a la BD")
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(originPatterns = "*", allowedHeaders = "*", allowCredentials = "false")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class AiController {
 
     @Autowired

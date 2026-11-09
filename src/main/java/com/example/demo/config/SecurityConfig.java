@@ -53,11 +53,14 @@ public class SecurityConfig {
                                 "/api/auth/google/start",
                                 "/api/auth/google/exchange",
                                 "/api/clients",
+                                "/api/ai/**",
                                 "/login/oauth2/code/google"))
                 .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/ai/**",
                                 "/login/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -65,8 +68,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/h2-console", "/h2-console/**").denyAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                "/api/rooms",
                                 "/api/rooms/**",
+                                "/api/room-types",
                                 "/api/room-types/**",
+                                "/api/services",
                                 "/api/services/**",
                                 "/api/services/nothidden",
                                 "/api/services/not-hidden")
@@ -81,16 +87,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of(
-                "Authorization", "Content-Type", "Accept", "X-XSRF-TOKEN", "X-CSRF-TOKEN"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Set-Cookie"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
-        source.registerCorsConfiguration("/login/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
