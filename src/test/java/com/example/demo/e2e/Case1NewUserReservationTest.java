@@ -131,7 +131,7 @@ public class Case1NewUserReservationTest {
 
         WebElement tarjeta1 = listaInicial.get(0);
         String habitacion1 = tarjeta1.findElement(By.className("res-card-room-number"))
-                .getText().replace("(Hab. ", "").replace(")", "").trim();
+                .getText().toUpperCase().replace("(HAB.", "").replace(")", "").trim();
 
         Assertions.assertThat(habitacion1).isNotEmpty();
 
@@ -163,7 +163,7 @@ public class Case1NewUserReservationTest {
         // Obtener la habitacion de la segunda reserva (la ultima de la lista)
         WebElement tarjeta2 = listaFinal.get(listaFinal.size() - 1);
         String habitacion2 = tarjeta2.findElement(By.className("res-card-room-number"))
-                .getText().replace("(Hab. ", "").replace(")", "").trim();
+                .getText().toUpperCase().replace("(HAB.", "").replace(")", "").trim();
 
         // Asegurar que el numero de habitacion asignado sea diferente al primero
         Assertions.assertThat(habitacion2).isNotEqualTo(habitacion1);

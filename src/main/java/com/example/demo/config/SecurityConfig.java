@@ -49,12 +49,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/google/start",
-                                "/api/auth/google/exchange",
-                                "/api/clients",
+                                "/api/auth/**",
+                                "/api/clients/**",
+                                "/api/reservations/**",
+                                "/api/rooms/**",
+                                "/api/services/**",
                                 "/api/ai/**",
-                                "/login/oauth2/code/google"))
+                                "/login/**"))
                 .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
@@ -75,7 +76,9 @@ public class SecurityConfig {
                                 "/api/services",
                                 "/api/services/**",
                                 "/api/services/nothidden",
-                                "/api/services/not-hidden")
+                                "/api/services/not-hidden",
+                                "/api/reservations",
+                                "/api/reservations/summary")
                         .permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/clients")
                         .permitAll()

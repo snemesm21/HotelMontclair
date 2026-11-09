@@ -6,9 +6,15 @@ import com.example.demo.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,6 +28,12 @@ public class ClientController {
 
     @Autowired
     private ClientService clientService;
+
+    @Autowired(required = false)
+    private JwtService jwtService;
+
+    @Value("${hotelmontclair.auth.cookie-secure:false}")
+    private boolean cookieSecure;
 
     //Lista todos los clientes (GET /api/clients).
     @Operation (summary = "Obtiene todos los clientes")
@@ -52,6 +64,23 @@ public class ClientController {
     public ResponseEntity<Client> createClient(@RequestBody Client client) {
         client.setId(null);
         Client saved = clientService.save(client);
+
+        Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        boolean hasExistingSession = authentication != null
+                && authentication.getPrincipal() instanceof JwtService.JwtClaims;
+        if (!hasExistingSession && jwtService != null && saved != null && saved.getId() != null) {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            HttpServletResponse response = attrs != null ? attrs.getResponse() : null;
+            if (response != null) {
+                String jwt = jwtService.createToken(saved.getId(), saved.getEmail(), saved.getRole());
+                ResponseCookie cookie = ResponseCookie.from("HM_SESSION", jwt)
+                        .httpOnly(true).secure(cookieSecure).sameSite("Lax")
+                        .path("/").maxAge(7200).build();
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
