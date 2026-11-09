@@ -13,7 +13,7 @@ import java.util.Collection;
 //Controlador REST de servicios del hotel (/api/services).
 @RestController
 @RequestMapping("/api/services")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class ServicesController {
 
     @Autowired

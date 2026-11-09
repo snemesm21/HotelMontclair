@@ -16,7 +16,7 @@ No usa tokens: si las credenciales son correctas devuelve el cliente completo
 y el frontend lo guarda como sesión.*/
 @RestController
 @RequestMapping({"/api/auth"})
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired

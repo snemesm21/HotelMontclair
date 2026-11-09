@@ -13,7 +13,7 @@ import java.util.List;
 //Controlador REST de tipos de habitación (/api/room-types).
 @RestController
 @RequestMapping("/api/room-types")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class RoomTypeController {
 
     @Autowired

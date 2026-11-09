@@ -15,7 +15,7 @@ import java.util.List;
 //Controlador REST de habitaciones (/api/rooms).
 @RestController
 @RequestMapping("/api/rooms")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class RoomController {
 
     @Autowired

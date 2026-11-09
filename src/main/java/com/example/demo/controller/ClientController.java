@@ -14,7 +14,7 @@ import java.util.List;
 //Controlador REST de clientes (/api/clients).
 @RestController
 @RequestMapping({"/api/clients"})
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class ClientController {
 
     @Autowired
