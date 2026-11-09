@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -40,6 +41,7 @@ public class RoomTypeController {
     //Crea un tipo de habitación (POST /api/room-types). Se pone el id en null para que la base de datos genere uno nuevo.
     @Operation(summary = "Crea un nuevo tipo de cuarto")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoomType> createRoomType(@RequestBody RoomType roomType) {
         roomType.setId(null);
         RoomType saved = roomTypeService.save(roomType);
@@ -49,6 +51,7 @@ public class RoomTypeController {
     //Actualiza un tipo (PUT /api/room-types/{id}). El id de la URL manda sobre el del cuerpo.
     @Operation(summary = "Actualiza un tipo de cuarto existente por su ID")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoomType> updateRoomType(@PathVariable Long id, @RequestBody RoomType roomType) {
         roomType.setId(id);
         RoomType updated = roomTypeService.save(roomType);
@@ -58,6 +61,7 @@ public class RoomTypeController {
     //Elimina un tipo (DELETE /api/room-types/{id}).
     @Operation(summary = "Elimina un tipo de cuarto por su ID")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRoomType(@PathVariable Long id) {
         roomTypeService.delete(id);
         return ResponseEntity.noContent().build();

@@ -1,5 +1,7 @@
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +15,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 @Getter
 @Setter
@@ -30,7 +34,9 @@ public class Client {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ToString.Exclude
     private String password;
 
     @Column(nullable = false, unique = true, length = 120)
@@ -50,6 +56,23 @@ public class Client {
 
     @Column(nullable = false, length = 20)
     private String role;
+
+    @Column(unique = true, length = 255)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ToString.Exclude
+    private String googleSubject;
+
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String authProvider = "LOCAL";
+
+    @PrePersist
+    @PreUpdate
+    public void applyAuthProviderDefault() {
+        if (authProvider == null || authProvider.isBlank()) {
+            authProvider = googleSubject != null && !googleSubject.isBlank() ? "GOOGLE" : "LOCAL";
+        }
+    }
 
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(username);

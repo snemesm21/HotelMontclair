@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Collection;
 
@@ -50,6 +51,7 @@ public class ServicesController {
     //Crea un servicio (POST /api/services). Se pone el id en null para que la base de datos genere uno nuevo.
     @Operation(summary = "Crea un nuevo servicio")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Service> createService(@RequestBody Service service) {
         service.setId(null);
         Service saved = serviceService.save(service);
@@ -59,6 +61,7 @@ public class ServicesController {
     //Actualiza un servicio (PUT /api/services/{id}).
     @Operation(summary = "Actualiza un servicio existente por su ID")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Service> updateService(@PathVariable Long id, @RequestBody Service service) {
         Service updated = serviceService.update(id, service);
         if (updated == null) {
@@ -70,6 +73,7 @@ public class ServicesController {
     //Crea o actualiza según el cuerpo (PUT /api/services, sin id en la URL). Si el servicio trae id lo actualiza; si no, lo crea.
     @Operation(summary = "Crea o actualiza un servicio")
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Service> createOrUpdateService(@RequestBody Service service) {
         if (service.getId() != null) {
             return updateService(service.getId(), service);
@@ -80,6 +84,7 @@ public class ServicesController {
     //Elimina un servicio (DELETE /api/services/{id}).
     @Operation(summary = "Elimina un servicio por su ID")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteService(@PathVariable Long id) {
         serviceService.delete(id);
         return ResponseEntity.noContent().build();

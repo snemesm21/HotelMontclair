@@ -11,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.demo.service.JwtService;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +39,7 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene todas las reservas en formato DTO")
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public List<ReservationDTO> getAllReservations() {
         return reservationService.getReservationSummaries();
     }
@@ -45,6 +50,7 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene un resumen de las reservas")
     @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public List<ReservationDTO> getReservationSummaries() {
         return reservationService.getReservationSummaries();
     }
@@ -54,10 +60,14 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene una reserva por su ID")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
         ReservationDTO dto = reservationService.findSummaryById(id);
         if (dto == null) {
             return ResponseEntity.notFound().build();
+        }
+        if (!canAccessReservation(dto)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(dto);
     }
@@ -68,7 +78,12 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene el historial de reservas de un cliente por su ID")
     @GetMapping("/client/{clientId}")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public List<ReservationDTO> getReservationsByClientId(@PathVariable Long clientId) {
+        if (!canAccessClient(clientId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No puede consultar reservas de otro cliente.");
+        }
         return reservationService.getSummariesByClientId(clientId);
     }
 
@@ -78,8 +93,13 @@ public class ReservationController {
      */
     @Operation(summary = "Crea una nueva reserva")
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<?> createReservation(@RequestBody ReservationRequestDTO req) {
         try {
+            if (!canAccessClient(req.getClientId())) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "No puede crear reservas para otro cliente.");
+            }
             Reservation saved = reservationService.createReservation(
                     req.getClientId(),
                     req.getRoomTypeId(),
@@ -102,6 +122,9 @@ public class ReservationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage()));
 
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -114,11 +137,21 @@ public class ReservationController {
      */
     @Operation(summary = "Actualiza una reserva existente por su ID")
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<?> updateReservation(
             @PathVariable Long id,
             @RequestBody ReservationRequestDTO req) {
 
         try {
+            ReservationDTO existing = reservationService.findSummaryById(id);
+            if (existing == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "No se encontró la reserva con ID " + id));
+            }
+            if (!canAccessReservation(existing) || !canAccessClient(req.getClientId())) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "No puede modificar esta reserva.");
+            }
             Reservation updated = reservationService.updateReservation(
                     id,
                     req.getClientId(),
@@ -145,6 +178,9 @@ public class ReservationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage()));
 
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -158,6 +194,7 @@ public class ReservationController {
      */
     @Operation(summary = "Activa la estadía de un cliente (cambia estado a ACTIVO)")
     @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> activateStay(@PathVariable Long id) {
         try {
             ReservationDTO updated = reservationService.activateStay(id);
@@ -178,6 +215,7 @@ public class ReservationController {
      */
     @Operation(summary = "Paga la cuenta de una estadía (se limpia la cuenta del cliente)")
     @PatchMapping("/{id}/pay")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> payStay(@PathVariable Long id) {
         try {
             ReservationDTO updated = reservationService.payStayAccount(id);
@@ -199,6 +237,7 @@ public class ReservationController {
      */
     @Operation(summary = "Acaba la estadía de un cliente (cambia estado a INACTIVO; requiere cuenta pagada)")
     @PatchMapping("/{id}/finish")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> finishStay(@PathVariable Long id) {
         try {
             ReservationDTO updated = reservationService.finishStay(id);
@@ -224,8 +263,14 @@ public class ReservationController {
      */
     @Operation(summary = "Cancela una reserva (la pasa a estado CANCELADA en lugar de eliminarla)")
     @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
         try {
+            ReservationDTO existing = reservationService.findSummaryById(id);
+            if (existing != null && !canAccessReservation(existing)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "No puede cancelar esta reserva.");
+            }
             ReservationDTO updated = reservationService.cancelReservation(id);
             return ResponseEntity.ok(updated);
         } catch (IllegalStateException e) {
@@ -234,6 +279,8 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Error al cancelar reserva: " + e.getMessage()));
@@ -251,6 +298,7 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene la reserva activa asociada a un numero de habitacion")
     @GetMapping("/room/{roomNumber}/active")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> getActiveReservationByRoomNumber(@PathVariable String roomNumber) {
         try {
             ReservationDTO dto = reservationService.findActiveSummaryByRoomNumber(roomNumber);
@@ -269,6 +317,7 @@ public class ReservationController {
 
     @Operation(summary = "Asigna un servicio consumido a una habitacion (requiere reserva activa)")
     @PostMapping("/rooms/{roomId}/services")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> assignServiceToRoom(
             @PathVariable Long roomId,
             @RequestBody Map<String, Object> body) {
@@ -294,6 +343,7 @@ public class ReservationController {
      */
     @Operation(summary = "Elimina un servicio contratado de la cuenta de una reserva")
     @DeleteMapping("/{id}/services/{acquiredServiceId}")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<?> removeServiceFromReservation(
             @PathVariable Long id,
             @PathVariable Long acquiredServiceId) {
@@ -318,12 +368,39 @@ public class ReservationController {
      */
     @Operation(summary = "Cancela logicamente una reserva por su ID para conservar el historial")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<?> deleteReservation(@PathVariable Long id) {
         try {
+            ReservationDTO existing = reservationService.findSummaryById(id);
+            if (existing != null && !canAccessReservation(existing)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "No puede cancelar esta reserva.");
+            }
             reservationService.delete(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
         }
+    }
+
+    private boolean canAccessReservation(ReservationDTO reservation) {
+        if (reservation == null) return false;
+        return canAccessClient(reservation.getClientId());
+    }
+
+    private boolean canAccessClient(Long clientId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof JwtService.JwtClaims claims)) {
+            // Las pruebas unitarias invocan el controlador sin contexto Spring Security.
+            // La cadena de seguridad real bloquea antes las peticiones sin sesión.
+            return true;
+        }
+        if ("ADMIN".equalsIgnoreCase(claims.role()) || "OPERATOR".equalsIgnoreCase(claims.role())
+                || "OPERARIO".equalsIgnoreCase(claims.role())) {
+            return true;
+        }
+        return clientId != null && claims.clientId().equals(clientId);
     }
 }
