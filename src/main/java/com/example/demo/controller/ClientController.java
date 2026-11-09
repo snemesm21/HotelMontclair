@@ -17,7 +17,7 @@ import com.example.demo.service.JwtService;
 //Controlador REST de clientes (/api/clients).
 @RestController
 @RequestMapping({"/api/clients"})
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class ClientController {
 
     @Autowired

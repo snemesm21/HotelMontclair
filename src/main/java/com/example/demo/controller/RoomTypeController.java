@@ -14,7 +14,7 @@ import java.util.List;
 //Controlador REST de tipos de habitación (/api/room-types).
 @RestController
 @RequestMapping("/api/room-types")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class RoomTypeController {
 
     @Autowired
