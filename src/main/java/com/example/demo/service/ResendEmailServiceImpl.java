@@ -43,8 +43,8 @@ public class ResendEmailServiceImpl implements EmailService {
     public ResendEmailServiceImpl(
             @Value("${hotelmontclair.mail.enabled:true}") boolean mailEnabled,
             @Value("${hotelmontclair.mail.resend-api-key:${RESEND_API_KEY:}}") String apiKey,
-            @Value("${hotelmontclair.mail.from:MontClair Grand Hotel <onboarding@resend.dev>}") String fromAddress,
-            @Value("${hotelmontclair.mail.reply-to:}") String replyTo,
+            @Value("${hotelmontclair.mail.from:MontClair Grand Hotel <reservas@angaritateamo.com>}") String fromAddress,
+            @Value("${hotelmontclair.mail.reply-to:concierge@angaritateamo.com}") String replyTo,
             @Value("${hotelmontclair.mail.api-url:https://api.resend.com/emails}") String resendApiUrl,
             EmailTemplateBuilder templateBuilder) {
         this(
