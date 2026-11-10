@@ -52,6 +52,7 @@ public class SecurityConfig {
                                                                 "/api/auth/**",
                                                                 "/api/clients/**",
                                                                 "/api/reservations/**",
+                                                                "/api/payments/**",
                                                                 "/api/rooms/**",
                                                                 "/api/services/**",
                                                                 "/api/ai/**",

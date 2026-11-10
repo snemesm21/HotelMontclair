@@ -218,9 +218,14 @@ public class ReservationController {
      */
     @Operation(summary = "Paga la cuenta de una estadía (se limpia la cuenta del cliente)")
     @PatchMapping("/{id}/pay")
-    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<?> payStay(@PathVariable Long id) {
         try {
+            ReservationDTO existing = reservationService.findSummaryById(id);
+            if (existing != null && !canAccessReservation(existing)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "No puede pagar la reserva de otro cliente."));
+            }
             ReservationDTO updated = reservationService.payStayAccount(id);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
