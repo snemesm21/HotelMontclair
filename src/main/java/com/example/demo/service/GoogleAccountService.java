@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
 import com.example.demo.entities.Client;
+import com.example.demo.events.HotelNotificationListener.ClientRegisteredEvent;
 import com.example.demo.repository.ClientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,9 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class GoogleAccountService {
 
     private final ClientRepository clientRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public GoogleAccountService(ClientRepository clientRepository) {
+        this(clientRepository, null);
+    }
+
+    @Autowired
+    public GoogleAccountService(ClientRepository clientRepository, ApplicationEventPublisher eventPublisher) {
         this.clientRepository = clientRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -57,7 +67,11 @@ public class GoogleAccountService {
                 .googleSubject(googleUser.subject())
                 .authProvider("GOOGLE")
                 .build();
-        return clientRepository.save(client);
+        Client saved = clientRepository.save(client);
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new ClientRegisteredEvent(saved));
+        }
+        return saved;
     }
 
     public Client findOrCreateFromId(Long clientId) {

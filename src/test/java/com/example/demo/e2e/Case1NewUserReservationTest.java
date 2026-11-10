@@ -44,7 +44,6 @@ public class Case1NewUserReservationTest {
         prefs.put("profile.password_manager_enabled", false);
         options.setExperimentalOption("prefs", prefs);
         options.addArguments("--disable-notifications", "--disable-extensions");
-        // options.addArguments("--headless=new");
         driver = new ChromeDriver(options);
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }

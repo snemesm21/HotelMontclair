@@ -22,8 +22,10 @@ import java.util.Map;
 /**
  * Controlador REST de reservas (/api/reservations).
  * Diseñado con arquitectura en capas.
- * Devuelve DTOs planos (ReservationDTO) sin objetos anidados ni grafos circulares hacia el frontend.
- * Maneja el ciclo de vida: activación de estadía, pago/limpieza de cuenta y finalización de estadía.
+ * Devuelve DTOs planos (ReservationDTO) sin objetos anidados ni grafos
+ * circulares hacia el frontend.
+ * Maneja el ciclo de vida: activación de estadía, pago/limpieza de cuenta y
+ * finalización de estadía.
  */
 @RestController
 @RequestMapping("/api/reservations")
@@ -54,7 +56,8 @@ public class ReservationController {
     }
 
     /**
-     * Busca una reserva por id (GET /api/reservations/{id}) devolviendo su DTO plano.
+     * Busca una reserva por id (GET /api/reservations/{id}) devolviendo su DTO
+     * plano.
      */
     @Operation(summary = "Obtiene una reserva por su ID")
     @GetMapping("/{id}")
@@ -71,7 +74,8 @@ public class ReservationController {
     }
 
     /**
-     * Lista las reservas de un cliente para su historial (GET /api/reservations/client/{clientId}).
+     * Lista las reservas de un cliente para su historial (GET
+     * /api/reservations/client/{clientId}).
      * Devuelve DTOs planos con datos completos de fecha, importes y estado.
      */
     @Operation(summary = "Obtiene el historial de reservas de un cliente por su ID")
@@ -187,7 +191,8 @@ public class ReservationController {
     }
 
     /**
-     * Activa la estadía de un cliente cuando este llega al hotel (PATCH /api/reservations/{id}/activate).
+     * Activa la estadía de un cliente cuando este llega al hotel (PATCH
+     * /api/reservations/{id}/activate).
      * El estado pasa a ACTIVE.
      */
     @Operation(summary = "Activa la estadía de un cliente (cambia estado a ACTIVO)")
@@ -231,7 +236,8 @@ public class ReservationController {
     /**
      * Finaliza la estadía de un cliente (PATCH /api/reservations/{id}/finish).
      * Estado pasa a INACTIVE.
-     * REGLA DE NEGOCIO: Solo se permite realizar este procedimiento si la cuenta está vacía (ya pagó).
+     * REGLA DE NEGOCIO: Solo se permite realizar este procedimiento si la cuenta
+     * está vacía (ya pagó).
      */
     @Operation(summary = "Acaba la estadía de un cliente (cambia estado a INACTIVO; requiere cuenta pagada)")
     @PatchMapping("/{id}/finish")
@@ -255,8 +261,10 @@ public class ReservationController {
 
     /**
      * Cancela una reserva (PATCH /api/reservations/{id}/cancel).
-     * Pone la reserva como cancelada para no eliminarla de la base de datos y mantener el historial.
-     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * Pone la reserva como cancelada para no eliminarla de la base de datos y
+     * mantener el historial.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan
+     * activas,
      * es decir que su fecha de inicio es posterior a la fecha actual.
      */
     @Operation(summary = "Cancela una reserva (la pasa a estado CANCELADA en lugar de eliminarla)")
@@ -286,12 +294,15 @@ public class ReservationController {
     }
 
     /**
-     * Asigna un servicio consumido a una habitacion (POST /api/reservations/rooms/{roomId}/services).
-     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva activa,
+     * Asigna un servicio consumido a una habitacion (POST
+     * /api/reservations/rooms/{roomId}/services).
+     * REGLA DE NEGOCIO 5: En caso de que en la habitacion no haya ninguna reserva
+     * activa,
      * no se debe poder asignar ningun servicio.
      */
     /**
-     * Obtiene la reserva activa asociada al numero de habitacion (GET /api/reservations/room/{roomNumber}/active).
+     * Obtiene la reserva activa asociada al numero de habitacion (GET
+     * /api/reservations/room/{roomNumber}/active).
      * Regla de negocio: Devuelve la unica estadia activa actual de la habitacion.
      */
     @Operation(summary = "Obtiene la reserva activa asociada a un numero de habitacion")
@@ -302,7 +313,8 @@ public class ReservationController {
             ReservationDTO dto = reservationService.findActiveSummaryByRoomNumber(roomNumber);
             if (dto == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("message", "No se encontro ninguna estadia ACTIVA para la habitacion " + roomNumber + "."));
+                        .body(Map.of("message",
+                                "No se encontro ninguna estadia ACTIVA para la habitacion " + roomNumber + "."));
             }
             return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
@@ -337,7 +349,8 @@ public class ReservationController {
     }
 
     /**
-     * Elimina un servicio contratado de la cuenta de una reserva (DELETE /api/reservations/{id}/services/{acquiredServiceId}).
+     * Elimina un servicio contratado de la cuenta de una reserva (DELETE
+     * /api/reservations/{id}/services/{acquiredServiceId}).
      */
     @Operation(summary = "Elimina un servicio contratado de la cuenta de una reserva")
     @DeleteMapping("/{id}/services/{acquiredServiceId}")
@@ -360,8 +373,10 @@ public class ReservationController {
 
     /**
      * Elimina una reserva (DELETE /api/reservations/{id}).
-     * Implementa la logica de historial: no se borra fisicamente, sino que se cancela logicamente.
-     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan activas,
+     * Implementa la logica de historial: no se borra fisicamente, sino que se
+     * cancela logicamente.
+     * REGLA DE NEGOCIO 4: Solo se pueden cancelar reservas que todavia no estan
+     * activas,
      * es decir que su fecha de inicio es posterior a la fecha actual.
      */
     @Operation(summary = "Cancela logicamente una reserva por su ID para conservar el historial")
@@ -384,7 +399,8 @@ public class ReservationController {
     }
 
     private boolean canAccessReservation(ReservationDTO reservation) {
-        if (reservation == null) return false;
+        if (reservation == null)
+            return false;
         return canAccessClient(reservation.getClientId());
     }
 

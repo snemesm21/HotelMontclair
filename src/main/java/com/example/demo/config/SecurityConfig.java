@@ -23,81 +23,84 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final SessionAuthenticationFilter sessionAuthenticationFilter;
+        private final SessionAuthenticationFilter sessionAuthenticationFilter;
 
-    public SecurityConfig(SessionAuthenticationFilter sessionAuthenticationFilter) {
-        this.sessionAuthenticationFilter = sessionAuthenticationFilter;
-    }
+        public SecurityConfig(SessionAuthenticationFilter sessionAuthenticationFilter) {
+                this.sessionAuthenticationFilter = sessionAuthenticationFilter;
+        }
 
-    @Bean
-    @Profile("dev")
-    @Order(1)
-    public SecurityFilterChain h2ConsoleSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/h2-console", "/h2-console/**")
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
-        return http.build();
-    }
+        @Bean
+        @Profile("dev")
+        @Order(1)
+        public SecurityFilterChain h2ConsoleSecurityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .securityMatcher("/h2-console", "/h2-console/**")
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+                return http.build();
+        }
 
-    @Bean
-    @Order(2)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers(
-                                "/api/auth/**",
-                                "/api/clients/**",
-                                "/api/reservations/**",
-                                "/api/rooms/**",
-                                "/api/services/**",
-                                "/api/ai/**",
-                                "/login/**"))
-                .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/ai/**",
-                                "/login/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**")
-                        .permitAll()
-                        .requestMatchers("/h2-console", "/h2-console/**").denyAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/api/rooms",
-                                "/api/rooms/**",
-                                "/api/room-types",
-                                "/api/room-types/**",
-                                "/api/services",
-                                "/api/services/**",
-                                "/api/services/nothidden",
-                                "/api/services/not-hidden",
-                                "/api/reservations",
-                                "/api/reservations/summary")
-                        .permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/clients")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
-        return http.build();
-    }
+        @Bean
+        @Order(2)
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(Customizer.withDefaults())
+                                .csrf(csrf -> csrf
+                                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                                .ignoringRequestMatchers(
+                                                                "/api/auth/**",
+                                                                "/api/clients/**",
+                                                                "/api/reservations/**",
+                                                                "/api/rooms/**",
+                                                                "/api/services/**",
+                                                                "/api/ai/**",
+                                                                "/login/**"))
+                                .addFilterBefore(sessionAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                                                .permitAll()
+                                                .requestMatchers(
+                                                                "/api/auth/**",
+                                                                "/api/ai/**",
+                                                                "/login/**",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
+                                                .requestMatchers("/h2-console", "/h2-console/**").denyAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                                                "/api/rooms",
+                                                                "/api/rooms/**",
+                                                                "/api/room-types",
+                                                                "/api/room-types/**",
+                                                                "/api/services",
+                                                                "/api/services/**",
+                                                                "/api/services/nothidden",
+                                                                "/api/services/not-hidden",
+                                                                "/api/reservations",
+                                                                "/api/reservations/summary")
+                                                .permitAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/clients")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+                return http.build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Set-Cookie"));
-        configuration.setAllowCredentials(true);
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOriginPatterns(List.of("*"));
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(List.of("*"));
+                configuration.setExposedHeaders(List.of("Set-Cookie"));
+                configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 }

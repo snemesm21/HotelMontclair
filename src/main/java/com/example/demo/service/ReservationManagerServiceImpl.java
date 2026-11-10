@@ -3,6 +3,8 @@ package com.example.demo.service;
 import com.example.demo.dto.ReservationDTO;
 import com.example.demo.entities.*;
 import com.example.demo.errors.NotFoundException;
+import com.example.demo.events.HotelNotificationListener.ReservationEventType;
+import com.example.demo.events.HotelNotificationListener.ReservationLifecycleEvent;
 import com.example.demo.repository.ClientRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.RoomRepository;
@@ -11,6 +13,7 @@ import com.example.demo.repository.RoomTypeRepository;
 import com.example.demo.repository.ServiceRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +63,15 @@ public class ReservationManagerServiceImpl
 
     @Autowired
     private ServiceRepository serviceRepository;
+
+    @Autowired(required = false)
+    private ApplicationEventPublisher eventPublisher;
+
+    private void publishReservationEvent(ReservationEventType type, Reservation reservation) {
+        if (eventPublisher != null && reservation != null) {
+            eventPublisher.publishEvent(new ReservationLifecycleEvent(type, toDTO(reservation)));
+        }
+    }
 
     @Override
     public List<Reservation> searchAll() {
@@ -551,7 +563,9 @@ public class ReservationManagerServiceImpl
 
         reservation.addReservationRoom(reservationRoom);
 
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+        publishReservationEvent(ReservationEventType.CREATED, saved);
+        return saved;
     }
 
     @Override
@@ -684,7 +698,9 @@ public class ReservationManagerServiceImpl
 
         syncPaymentStatus(reservation);
 
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+        publishReservationEvent(ReservationEventType.UPDATED, saved);
+        return saved;
     }
 
     /**
@@ -721,7 +737,8 @@ public class ReservationManagerServiceImpl
                         "Solo se pueden cancelar reservas cuya fecha de inicio sea posterior a la fecha actual (" + LocalDate.now() + ").");
             }
             reservation.setStatus(STATUS_CANCELLED);
-            reservationRepository.save(reservation);
+            Reservation saved = reservationRepository.save(reservation);
+            publishReservationEvent(ReservationEventType.CANCELLED, saved);
         }
     }
 
@@ -760,7 +777,11 @@ public class ReservationManagerServiceImpl
 
         reservation.setStatus(STATUS_CANCELLED);
         Reservation saved = reservationRepository.save(reservation);
-        return toDTO(saved);
+        ReservationDTO dto = toDTO(saved);
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new ReservationLifecycleEvent(ReservationEventType.CANCELLED, dto));
+        }
+        return dto;
     }
 
     /**
@@ -832,7 +853,11 @@ public class ReservationManagerServiceImpl
 
         reservation.setStatus(STATUS_INACTIVE);
         Reservation saved = reservationRepository.save(reservation);
-        return toDTO(saved);
+        ReservationDTO dto = toDTO(saved);
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new ReservationLifecycleEvent(ReservationEventType.COMPLETED, dto));
+        }
+        return dto;
     }
 
     /**
@@ -858,7 +883,11 @@ public class ReservationManagerServiceImpl
         reservation.setPaidAmount(currentTotal);
         reservation.setPaid(true);
         Reservation saved = reservationRepository.save(reservation);
-        return toDTO(saved);
+        ReservationDTO dto = toDTO(saved);
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new ReservationLifecycleEvent(ReservationEventType.PAID, dto));
+        }
+        return dto;
     }
 
     /**

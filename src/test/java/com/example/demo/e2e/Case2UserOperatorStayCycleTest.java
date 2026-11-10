@@ -52,7 +52,6 @@ public class Case2UserOperatorStayCycleTest {
         options.setExperimentalOption("prefs", prefs);
         options.addArguments("--disable-notifications", "--disable-extensions",
                 "--disable-features=PasswordLeakDetection");
-        // options.addArguments("--headless=new");
         return new ChromeDriver(options);
     }
 

@@ -1,10 +1,12 @@
 package com.example.demo.service;
 
 import com.example.demo.entities.Client;
+import com.example.demo.events.HotelNotificationListener.ClientRegisteredEvent;
 import com.example.demo.repository.ClientRepository;
 import com.example.demo.repository.ReservationRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.errors.NotFoundException;
@@ -21,6 +23,9 @@ public class ClientServiceImpl implements ClientService {
     @Autowired
     private ReservationRepository reservationRepository;
 
+    @Autowired(required = false)
+    private ApplicationEventPublisher eventPublisher;
+
     @Override
     public List<Client> findAll() {
         return repository.findAll();
@@ -35,10 +40,11 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public Client save(Client client) {
+        boolean isNewClient = client.getId() == null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean admin = authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (client.getId() == null) {
+        if (isNewClient) {
             client.setRole(admin && isValidRole(client.getRole()) ? client.getRole().trim().toUpperCase() : "CLIENT");
         } else {
             Client existing = findById(client.getId());
@@ -113,7 +119,11 @@ public class ClientServiceImpl implements ClientService {
                     }
                 }
             });
-        return repository.save(client);
+        Client saved = repository.save(client);
+        if (isNewClient && eventPublisher != null && "CLIENT".equalsIgnoreCase(saved.getRole())) {
+            eventPublisher.publishEvent(new ClientRegisteredEvent(saved));
+        }
+        return saved;
 
     }
 

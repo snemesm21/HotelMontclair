@@ -22,7 +22,7 @@ import com.example.demo.service.JwtService;
 
 //Controlador REST de clientes (/api/clients).
 @RestController
-@RequestMapping({"/api/clients"})
+@RequestMapping({ "/api/clients" })
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class ClientController {
 
@@ -35,16 +35,16 @@ public class ClientController {
     @Value("${hotelmontclair.auth.cookie-secure:false}")
     private boolean cookieSecure;
 
-    //Lista todos los clientes (GET /api/clients).
-    @Operation (summary = "Obtiene todos los clientes")
+    // Lista todos los clientes (GET /api/clients).
+    @Operation(summary = "Obtiene todos los clientes")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<Client> getAllClients() {
         return clientService.findAll();
     }
 
-    //Busca un cliente por id (GET /api/clients/{id}).
-    @Operation (summary = "Obtiene un cliente por su ID")
+    // Busca un cliente por id (GET /api/clients/{id}).
+    @Operation(summary = "Obtiene un cliente por su ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<Client> getClientById(@PathVariable Long id) {
@@ -58,8 +58,9 @@ public class ClientController {
         return ResponseEntity.ok(client);
     }
 
-    //Crea un cliente (POST /api/clients). Se pone el id en null para que la base de datos genere uno nuevo.
-    @Operation (summary = "Crea un nuevo cliente")
+    // Crea un cliente (POST /api/clients). Se pone el id en null para que la base
+    // de datos genere uno nuevo.
+    @Operation(summary = "Crea un nuevo cliente")
     @PostMapping
     public ResponseEntity<Client> createClient(@RequestBody Client client) {
         client.setId(null);
@@ -84,8 +85,9 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    //Actualiza un cliente (PUT /api/clients/{id}). El id de la URL manda sobre el del cuerpo. Reemplaza todos los campos del cliente.
-    @Operation (summary = "Actualiza un cliente existente por su ID")
+    // Actualiza un cliente (PUT /api/clients/{id}). El id de la URL manda sobre el
+    // del cuerpo. Reemplaza todos los campos del cliente.
+    @Operation(summary = "Actualiza un cliente existente por su ID")
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
@@ -97,8 +99,8 @@ public class ClientController {
         return ResponseEntity.ok(updated);
     }
 
-    //Elimina un cliente (DELETE /api/clients/{id}).
-    @Operation (summary = "Elimina un cliente por su ID")
+    // Elimina un cliente (DELETE /api/clients/{id}).
+    @Operation(summary = "Elimina un cliente por su ID")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
