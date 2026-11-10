@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.WindowType;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -18,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -28,163 +28,227 @@ import java.util.Map;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class Case2UserOperatorStayCycleTest {
 
-    private WebDriver driver;
-    private WebDriverWait wait;
+    private WebDriver driverUsuario;
+    private WebDriver driverOperador;
+    private WebDriverWait waitUsuario;
+    private WebDriverWait waitOperador;
     private final String BASE_URL = "http://localhost:4200";
 
     @BeforeEach
     public void init() {
         WebDriverManager.chromedriver().setup();
+        driverUsuario = crearChrome();
+        driverOperador = crearChrome();
+        waitUsuario = new WebDriverWait(driverUsuario, Duration.ofSeconds(15));
+        waitOperador = new WebDriverWait(driverOperador, Duration.ofSeconds(15));
+    }
 
-        ChromeOptions chromeOptions = new ChromeOptions();
+    private WebDriver crearChrome() {
+        ChromeOptions options = new ChromeOptions();
         Map<String, Object> prefs = new HashMap<>();
         prefs.put("credentials_enable_service", false);
         prefs.put("profile.password_manager_enabled", false);
         prefs.put("profile.password_manager_leak_detection", false);
-        chromeOptions.setExperimentalOption("prefs", prefs);
-        chromeOptions.addArguments("--incognito");
-        chromeOptions.addArguments("--disable-notifications");
-        chromeOptions.addArguments("--disable-extensions");
-        chromeOptions.addArguments("--disable-save-password-bubble");
-        chromeOptions.addArguments("--disable-features=PasswordLeakDetection");
-        // chromeOptions.addArguments("--headless");
-
-        driver = new ChromeDriver(chromeOptions);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        options.setExperimentalOption("prefs", prefs);
+        options.addArguments("--disable-notifications", "--disable-extensions",
+                "--disable-features=PasswordLeakDetection");
+        // options.addArguments("--headless=new");
+        return new ChromeDriver(options);
     }
 
     @AfterEach
-    void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
+    public void tearDown() {
+        if (driverUsuario != null) driverUsuario.quit();
+        if (driverOperador != null) driverOperador.quit();
+    }
+
+    private void login(WebDriver driver, WebDriverWait wait, String usuario, String clave) {
+        driver.get(BASE_URL + "/login");
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("login-identifier"))).sendKeys(usuario);
+        driver.findElement(By.id("login-password")).sendKeys(clave);
+        wait.until(ExpectedConditions.elementToBeClickable(By.id("login-submit-btn"))).click();
+    }
+
+    private WebElement fila(String id) {
+        return driverOperador.findElement(By.cssSelector("tr.reservation-table-row[data-id='" + id + "']"));
+    }
+
+    private By selectorFila(String id) {
+        return By.cssSelector("tr.reservation-table-row[data-id='" + id + "']");
+    }
+
+    private void clickFila(String id, String claseBoton) {
+        By boton = By.cssSelector("tr.reservation-table-row[data-id='" + id + "'] ." + claseBoton);
+        waitOperador.until(ExpectedConditions.elementToBeClickable(boton)).click();
+    }
+
+    private void confirmarModal() {
+        waitOperador.until(ExpectedConditions.elementToBeClickable(By.id("modal-confirm-btn"))).click();
+    }
+
+    private BigDecimal dinero(String texto) {
+        // Formato que usa Angular: 1.234,50 €
+        String valor = texto.replaceAll("[^0-9,.-]", "")
+                .replace(".", "").replace(',', '.');
+        return new BigDecimal(valor);
+    }
+
+    private BigDecimal precioOpcion(String texto) {
+        // Las opciones tienen formato: Nombre — 25,00 €
+        String[] partes = texto.split("—");
+        Assertions.assertThat(partes).hasSizeGreaterThan(1);
+        return dinero(partes[partes.length - 1]);
+    }
+
+    private WebElement tarjetaUsuario(String id) {
+        return driverUsuario.findElements(By.className("reservation-card-item")).stream()
+                .filter(t -> t.findElement(By.className("res-card-id"))
+                        .getText().replace("#", "").trim().equals(id))
+                .findFirst().orElseThrow(() -> new AssertionError("No aparece la reserva #" + id));
     }
 
     @Test
     public void Case2_usuarioYOperador_cicloEstadiaCompleto() {
-        // 1. Usuario ya registrado realiza login con su perfil
-        driver.get(BASE_URL + "/login");
+        // 1. El cliente inicia sesión y consulta sus reservas.
+        login(driverUsuario, waitUsuario, "demo", "demo");
+        waitUsuario.until(ExpectedConditions.urlContains("/profile/"));
+        // Esperar específicamente la reserva confirmada, no simplemente cualquier tarjeta.
+        By selectorConfirmada = By.cssSelector(".reservation-card-item .res-card-status");
+        try {
+            waitUsuario.until(d -> d.findElements(selectorConfirmada).stream()
+                    .anyMatch(estado -> estado.getText().trim().equalsIgnoreCase("Confirmada")));
+        } catch (org.openqa.selenium.TimeoutException ex) {
+            List<WebElement> encontradas = driverUsuario.findElements(By.className("reservation-card-item"));
+            StringBuilder detalle = new StringBuilder();
+            for (WebElement tarjeta : encontradas) {
+                detalle.append(" [")
+                        .append(tarjeta.findElement(By.className("res-card-id")).getText())
+                        .append(" / ")
+                        .append(tarjeta.findElement(By.className("res-card-status")).getText())
+                        .append("]");
+            }
+            throw new AssertionError("No apareció una reserva confirmada para demo. "
+                    + "URL: " + driverUsuario.getCurrentUrl()
+                    + "; tarjetas encontradas: " + encontradas.size()
+                    + "; estados:" + detalle, ex);
+        }
+        List<WebElement> reservas = driverUsuario.findElements(By.className("reservation-card-item"));
+        WebElement confirmada = reservas.stream()
+                .filter(t -> t.findElement(By.className("res-card-status"))
+                        .getText().trim().equalsIgnoreCase("Confirmada"))
+                .findFirst().orElseThrow(() -> new AssertionError("No hay reserva CONFIRMED visible"));
+        String idReserva = confirmada.findElement(By.className("res-card-id"))
+                .getText().replace("#", "").trim();
+        Assertions.assertThat(idReserva).isNotBlank();
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("login-identifier")));
-        WebElement inputUser = driver.findElement(By.id("login-identifier"));
-        WebElement inputPass = driver.findElement(By.id("login-password"));
+        // 2. Operador inicia sesión en un Chrome independiente.
+        login(driverOperador, waitOperador, "operario", "operario");
+        waitOperador.until(ExpectedConditions.urlContains("/operator/reservations"));
+        waitOperador.until(ExpectedConditions.presenceOfElementLocated(selectorFila(idReserva)));
+        Assertions.assertThat(fila(idReserva).findElement(By.className("res-row-status"))
+                .getText()).containsIgnoringCase("Confirmada");
 
-        inputUser.sendKeys("demo");
-        inputPass.sendKeys("demo");
+        // 3. Check-in de la reserva correcta.
+        clickFila(idReserva, "btn-activar-estadia");
+        confirmarModal();
+        // El operador actualiza su tabla automáticamente al confirmar el check-in.
+        waitOperador.until(d -> {
+            List<WebElement> estados = d.findElements(By.cssSelector(
+                    "tr.reservation-table-row[data-id='" + idReserva + "'] .res-row-status"));
+            return !estados.isEmpty() && estados.get(0).getText().trim().equalsIgnoreCase("Activa");
+        });
+        Assertions.assertThat(fila(idReserva).findElement(By.className("res-row-status"))
+                .getText()).containsIgnoringCase("Activa");
 
-        WebElement btnLogin = driver.findElement(By.id("login-submit-btn"));
-        btnLogin.click();
+        // La página del cliente no se actualiza automáticamente: recargar SU navegador.
+        driverUsuario.navigate().refresh();
+        waitUsuario.until(d -> d.findElements(By.className("reservation-card-item")).stream()
+                .anyMatch(t -> {
+                    List<WebElement> ids = t.findElements(By.className("res-card-id"));
+                    List<WebElement> estados = t.findElements(By.className("res-card-status"));
+                    return !ids.isEmpty() && !estados.isEmpty()
+                            && ids.get(0).getText().replace("#", "").trim().equals(idReserva)
+                            && estados.get(0).getText().trim().equalsIgnoreCase("En Estadía (Activa)");
+                }));
+        Assertions.assertThat(tarjetaUsuario(idReserva).findElement(By.className("res-card-status"))
+                .getText()).containsIgnoringCase("Activa");
 
-        // 2. Revisa sus proximas reservas y aparece una que realizo tiempo atras que esta sin iniciar
-        wait.until(ExpectedConditions.urlContains("/profile/"));
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("reservation-card-item")));
+        // 4. Agregar exactamente dos servicios y comprobar su importe.
+        clickFila(idReserva, "btn-contratar-servicio");
+        waitOperador.until(ExpectedConditions.visibilityOfElementLocated(By.id("select-service-modal")));
+        int cantidadInicial = driverOperador.findElements(By.className("service-account-item")).size();
+        BigDecimal montoInicial = dinero(driverOperador.findElement(By.id("modal-total-account-price")).getText());
+        Select select = new Select(driverOperador.findElement(By.id("select-service-modal")));
+        Assertions.assertThat(select.getOptions().size()).isGreaterThanOrEqualTo(2);
 
-        List<WebElement> reservasUsuario = driver.findElements(By.className("reservation-card-item"));
-        Assertions.assertThat(reservasUsuario.size()).isGreaterThanOrEqualTo(1);
+        BigDecimal precio1 = precioOpcion(select.getOptions().get(0).getText());
+        BigDecimal precio2 = precioOpcion(select.getOptions().get(1).getText());
+        WebElement cantidad = driverOperador.findElement(By.id("input-service-quantity"));
+        cantidad.clear();
+        cantidad.sendKeys("1");
 
-        WebElement primeraReserva = reservasUsuario.get(0);
-        WebElement badgeEstado = primeraReserva.findElement(By.className("res-card-status"));
-        Assertions.assertThat(badgeEstado.getText()).containsIgnoringCase("Confirmada");
+        select.selectByIndex(0);
+        waitOperador.until(ExpectedConditions.elementToBeClickable(By.id("btn-confirm-add-service"))).click();
+        waitOperador.until(d -> d.findElements(By.className("service-account-item")).size() == cantidadInicial + 1);
 
-        // Guardar la referencia a la pestana del usuario
-        String pestanaUsuario = driver.getWindowHandle();
+        // El modal se actualiza con la respuesta del servidor.
+        select = new Select(driverOperador.findElement(By.id("select-service-modal")));
+        select.selectByIndex(1);
+        waitOperador.until(ExpectedConditions.elementToBeClickable(By.id("btn-confirm-add-service"))).click();
+        waitOperador.until(d -> d.findElements(By.className("service-account-item")).size() == cantidadInicial + 2);
 
-        // 3. En otra pestana ingresa un operador con su usuario y contrasena
-        driver.switchTo().newWindow(WindowType.TAB);
+        BigDecimal esperado = montoInicial.add(precio1).add(precio2);
+        BigDecimal total = dinero(driverOperador.findElement(By.id("modal-total-account-price")).getText());
+        Assertions.assertThat(total).isEqualByComparingTo(esperado);
+        Assertions.assertThat(driverOperador.findElements(By.className("service-account-item")))
+                .hasSize(cantidadInicial + 2);
+        waitOperador.until(ExpectedConditions.elementToBeClickable(By.id("btn-close-service-modal"))).click();
 
-        driver.get(BASE_URL + "/login");
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("login-identifier")));
+        // 5. El operador paga la cuenta de esa misma reserva.
+        clickFila(idReserva, "btn-pagar-cuenta");
+        String descripcion = waitOperador.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("modal-description"))).getText();
+        Assertions.assertThat(descripcion).contains("#" + idReserva);
+        Assertions.assertThat(dinero(descripcion.split("para la reserva")[0]))
+                .isEqualByComparingTo(esperado);
+        confirmarModal();
+        waitOperador.until(d -> !fila(idReserva).findElements(By.className("cuenta-pagada-badge")).isEmpty());
 
-        driver.findElement(By.id("login-identifier")).sendKeys("operario");
-        driver.findElement(By.id("login-password")).sendKeys("operario");
-        driver.findElement(By.id("login-submit-btn")).click();
+        // 6. Checkout: la misma reserva debe pasar a INACTIVA.
+        clickFila(idReserva, "btn-finalizar-estadia");
+        confirmarModal();
+        // Esperar el cambio del estado de ESA reserva, sin depender de mayúsculas.
+        try {
+            waitOperador.until(d -> {
+                List<WebElement> estados = d.findElements(By.cssSelector(
+                        "tr.reservation-table-row[data-id='" + idReserva + "'] .res-row-status"));
+                return !estados.isEmpty()
+                        && estados.get(0).getText().trim().equalsIgnoreCase("Inactiva");
+            });
+        } catch (org.openqa.selenium.TimeoutException ex) {
+            String estadoActual = fila(idReserva).findElement(By.className("res-row-status")).getText();
+            throw new AssertionError("La reserva #" + idReserva
+                    + " no cambió a INACTIVA en la vista del operador. Estado mostrado: "
+                    + estadoActual, ex);
+        }
+        Assertions.assertThat(fila(idReserva).findElement(By.className("res-row-status"))
+                .getText()).containsIgnoringCase("Inactiva");
 
-        // 4. Va al perfil de reservas y activa (checkin) la reserva del usuario
-        wait.until(ExpectedConditions.urlContains("/operator/reservations"));
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("btn-activar-estadia")));
-
-        WebElement btnActivar = driver.findElement(By.className("btn-activar-estadia"));
-        btnActivar.click();
-
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("modal-confirm-btn")));
-        WebElement btnConfirmarModal = driver.findElement(By.id("modal-confirm-btn"));
-        btnConfirmarModal.click();
-
-        // Esperar a que la reserva cambie a estado Activa
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("status-activa")));
-
-        // 5. Agrega 2 servicios a esta reserva
-        WebElement btnContratar = driver.findElement(By.className("btn-contratar-servicio"));
-        btnContratar.click();
-
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("service-option")));
-        List<WebElement> serviciosIniciales = driver.findElements(By.className("service-account-item"));
-        String montoInicial = driver.findElement(By.id("modal-total-account-price")).getText();
-
-        Select selectServicio = new Select(driver.findElement(By.id("select-service-modal")));
-        WebElement btnAgregarServicio = driver.findElement(By.id("btn-confirm-add-service"));
-
-        // Servicio 1
-        selectServicio.selectByIndex(0);
-        btnAgregarServicio.click();
-
-        wait.until(driver -> driver.findElements(By.className("service-account-item")).size() == serviciosIniciales.size() + 1);
-
-        // Servicio 2
-        selectServicio.selectByIndex(1);
-        driver.findElement(By.id("btn-confirm-add-service")).click();
-
-        wait.until(driver -> driver.findElements(By.className("service-account-item")).size() == serviciosIniciales.size() + 2);
-
-        List<WebElement> serviciosFinales = driver.findElements(By.className("service-account-item"));
-        Assertions.assertThat(serviciosFinales.size()).isEqualTo(serviciosIniciales.size() + 2);
-
-        String montoTotalConServicios = driver.findElement(By.id("modal-total-account-price")).getText();
-        Assertions.assertThat(montoTotalConServicios).isNotEqualTo(montoInicial);
-
-        WebElement btnCerrarModalServicios = driver.findElement(By.id("btn-close-service-modal"));
-        btnCerrarModalServicios.click();
-
-        // 6. El usuario acaba su estadia y decide pagar todos los servicios pendientes
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("btn-pagar-cuenta")));
-        WebElement btnPagar = driver.findElement(By.className("btn-pagar-cuenta"));
-        btnPagar.click();
-
-        // Verificar que el monto a pagar en el modal sea el apropiado (incluyendo los 2 servicios agregados)
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("modal-description")));
-        WebElement descripcionModal = driver.findElement(By.id("modal-description"));
-        Assertions.assertThat(descripcionModal.getText()).contains(montoTotalConServicios);
-
-        // Confirmar el pago
-        driver.findElement(By.id("modal-confirm-btn")).click();
-
-        // Esperar a que aparezca la etiqueta de cuenta pagada
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("cuenta-pagada-badge")));
-
-        // 7. La reserva se da por finalizada (checkout)
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("btn-finalizar-estadia")));
-        WebElement btnFinalizar = driver.findElement(By.className("btn-finalizar-estadia"));
-        btnFinalizar.click();
-
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("modal-confirm-btn")));
-        driver.findElement(By.id("modal-confirm-btn")).click();
-
-        // Verificar que el estado cambie a Inactiva
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("status-inactiva")));
-
-        WebElement estadoFinalTabla = driver.findElement(By.className("status-inactiva"));
-        Assertions.assertThat(estadoFinalTabla.getText()).containsIgnoringCase("Inactiva");
-
-        // 8. Verificar que en la pestana del usuario se vea finalizada y pagada
-        driver.switchTo().window(pestanaUsuario);
-        driver.navigate().refresh();
-
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("reservation-card-item")));
-        WebElement tarjetaPerfil = driver.findElements(By.className("reservation-card-item")).get(0);
-
-        Assertions.assertThat(tarjetaPerfil.findElement(By.className("res-card-status")).getText())
+        // 7. El usuario comprueba la finalización y el pago.
+        driverUsuario.navigate().refresh();
+        waitUsuario.until(ExpectedConditions.numberOfElementsToBeMoreThan(
+                By.className("reservation-card-item"), 0));
+        waitUsuario.until(d -> {
+            WebElement tarjeta = tarjetaUsuario(idReserva);
+            return tarjeta.findElement(By.className("res-card-status")).getText()
+                    .toLowerCase(java.util.Locale.ROOT).contains("finalizada")
+                    && tarjeta.findElement(By.className("res-card-paid-badge")).getText()
+                    .toLowerCase(java.util.Locale.ROOT).contains("pagada");
+        });
+        WebElement tarjetaFinal = tarjetaUsuario(idReserva);
+        Assertions.assertThat(tarjetaFinal.findElement(By.className("res-card-status")).getText())
                 .containsIgnoringCase("Finalizada");
-        Assertions.assertThat(tarjetaPerfil.findElement(By.className("res-card-paid-badge")).getText())
+        Assertions.assertThat(tarjetaFinal.findElement(By.className("res-card-paid-badge")).getText())
                 .containsIgnoringCase("Pagada");
     }
 }

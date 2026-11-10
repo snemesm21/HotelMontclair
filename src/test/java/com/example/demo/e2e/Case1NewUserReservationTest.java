@@ -22,6 +22,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("test")
@@ -31,142 +33,130 @@ public class Case1NewUserReservationTest {
     private WebDriver driver;
     private WebDriverWait wait;
     private final String BASE_URL = "http://localhost:4200";
+    private final By RESERVAS = By.className("reservation-card-item");
 
     @BeforeEach
     public void init() {
         WebDriverManager.chromedriver().setup();
-
-        ChromeOptions chromeOptions = new ChromeOptions();
+        ChromeOptions options = new ChromeOptions();
         Map<String, Object> prefs = new HashMap<>();
         prefs.put("credentials_enable_service", false);
         prefs.put("profile.password_manager_enabled", false);
-        prefs.put("profile.password_manager_leak_detection", false);
-        chromeOptions.setExperimentalOption("prefs", prefs);
-        chromeOptions.addArguments("--incognito");
-        chromeOptions.addArguments("--disable-notifications");
-        chromeOptions.addArguments("--disable-extensions");
-        chromeOptions.addArguments("--disable-save-password-bubble");
-        chromeOptions.addArguments("--disable-features=PasswordLeakDetection");
-        // chromeOptions.addArguments("--headless");
-
-        driver = new ChromeDriver(chromeOptions);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        options.setExperimentalOption("prefs", prefs);
+        options.addArguments("--disable-notifications", "--disable-extensions");
+        // options.addArguments("--headless=new");
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
     @AfterEach
-    void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
+    public void tearDown() {
+        if (driver != null) driver.quit();
+    }
+
+    private WebElement visible(By selector) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(selector));
+    }
+
+    private void click(By selector) {
+        wait.until(ExpectedConditions.elementToBeClickable(selector)).click();
+    }
+
+    private String idReserva(WebElement tarjeta) {
+        return tarjeta.findElement(By.className("res-card-id"))
+                .getText().replace("#", "").trim();
+    }
+
+    private String numeroHabitacion(WebElement tarjeta) {
+        return tarjeta.findElement(By.className("res-card-room-number"))
+                .getText().replaceAll("[^0-9]", "");
+    }
+
+    private Map<String, String> reservasPorId() {
+        return driver.findElements(RESERVAS).stream().collect(Collectors.toMap(
+                this::idReserva, this::numeroHabitacion));
+    }
+
+    private String buscarNuevaReserva(Set<String> idsIniciales) {
+        return wait.until(d -> {
+            Set<String> actuales = reservasPorId().keySet();
+            Set<String> nuevos = actuales.stream().filter(id -> !idsIniciales.contains(id))
+                    .collect(Collectors.toSet());
+            return nuevos.size() == 1 ? nuevos.iterator().next() : null;
+        });
     }
 
     @Test
     public void Case1_nuevoUsuario_registroError_dosReservasSolapadas() {
-        // 1. Llegar al Landing Page
+        // 1. Landing page y formulario de registro.
         driver.get(BASE_URL + "/");
+        click(By.id("nav-login-link"));
+        click(By.id("create-account-btn"));
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("nav-login-link")));
-        WebElement navLogin = driver.findElement(By.id("nav-login-link"));
-        navLogin.click();
+        visible(By.id("client-firstName")).sendKeys("Carlos");
+        driver.findElement(By.id("client-lastName")).sendKeys("Mendoza");
+        String usuario = "carlos" + System.currentTimeMillis();
+        driver.findElement(By.id("client-username")).sendKeys(usuario);
+        WebElement correo = driver.findElement(By.id("client-email"));
+        correo.sendKeys("correo-invalido-sin-arroba");
+        driver.findElement(By.id("client-password")).sendKeys("12345");
+        driver.findElement(By.id("client-phone")).sendKeys("3001234567");
+        click(By.id("client-submit-btn"));
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("create-account-btn")));
-        WebElement btnCrearCuenta = driver.findElement(By.id("create-account-btn"));
-        btnCrearCuenta.click();
+        // 2. Debe aparecer el error del correo inválido.
+        wait.until(d -> visible(By.id("client-email-error")).getText().toLowerCase()
+                .contains("correo electrónico válido"));
+        Assertions.assertThat(driver.findElement(By.id("client-email-error")).getText())
+                .containsIgnoringCase("correo electrónico válido");
 
-        // 2. Registro con correo invalido
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("client-firstName")));
-
-        WebElement inputNombre = driver.findElement(By.id("client-firstName"));
-        WebElement inputApellido = driver.findElement(By.id("client-lastName"));
-        WebElement inputUsername = driver.findElement(By.id("client-username"));
-        WebElement inputEmail = driver.findElement(By.id("client-email"));
-        WebElement inputPassword = driver.findElement(By.id("client-password"));
-        WebElement inputPhone = driver.findElement(By.id("client-phone"));
-
-        inputNombre.sendKeys("Carlos");
-        inputApellido.sendKeys("Mendoza");
-
-        String usuarioUnico = "carlos" + System.currentTimeMillis();
-        inputUsername.sendKeys(usuarioUnico);
-        inputEmail.sendKeys("correo-invalido-sin-arroba");
-        inputPassword.sendKeys("12345");
-        inputPhone.sendKeys("3001234567");
-
-        WebElement btnSubmit = driver.findElement(By.id("client-submit-btn"));
-        btnSubmit.click();
-
-        // Verificar el mensaje de error del correo
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("client-email-error")));
-        WebElement errorEmail = driver.findElement(By.id("client-email-error"));
-        Assertions.assertThat(errorEmail.getText()).containsIgnoringCase("Ingresa un correo electrónico válido");
-
-        // 3. Corregir correo y registrarse correctamente
-        inputEmail.clear();
-        inputEmail.sendKeys(usuarioUnico + "@javeriana.edu.co");
-        btnSubmit.click();
-
-        // Redirige al perfil del usuario
+        // 3. Corregir el correo y registrarse.
+        correo.clear();
+        correo.sendKeys(usuario + "@javeriana.edu.co");
+        click(By.id("client-submit-btn"));
         wait.until(ExpectedConditions.urlContains("/profile/"));
 
-        // 4. Generar primera reserva para la siguiente semana
-        LocalDate fechaHoy = LocalDate.now();
-        LocalDate checkIn1 = fechaHoy.plusDays(7);
-        LocalDate checkOut1 = fechaHoy.plusDays(10);
-
-        driver.get(BASE_URL + "/reservations/book?checkIn=" + checkIn1 + "&checkOut=" + checkOut1);
-
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("room-type-option")));
-        Select selectTipo1 = new Select(driver.findElement(By.id("booking-roomTypeId")));
-        selectTipo1.selectByIndex(0);
-
-        WebElement btnReservar1 = driver.findElement(By.id("btn-confirmar-reserva"));
-        btnReservar1.click();
-
-        // Esperar a que la reserva aparezca en el perfil
+        // 4. Primera reserva para la próxima semana.
+        LocalDate hoy = LocalDate.now();
+        LocalDate entrada1 = hoy.plusDays(7);
+        LocalDate salida1 = hoy.plusDays(10);
+        driver.get(BASE_URL + "/reservations/book?checkIn=" + entrada1 + "&checkOut=" + salida1);
+        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.className("room-type-option"), 0));
+        new Select(driver.findElement(By.id("booking-roomTypeId"))).selectByIndex(0);
+        click(By.id("btn-confirmar-reserva"));
         wait.until(ExpectedConditions.urlContains("/profile/"));
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("reservation-card-item")));
+        wait.until(d -> !d.findElements(RESERVAS).isEmpty());
 
-        List<WebElement> listaInicial = driver.findElements(By.className("reservation-card-item"));
-        Assertions.assertThat(listaInicial.size()).isEqualTo(1);
+        Map<String, String> reservasPrimera = reservasPorId();
+        Assertions.assertThat(reservasPrimera).hasSize(1);
+        String idPrimera = reservasPrimera.keySet().iterator().next();
+        String habitacion1 = reservasPrimera.get(idPrimera);
+        Assertions.assertThat(habitacion1).isNotBlank();
+        int cantidadInicial = reservasPrimera.size();
 
-        WebElement tarjeta1 = listaInicial.get(0);
-        String habitacion1 = tarjeta1.findElement(By.className("res-card-room-number"))
-                .getText().toUpperCase().replace("(HAB.", "").replace(")", "").trim();
+        // 5. Buscar fechas que se solapan con la primera reserva.
+        LocalDate entrada2 = hoy.plusDays(8);
+        LocalDate salida2 = hoy.plusDays(11);
+        driver.get(BASE_URL + "/reservations/book?checkIn=" + entrada2 + "&checkOut=" + salida2);
+        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.className("room-type-option"), 0));
+        new Select(driver.findElement(By.id("booking-roomTypeId"))).selectByIndex(0);
 
-        Assertions.assertThat(habitacion1).isNotEmpty();
+        // La primera habitación debe figurar como no disponible.
+        wait.until(d -> d.findElements(By.className("room-unavailable-badge")).stream()
+                .anyMatch(b -> b.getText().matches("(?is).*Hab\\.\\s*" + habitacion1 + "\\s*:\\s*No disponible.*")));
+        List<WebElement> noDisponibles = driver.findElements(By.className("room-unavailable-badge"));
+        Assertions.assertThat(noDisponibles.stream().map(WebElement::getText).toList())
+                .anyMatch(t -> t.matches("(?is).*Hab\\.\\s*" + habitacion1 + "\\s*:\\s*No disponible.*"));
 
-        // 5. Segunda reserva que se intercepta con las fechas de la primera (solapamiento)
-        LocalDate checkIn2 = fechaHoy.plusDays(8);
-        LocalDate checkOut2 = fechaHoy.plusDays(11);
-
-        driver.get(BASE_URL + "/reservations/book?checkIn=" + checkIn2 + "&checkOut=" + checkOut2);
-
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("room-type-option")));
-        Select selectTipo2 = new Select(driver.findElement(By.id("booking-roomTypeId")));
-        selectTipo2.selectByIndex(0);
-
-        // Verificar que la primera habitacion asignada NO este disponible en estas fechas solapadas
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("room-unavailable-badge")));
-        WebElement disponibilidadHab1 = driver.findElement(By.className("room-unavailable-badge"));
-        Assertions.assertThat(disponibilidadHab1.getText()).contains(habitacion1);
-        Assertions.assertThat(disponibilidadHab1.getText()).containsIgnoringCase("No disponible");
-
-        WebElement btnReservar2 = driver.findElement(By.id("btn-confirmar-reserva"));
-        btnReservar2.click();
-
-        // Esperar que la lista de reservas aumente en 1 con el lambda
-        wait.until(driver -> driver.findElements(By.className("reservation-card-item")).size() == listaInicial.size() + 1);
-
-        List<WebElement> listaFinal = driver.findElements(By.className("reservation-card-item"));
-        Assertions.assertThat(listaFinal.size()).isEqualTo(listaInicial.size() + 1);
-
-        // Obtener la habitacion de la segunda reserva (la ultima de la lista)
-        WebElement tarjeta2 = listaFinal.get(listaFinal.size() - 1);
-        String habitacion2 = tarjeta2.findElement(By.className("res-card-room-number"))
-                .getText().toUpperCase().replace("(HAB.", "").replace(")", "").trim();
-
-        // Asegurar que el numero de habitacion asignado sea diferente al primero
-        Assertions.assertThat(habitacion2).isNotEqualTo(habitacion1);
-        Assertions.assertThat(habitacion2).isNotEmpty();
+        // 6. Crear segunda reserva y localizarla por ID, no por posición.
+        click(By.id("btn-confirmar-reserva"));
+        wait.until(ExpectedConditions.urlContains("/profile/"));
+        wait.until(d -> d.findElements(RESERVAS).size() == cantidadInicial + 1);
+        String idSegunda = buscarNuevaReserva(reservasPrimera.keySet());
+        Map<String, String> reservasFinales = reservasPorId();
+        Assertions.assertThat(reservasFinales).hasSize(cantidadInicial + 1);
+        Assertions.assertThat(idSegunda).isNotEqualTo(idPrimera);
+        String habitacion2 = reservasFinales.get(idSegunda);
+        Assertions.assertThat(habitacion2).isNotBlank().isNotEqualTo(habitacion1);
+        Assertions.assertThat(reservasFinales.get(idPrimera)).isEqualTo(habitacion1);
     }
 }
