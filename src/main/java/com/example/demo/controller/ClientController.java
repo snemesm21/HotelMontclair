@@ -8,8 +8,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 //Controlador REST de clientes (/api/clients).
 @RestController
@@ -62,5 +65,16 @@ public class ClientController {
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         clientService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Obtiene el cliente autenticado a partir de su JWT")
+    @GetMapping("/details")
+    public ResponseEntity<?> getMyDetails() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Client client = clientService.findByUsername(auth.getName());
+        if (client == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Cliente no encontrado"));
+        }
+        return ResponseEntity.ok(client);
     }
 }

@@ -7,12 +7,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Getter
 @Setter
@@ -30,7 +35,7 @@ public class Client {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 100)
+    @Transient 
     private String password;
 
     @Column(nullable = false, unique = true, length = 120)
@@ -50,6 +55,24 @@ public class Client {
 
     @Column(nullable = false, length = 20)
     private String role;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
+    private UserEntity user;
+
+    public Client(Long id, String username, String password, String email, String firstName,
+                  String lastName, String avatarUrl, String phone, String role) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.avatarUrl = avatarUrl;
+        this.phone = phone;
+        this.role = role;
+    }
 
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(username);

@@ -1,10 +1,13 @@
 package com.example.demo.service;
 
 import com.example.demo.entities.Client;
+import com.example.demo.entities.UserEntity;
 import com.example.demo.repository.ClientRepository;
 import com.example.demo.repository.ReservationRepository;
+import com.example.demo.security.CustomUserDetailsService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.errors.NotFoundException;
@@ -18,6 +21,11 @@ public class ClientServiceImpl implements ClientService {
 
     @Autowired
     private ReservationRepository reservationRepository;
+
+    @Autowired 
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
 
     @Override
     public List<Client> findAll() {
@@ -33,35 +41,34 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public Client save(Client client) {
+        Client current = null;
         if (client.getId() == null) {
             if (client.getRole() == null || client.getRole().isBlank()) {
                 client.setRole("CLIENT");
             }
         } else {
-            Client existing = findById(client.getId());
-            if (client.getPassword() == null || client.getPassword().isBlank()) {
-                client.setPassword(existing.getPassword());
-            }
+            current = findById(client.getId());
+            
             if (client.getAvatarUrl() == null || client.getAvatarUrl().isBlank()) {
-                client.setAvatarUrl(existing.getAvatarUrl());
+                client.setAvatarUrl(current.getAvatarUrl());
             }
             if (client.getRole() == null || client.getRole().isBlank()) {
-                client.setRole(existing.getRole());
+                client.setRole(current.getRole());
             }
             if (client.getUsername() == null || client.getUsername().isBlank()) {
-                client.setUsername(existing.getUsername());
+                client.setUsername(current.getUsername());
             }
             if (client.getEmail() == null || client.getEmail().isBlank()) {
-                client.setEmail(existing.getEmail());
+                client.setEmail(current.getEmail());
             }
             if (client.getFirstName() == null || client.getFirstName().isBlank()) {
-                client.setFirstName(existing.getFirstName());
+                client.setFirstName(current.getFirstName());
             }
             if (client.getLastName() == null || client.getLastName().isBlank()) {
-                client.setLastName(existing.getLastName());
+                client.setLastName(current.getLastName());
             }
             if (client.getPhone() == null || client.getPhone().isBlank()) {
-                client.setPhone(existing.getPhone());
+                client.setPhone(current.getPhone());
             }
         }
         // Validar campos obligatorios
@@ -93,8 +100,19 @@ public class ClientServiceImpl implements ClientService {
                     }
                 }
             });
-        return repository.save(client);
-
+        
+            if(current == null) {
+                client.setUser(userDetailsService.clientToUser(client));
+            } else {
+                UserEntity user = current.getUser();
+                user.setUsername(client.getUsername().trim());
+                if (client.getPassword() != null && !client.getPassword().isBlank()) {
+                    user.setPassword(passwordEncoder.encode(client.getPassword().trim()));
+                }
+                user.setRoles(userDetailsService.rolesFor(client));
+                client.setUser(user);
+            }
+            return repository.save(client);
     }
 
     @Override
@@ -124,7 +142,13 @@ public class ClientServiceImpl implements ClientService {
 
         String passTrimmed = password.trim();
         return repository.findByUsernameIgnoreCaseOrEmailIgnoreCase(identifier, identifier)
-                .filter(c -> c.getPassword() != null && passTrimmed.equals(c.getPassword().trim()))
+                .filter(c -> c.getUser() != null
+                    && passwordEncoder.matches(passTrimmed, c.getUser().getPassword()))
                 .orElse(null);
+    }
+
+    @Override
+    public Client findByUsername(String username) {
+        return repository.findByUsernameIgnoreCaseOrEmailIgnoreCase(username, username).orElse(null);
     }
 }

@@ -13,4 +13,6 @@ public interface ClientService {
     void delete(Long id);
 
     Client login(String username, String email, String password);
+
+    Client findByUsername(String username);
 }

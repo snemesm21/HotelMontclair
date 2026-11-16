@@ -2,9 +2,11 @@ package com.example.demo;
 
 import com.example.demo.entities.*;
 import com.example.demo.repository.*;
+import com.example.demo.security.CustomUserDetailsService;
 import com.example.demo.service.ReservationManagerService;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,12 +23,14 @@ public class DataInitializer implements CommandLineRunner {
     private final ReservationRoomRepository reservationRoomRepository;
     private final AcquiredServiceRepository acquiredServiceRepository;
     private final ReservationManagerService reservationService;
+    private final RoleRepository roleRepository;
+    private final CustomUserDetailsService userDetailsService;
 
     public DataInitializer(ClientRepository clientRepository, RoomTypeRepository roomTypeRepository,
             RoomRepository roomRepository, ServiceRepository serviceRepository,
             ReservationRepository reservationRepository,
             ReservationRoomRepository reservationRoomRepository, AcquiredServiceRepository acquiredServiceRepository,
-            ReservationManagerService reservationService) {
+            ReservationManagerService reservationService, RoleRepository roleRepository, CustomUserDetailsService userDetailsService) {
         this.clientRepository = clientRepository;
         this.roomTypeRepository = roomTypeRepository;
         this.roomRepository = roomRepository;
@@ -35,27 +39,34 @@ public class DataInitializer implements CommandLineRunner {
         this.reservationRoomRepository = reservationRoomRepository;
         this.acquiredServiceRepository = acquiredServiceRepository;
         this.reservationService = reservationService;
+        this.roleRepository = roleRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
     public void run(String... args) {
+        if (roleRepository.count() == 0) {
+                roleRepository.save(new Role("ADMIN"));
+                roleRepository.save(new Role("OPERATOR"));
+                roleRepository.save(new Role("CLIENT"));
+        }
         if (clientRepository.count() == 0) {
-            clientRepository.save(new Client(null, "admin", "admin", "admin@hotelmontclair.com",
+            saveClient(new Client(null, "admin", "admin", "admin@hotelmontclair.com",
                     "Administrador", "Montclair", null, "+34 910 000 001", "ADMIN"));
-            clientRepository.save(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
+            saveClient(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
                     "Operario", "Montclair", null, "+34 910 000 002", "OPERATOR"));
-            clientRepository.save(new Client(null, "demo", "demo", "demo@example.com",
+            saveClient(new Client(null, "demo", "demo", "demo@example.com",
                     "Demo", "User", null, "+34 612 345 678", "CLIENT"));
             for (int index = 3; index <= 10; index++) {
-                clientRepository.save(new Client(null, "cliente" + index, "cliente" + index,
+                saveClient(new Client(null, "cliente" + index, "cliente" + index,
                         "cliente" + index + "@example.com", "Cliente", "Montclair", null,
                         "+34 612 345 6" + String.format("%02d", index), "CLIENT"));
             }
-            clientRepository.save(new Client(null, "cliente11", "cliente11",
+            saveClient(new Client(null, "cliente11", "cliente11",
                     "cliente11@example.com", "Cliente", "Montclair", null,
                     "+34 612 345 611", "CLIENT"));
         } else if (clientRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("operario", "operario@hotelmontclair.com").isEmpty()) {
-            clientRepository.save(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
+            saveClient(new Client(null, "operario", "operario", "operario@hotelmontclair.com",
                     "Operario", "Montclair", null, "+34 910 000 002", "OPERATOR"));
         }
 
@@ -141,6 +152,11 @@ public class DataInitializer implements CommandLineRunner {
                 reservationService.save(reservation);
             }
         }
+    }
+
+    private void saveClient(Client client) {
+        client.setUser(userDetailsService.clientToUser(client));
+        clientRepository.save(client);
     }
 
     private String roomImage(int index) {
