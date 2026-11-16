@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Maven local y temporales
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Entornos de desarrollo e IDEs
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Archivos del sistema y logs
+.DS_Store
+*.log
+Thumbs.db
+

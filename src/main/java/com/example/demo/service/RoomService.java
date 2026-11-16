@@ -1,10 +1,10 @@
 
 package com.example.demo.service;
 
+import java.util.List;
+
 import com.example.demo.entities.Room;
 import com.example.demo.entities.RoomStatus;
-
-import java.util.List;
 
 public interface RoomService {
 
@@ -19,4 +19,5 @@ public interface RoomService {
     Room save(Room room);
 
     void delete(Long id);
+
 }

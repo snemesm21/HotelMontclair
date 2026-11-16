@@ -1,35 +1,43 @@
+
 package com.example.demo.controller;
 
 import com.example.demo.dto.ReservationDTO;
-import com.example.demo.dto.ReservationRequestDTO;
 import com.example.demo.entities.Client;
 import com.example.demo.entities.Reservation;
 import com.example.demo.service.ReservationManagerService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(ReservationController.class)
 class ReservationControllerTest {
 
-    private ReservationController controller;
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private ReservationManagerService reservationService;
+
     private Reservation reservation;
     private ReservationDTO summary;
-    private ReservationManagerService mockService;
 
     @BeforeEach
     void setUp() {
-        controller = new ReservationController();
 
         Client client = Client.builder()
                 .id(1L)
@@ -60,72 +68,207 @@ class ReservationControllerTest {
                 .numberOfPeople(2)
                 .status("CONFIRMED")
                 .build();
-
-        mockService = mock(ReservationManagerService.class);
-        when(mockService.getReservationSummaries()).thenReturn(List.of(summary));
-        when(mockService.findSummaryById(10L)).thenReturn(summary);
-        when(mockService.findSummaryById(99L)).thenReturn(null);
-        when(mockService.getSummariesByClientId(1L)).thenReturn(List.of(summary));
-        when(mockService.getSummariesByClientId(99L)).thenReturn(List.of());
-        when(mockService.createReservation(eq(1L), eq(2L), any(LocalDate.class),
-                any(LocalDate.class), eq(2), any())).thenReturn(reservation);
-        when(mockService.updateReservation(eq(10L), eq(1L), eq(2L), any(LocalDate.class),
-                any(LocalDate.class), eq(2), any())).thenReturn(reservation);
-
-        ReflectionTestUtils.setField(controller, "reservationService", mockService);
     }
 
-    @Test
-    void getAllReservations_shouldReturnReservations() {
-        List<ReservationDTO> result = controller.getAllReservations();
+    // PRUEBA 1: GET TODAS LAS RESERVAS
 
-        assertEquals(1, result.size());
-        assertEquals(10L, result.get(0).getId());
+    @Test
+    void reservationController_getAll_shouldReturnReservations()
+            throws Exception {
+
+        // Arrange
+        when(reservationService.getReservationSummaries())
+                .thenReturn(List.of(summary));
+
+        // Act y Assert
+        mockMvc.perform(get("/api/reservations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10))
+                .andExpect(jsonPath("$[0].clientId").value(1))
+                .andExpect(jsonPath("$[0].status")
+                        .value("CONFIRMED"));
+
+        verify(reservationService)
+                .getReservationSummaries();
     }
 
+    // PRUEBA 2: GET RESERVA POR ID
+
     @Test
-    void getReservationById_shouldReturnReservation() {
-        assertNotNull(controller.getReservationById(10L).getBody());
+    void reservationController_getById_shouldReturnReservation()
+            throws Exception {
+
+        // Arrange
+        when(reservationService.findSummaryById(10L))
+                .thenReturn(summary);
+
+        // Act y Assert
+        mockMvc.perform(get("/api/reservations/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.clientId").value(1))
+                .andExpect(jsonPath("$.status")
+                        .value("CONFIRMED"));
+
+        verify(reservationService)
+                .findSummaryById(10L);
     }
 
-    @Test
-    void getReservationsByClientId_shouldReturnReservations() {
-        List<ReservationDTO> result = controller.getReservationsByClientId(1L);
+    // PRUEBA 3: GET RESERVAS POR CLIENTE
 
-        assertEquals(1, result.size());
+    @Test
+    void reservationController_getByClientId_shouldReturnReservations()
+            throws Exception {
+
+        // Arrange
+        when(reservationService.getSummariesByClientId(1L))
+                .thenReturn(List.of(summary));
+
+        // Act y Assert
+        mockMvc.perform(
+                        get("/api/reservations/client/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10))
+                .andExpect(jsonPath("$[0].clientId").value(1));
+
+        verify(reservationService)
+                .getSummariesByClientId(1L);
     }
 
+    // PRUEBA 4: POST CREAR RESERVA
+
     @Test
-    void createReservation_shouldReturnCreated() {
-        ReservationRequestDTO request = new ReservationRequestDTO(
-                1L, 2L,
-                LocalDate.of(2026, 12, 10),
-                LocalDate.of(2026, 12, 15), 2, null);
+    void reservationController_create_shouldReturnCreated()
+            throws Exception {
 
-        var response = controller.createReservation(request);
+        // Arrange
+        String request = """
+                {
+                    "clientId": 1,
+                    "roomTypeId": 2,
+                    "checkInDate": "2026-12-10",
+                    "checkOutDate": "2026-12-15",
+                    "numberOfPeople": 2,
+                    "serviceIds": null
+                }
+                """;
 
-        assertEquals(201, response.getStatusCode().value());
-        assertNotNull(response.getBody());
+        when(reservationService.createReservation(
+                eq(1L),
+                eq(2L),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(2),
+                isNull()))
+                .thenReturn(reservation);
+
+        when(reservationService.findSummaryById(10L))
+                .thenReturn(summary);
+
+        // Act y Assert
+        mockMvc.perform(
+                        post("/api/reservations")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(request))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.status")
+                        .value("CONFIRMED"));
+
+        verify(reservationService).createReservation(
+                eq(1L),
+                eq(2L),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(2),
+                isNull());
     }
 
+    // PRUEBA 5: PUT ACTUALIZAR RESERVA
+
     @Test
-    void updateReservation_shouldReturnOk() {
-        ReservationRequestDTO request = new ReservationRequestDTO(
-                1L, 2L,
-                LocalDate.of(2026, 12, 11),
-                LocalDate.of(2026, 12, 16), 2, null);
+    void reservationController_update_shouldReturnOk()
+            throws Exception {
 
-        var response = controller.updateReservation(10L, request);
+        // Arrange
+        String request = """
+                {
+                    "clientId": 1,
+                    "roomTypeId": 2,
+                    "checkInDate": "2026-12-11",
+                    "checkOutDate": "2026-12-16",
+                    "numberOfPeople": 2,
+                    "serviceIds": null
+                }
+                """;
 
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
+        Reservation updated = Reservation.builder()
+                .id(10L)
+                .status("CONFIRMED")
+                .checkInDate(LocalDate.of(2026, 12, 11))
+                .checkOutDate(LocalDate.of(2026, 12, 16))
+                .numberOfPeople(2)
+                .build();
+
+        ReservationDTO updatedSummary = ReservationDTO.builder()
+                .id(10L)
+                .clientId(1L)
+                .checkInDate(LocalDate.of(2026, 12, 11))
+                .checkOutDate(LocalDate.of(2026, 12, 16))
+                .numberOfPeople(2)
+                .status("CONFIRMED")
+                .build();
+
+        when(reservationService.updateReservation(
+                eq(10L),
+                eq(1L),
+                eq(2L),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(2),
+                isNull()))
+                .thenReturn(updated);
+
+        when(reservationService.findSummaryById(10L))
+                .thenReturn(updatedSummary);
+
+        // Act y Assert
+        mockMvc.perform(
+                        put("/api/reservations/10")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.checkInDate")
+                        .value("2026-12-11"))
+                .andExpect(jsonPath("$.checkOutDate")
+                        .value("2026-12-16"));
+
+        verify(reservationService).updateReservation(
+                eq(10L),
+                eq(1L),
+                eq(2L),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(2),
+                isNull());
     }
 
-    @Test
-    void deleteReservation_shouldReturnNoContent() {
-        var response = controller.deleteReservation(10L);
+    // PRUEBA 6: DELETE CANCELAR RESERVA
 
-        assertEquals(204, response.getStatusCode().value());
-        verify(mockService).delete(10L);
+    @Test
+    void reservationController_delete_shouldReturnNoContent()
+            throws Exception {
+
+        // Arrange
+        doNothing().when(reservationService).delete(10L);
+
+        // Act y Assert
+        mockMvc.perform(
+                        delete("/api/reservations/10"))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(reservationService).delete(10L);
     }
 }

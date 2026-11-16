@@ -37,9 +37,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     private Collection<? extends GrantedAuthority> mapToAuthorities(List<Role> roles) {
-        return roles.stream()
-                .map(r -> new SimpleGrantedAuthority(r.getName()))
-                .collect(Collectors.toList());
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        for (Role r : roles) {
+            authorities.add(new SimpleGrantedAuthority(r.getName()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + r.getName()));
+        }
+        return authorities;
     }
 
     public UserEntity clientToUser(Client client) {
