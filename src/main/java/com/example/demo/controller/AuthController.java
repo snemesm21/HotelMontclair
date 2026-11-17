@@ -141,9 +141,14 @@ public class AuthController {
         try {
             Client client = googleOAuthService.exchangeTemporaryCode(code);
             setSessionCookie(response, client);
+            String token = jwtGenerator != null && client.getUsername() != null
+                    ? jwtGenerator.generateToken(
+                            new UsernamePasswordAuthenticationToken(client.getUsername(), null))
+                    : null;
             String redirectUrl = "/profile/" + client.getId();
             return ResponseEntity.ok(AuthResponseDTO.builder()
                     .success(true)
+                    .token(token)
                     .client(ClientMapper.INSTANCE.convert(client))
                     .role(client.getRole())
                     .redirectUrl(redirectUrl)

@@ -110,7 +110,7 @@ public class Case2UserOperatorStayCycleTest {
     public void Case2_usuarioYOperador_cicloEstadiaCompleto() {
         // 1. El cliente inicia sesión y consulta sus reservas.
         login(driverUsuario, waitUsuario, "demo", "demo");
-        waitUsuario.until(ExpectedConditions.urlContains("/profile/"));
+        waitUsuario.until(ExpectedConditions.urlContains("/profile"));
         // Esperar específicamente la reserva confirmada, no simplemente cualquier tarjeta.
         By selectorConfirmada = By.cssSelector(".reservation-card-item .res-card-status");
         try {

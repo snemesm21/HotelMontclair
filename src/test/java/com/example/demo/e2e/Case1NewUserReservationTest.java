@@ -112,7 +112,7 @@ public class Case1NewUserReservationTest {
         correo.clear();
         correo.sendKeys(usuario + "@javeriana.edu.co");
         click(By.id("client-submit-btn"));
-        wait.until(ExpectedConditions.urlContains("/profile/"));
+        wait.until(ExpectedConditions.urlContains("/profile"));
 
         // 4. Primera reserva para la próxima semana.
         LocalDate hoy = LocalDate.now();
@@ -122,7 +122,7 @@ public class Case1NewUserReservationTest {
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.className("room-type-option"), 0));
         new Select(driver.findElement(By.id("booking-roomTypeId"))).selectByIndex(0);
         click(By.id("btn-confirmar-reserva"));
-        wait.until(ExpectedConditions.urlContains("/profile/"));
+        wait.until(ExpectedConditions.urlContains("/profile"));
         wait.until(d -> !d.findElements(RESERVAS).isEmpty());
 
         Map<String, String> reservasPrimera = reservasPorId();
@@ -148,7 +148,7 @@ public class Case1NewUserReservationTest {
 
         // 6. Crear segunda reserva y localizarla por ID, no por posición.
         click(By.id("btn-confirmar-reserva"));
-        wait.until(ExpectedConditions.urlContains("/profile/"));
+        wait.until(ExpectedConditions.urlContains("/profile"));
         wait.until(d -> d.findElements(RESERVAS).size() == cantidadInicial + 1);
         String idSegunda = buscarNuevaReserva(reservasPrimera.keySet());
         Map<String, String> reservasFinales = reservasPorId();

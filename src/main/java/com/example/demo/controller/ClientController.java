@@ -91,9 +91,10 @@ public class ClientController {
         Client saved = clientService.save(client);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean hasExistingSession = authentication != null
-                && authentication.getPrincipal() instanceof JwtService.JwtClaims;
-        if (!hasExistingSession && jwtService != null && saved != null && saved.getId() != null) {
+        boolean isAdminSession = authentication != null
+                && authentication.getAuthorities().stream()
+                        .anyMatch(a -> "ADMIN".equals(a.getAuthority()) || "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdminSession && jwtService != null && saved != null && saved.getId() != null) {
             ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             HttpServletResponse response = attrs != null ? attrs.getResponse() : null;
             if (response != null) {
