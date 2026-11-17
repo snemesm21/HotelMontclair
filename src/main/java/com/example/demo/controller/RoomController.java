@@ -25,6 +25,9 @@ public class RoomController {
     @Autowired
     private com.example.demo.service.ReservationManagerService reservationService;
 
+    @Autowired
+    private com.example.demo.repository.ReservationRoomRepository reservationRoomRepository;
+
     //Lista habitaciones con filtros opcionales (GET /api/rooms). Combinaciones posibles: sin parámetros (todas), solo `typeId`, solo `status`, o ambos a la vez.
     @Operation(summary = "Obtiene todas las habitaciones, opcionalmente filtradas por tipo o estado")
     @GetMapping
@@ -55,6 +58,19 @@ public class RoomController {
     @GetMapping({ "/type/{typeId}", "/type-room/{typeId}", "/room-type/{typeId}" })
     public List<Room> getRoomsByTypeId(@PathVariable Long typeId) {
         return roomService.findByTypeId(typeId);
+    }
+
+    //Lista únicamente rangos de ocupación por habitación sin exponer datos personales de clientes.
+    @Operation(summary = "Obtiene los rangos de fechas ocupados por habitación (sin datos personales)")
+    @GetMapping("/occupied")
+    public List<java.util.Map<String, Object>> getOccupiedRoomRanges() {
+        return reservationRoomRepository.findOccupiedRoomRanges().stream()
+                .map(row -> java.util.Map.<String, Object>of(
+                        "roomId", row[0],
+                        "roomNumber", row[1],
+                        "checkInDate", row[2].toString(),
+                        "checkOutDate", row[3].toString()))
+                .toList();
     }
 
     //Busca una habitación por id (GET /api/rooms/{id}).

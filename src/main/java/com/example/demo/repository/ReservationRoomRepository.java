@@ -37,4 +37,16 @@ public interface ReservationRoomRepository
             @Param("checkInDate") LocalDate checkInDate,
             @Param("checkOutDate") LocalDate checkOutDate,
             @Param("excludeReservationId") Long excludeReservationId);
+
+    /**
+     * Devuelve rangos de ocupación (roomId, roomNumber, checkInDate, checkOutDate)
+     * para reservas activas/confirmadas, sin exponer datos personales de huéspedes.
+     */
+    @Query("""
+            SELECT rr.room.id, rr.room.number, r.checkInDate, r.checkOutDate
+            FROM ReservationRoom rr
+            JOIN rr.reservation r
+            WHERE r.status IS NULL OR (UPPER(r.status) <> 'CANCELLED' AND UPPER(r.status) <> 'INACTIVE')
+            """)
+    List<Object[]> findOccupiedRoomRanges();
 }

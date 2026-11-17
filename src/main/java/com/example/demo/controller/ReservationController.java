@@ -41,6 +41,7 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene todas las reservas en formato DTO")
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public List<ReservationDTO> getAllReservations() {
         return reservationService.getReservationSummaries();
     }
@@ -51,6 +52,7 @@ public class ReservationController {
      */
     @Operation(summary = "Obtiene un resumen de las reservas")
     @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public List<ReservationDTO> getReservationSummaries() {
         return reservationService.getReservationSummaries();
     }

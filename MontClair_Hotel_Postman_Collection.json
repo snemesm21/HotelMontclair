@@ -1,0 +1,812 @@
+{
+  "info": {
+    "_postman_id": "a7e9d3b0-5d22-4f9b-b5d9-montclair2026",
+    "name": "MontClair Grand Hotel API (JWT & Roles)",
+    "description": "Colección completa de todos los endpoints del backend Spring Boot de MontClair Grand Hotel. Incluye scripts automáticos en los endpoints de Login para guardar el JWT en la variable {{token}} y probar la seguridad por roles (ADMIN, OPERATOR, CLIENT).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth (JWT & Sesión)",
+      "description": "Autenticación, obtención automática del JWT ({{token}}), sesión actual (/me), logout, CSRF y Google OAuth.",
+      "item": [
+        {
+          "name": "Login ADMIN (guarda {{token}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data && data.token) {",
+                  "    pm.collectionVariables.set('token', data.token);",
+                  "    console.log('JWT ADMIN guardado:', data.role);",
+                  "}",
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye JWT', () => pm.expect(data.token).to.be.a('string').and.not.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin\",\n  \"password\": \"admin\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Inicia sesión como ADMIN y guarda automáticamente el JWT en {{token}}."
+          }
+        },
+        {
+          "name": "Login OPERATOR (guarda {{token}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data && data.token) {",
+                  "    pm.collectionVariables.set('token', data.token);",
+                  "    console.log('JWT OPERATOR guardado:', data.role);",
+                  "}",
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye JWT', () => pm.expect(data.token).to.be.a('string').and.not.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"operario\",\n  \"password\": \"operario\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Inicia sesión como OPERATOR y guarda automáticamente el JWT en {{token}}."
+          }
+        },
+        {
+          "name": "Login CLIENT (demo - guarda {{token}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data && data.token) {",
+                  "    pm.collectionVariables.set('token', data.token);",
+                  "    console.log('JWT CLIENT guardado:', data.role);",
+                  "}",
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye JWT', () => pm.expect(data.token).to.be.a('string').and.not.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"demo\",\n  \"password\": \"demo\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Inicia sesión como CLIENT (usuario demo) y guarda automáticamente el JWT en {{token}}."
+          }
+        },
+        {
+          "name": "Get Current Session (/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Devuelve el cliente autenticado (ClientDTO), rol y redirectUrl validando el JWT Bearer o cookie."
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('token', '');",
+                  "pm.test('Logout exitoso (200)', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "Cierra la sesión en el backend (borra cookie HM_SESSION) y limpia {{token}} en Postman."
+          }
+        },
+        {
+          "name": "Get CSRF Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/csrf"
+          }
+        },
+        {
+          "name": "Google OAuth Start",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/google/start"
+          }
+        },
+        {
+          "name": "Google OAuth Exchange Code",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"TEMPORARY_EXCHANGE_CODE\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/google/exchange"
+          }
+        },
+        {
+          "name": "Google OAuth Callback (Browser redirect)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/login/oauth2/code/google?code=SAMPLE&state=SAMPLE",
+              "host": ["{{baseUrl}}"],
+              "path": ["login", "oauth2", "code", "google"],
+              "query": [
+                { "key": "code", "value": "SAMPLE" },
+                { "key": "state", "value": "SAMPLE" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Clients (/api/clients)",
+      "description": "Gestión de clientes. Retorna ClientDTO sin exponer contraseñas ni googleSubject.",
+      "item": [
+        {
+          "name": "Get All Clients (Solo ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients"
+          }
+        },
+        {
+          "name": "Get My Details (/details - Autenticado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/details",
+            "description": "Devuelve el perfil (ClientDTO) del usuario identificado por el JWT actual."
+          }
+        },
+        {
+          "name": "Get Client By ID (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/3"
+          }
+        },
+        {
+          "name": "Create / Register Client (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevo_usuario\",\n  \"password\": \"Clave1234!\",\n  \"email\": \"nuevo@example.com\",\n  \"firstName\": \"Carlos\",\n  \"lastName\": \"Mendoza\",\n  \"phone\": \"+34 600 111 222\"\n}"
+            },
+            "url": "{{baseUrl}}/api/clients"
+          }
+        },
+        {
+          "name": "Update Client (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Demo\",\n  \"lastName\": \"User Actualizado\",\n  \"phone\": \"+34 612 345 999\"\n}"
+            },
+            "url": "{{baseUrl}}/api/clients/3"
+          }
+        },
+        {
+          "name": "Delete Client (Solo ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/11"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Room Types (/api/room-types)",
+      "description": "Tipos de habitación. Retorna RoomTypeDTO sin la colección de habitaciones.",
+      "item": [
+        {
+          "name": "Get All Room Types (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/room-types"
+          }
+        },
+        {
+          "name": "Get Room Type By ID (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/room-types/1"
+          }
+        },
+        {
+          "name": "Create Room Type (Solo ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Penthouse Presidencial\",\n  \"description\": \"Suite panorámica con terraza privada\",\n  \"pricePerNight\": 520.0,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80\"\n}"
+            },
+            "url": "{{baseUrl}}/api/room-types"
+          }
+        },
+        {
+          "name": "Update Room Type (Solo ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Simple\",\n  \"description\": \"Habitación estándar renovada\",\n  \"pricePerNight\": 85.0,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80\"\n}"
+            },
+            "url": "{{baseUrl}}/api/room-types/1"
+          }
+        },
+        {
+          "name": "Delete Room Type (Solo ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/room-types/6"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Rooms (/api/rooms)",
+      "description": "Habitaciones del hotel, disponibilidad sin PII y asignación de servicios desde habitación.",
+      "item": [
+        {
+          "name": "Get All Rooms (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/rooms"
+          }
+        },
+        {
+          "name": "Get Rooms Filtered (typeId & status - Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms?typeId=1&status=AVAILABLE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms"],
+              "query": [
+                { "key": "typeId", "value": "1" },
+                { "key": "status", "value": "AVAILABLE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Rooms By Type ID (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/rooms/type/1"
+          }
+        },
+        {
+          "name": "Get Occupied Room Ranges (Público sin PII)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/rooms/occupied",
+            "description": "Devuelve únicamente roomId, roomNumber, checkInDate y checkOutDate para comprobar disponibilidad sin exponer datos de huéspedes."
+          }
+        },
+        {
+          "name": "Get Room By ID (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/rooms/1"
+          }
+        },
+        {
+          "name": "Create Room (Solo ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"901\",\n  \"floor\": 9,\n  \"roomType\": { \"id\": 1 },\n  \"status\": \"AVAILABLE\",\n  \"name\": \"Habitación Horizon\",\n  \"capacity\": 2,\n  \"bedType\": \"King Size\",\n  \"area\": 35,\n  \"pricePerNight\": 120.0\n}"
+            },
+            "url": "{{baseUrl}}/api/rooms"
+          }
+        },
+        {
+          "name": "Update Room (Solo ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"101\",\n  \"floor\": 1,\n  \"roomType\": { \"id\": 1 },\n  \"status\": \"AVAILABLE\",\n  \"name\": \"Deluxe Room\",\n  \"capacity\": 2,\n  \"bedType\": \"King Size\",\n  \"area\": 30,\n  \"pricePerNight\": 80.0\n}"
+            },
+            "url": "{{baseUrl}}/api/rooms/1"
+          }
+        },
+        {
+          "name": "Delete Room (Solo ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/rooms/99"
+          }
+        },
+        {
+          "name": "Assign Service To Room (ADMIN / OPERATOR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": 1,\n  \"quantity\": 1\n}"
+            },
+            "url": "{{baseUrl}}/api/rooms/1/services"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Services (/api/services)",
+      "description": "Catálogo de servicios y experiencias del hotel.",
+      "item": [
+        {
+          "name": "Get All Services (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "Get Not Hidden Services (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/nothidden"
+          }
+        },
+        {
+          "name": "Get Service By ID (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/1"
+          }
+        },
+        {
+          "name": "Create Service (Solo ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Degustación Privada\",\n  \"description\": \"Cata de vinos reserva con sommelier\",\n  \"price\": 95.0,\n  \"tag\": \"degustacion-privada\",\n  \"schedule\": \"18:00 - 22:00\",\n  \"hidden\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "Update Service By ID (Solo ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Restaurante\",\n  \"description\": \"Experiencia gastronómica de autor\",\n  \"price\": 40.0,\n  \"tag\": \"restaurante\",\n  \"schedule\": \"07:00 - 23:00\",\n  \"hidden\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/services/1"
+          }
+        },
+        {
+          "name": "Create or Update Service via Body (Solo ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"name\": \"Restaurante\",\n  \"description\": \"Experiencia gastronómica de autor\",\n  \"price\": 40.0,\n  \"tag\": \"restaurante\",\n  \"schedule\": \"07:00 - 23:00\",\n  \"hidden\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "Delete Service (Solo ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/99"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Reservations (/api/reservations)",
+      "description": "Gestión de reservas con ReservationDTO plano, ciclo de vida (activate/pay/finish/cancel) y cargos de servicios.",
+      "item": [
+        {
+          "name": "Get All Reservations (Solo ADMIN / OPERATOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations"
+          }
+        },
+        {
+          "name": "Get Reservation Summaries (Solo ADMIN / OPERATOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/summary"
+          }
+        },
+        {
+          "name": "Get Reservation By ID (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        },
+        {
+          "name": "Get Reservations By Client ID (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/client/3"
+          }
+        },
+        {
+          "name": "Get Active Reservation By Room Number (ADMIN / OPERATOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/room/101/active"
+          }
+        },
+        {
+          "name": "Create Reservation (ADMIN / OPERATOR / CLIENT propio)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": 3,\n  \"roomTypeId\": 1,\n  \"checkInDate\": \"2026-12-10\",\n  \"checkOutDate\": \"2026-12-13\",\n  \"numberOfPeople\": 2,\n  \"serviceIds\": [1]\n}"
+            },
+            "url": "{{baseUrl}}/api/reservations"
+          }
+        },
+        {
+          "name": "Update Reservation (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": 3,\n  \"roomTypeId\": 1,\n  \"checkInDate\": \"2026-12-10\",\n  \"checkOutDate\": \"2026-12-14\",\n  \"numberOfPeople\": 2,\n  \"serviceIds\": [1, 2]\n}"
+            },
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        },
+        {
+          "name": "Activate Stay - Check-in (ADMIN / OPERATOR)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1/activate"
+          }
+        },
+        {
+          "name": "Pay Stay Account (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1/pay"
+          }
+        },
+        {
+          "name": "Finish Stay - Check-out (ADMIN / OPERATOR)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1/finish"
+          }
+        },
+        {
+          "name": "Cancel Reservation (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1/cancel"
+          }
+        },
+        {
+          "name": "Assign Service To Room via Reservations (ADMIN / OPERATOR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": 2,\n  \"quantity\": 1\n}"
+            },
+            "url": "{{baseUrl}}/api/reservations/rooms/1/services"
+          }
+        },
+        {
+          "name": "Remove Service From Reservation (ADMIN / OPERATOR)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1/services/1"
+          }
+        },
+        {
+          "name": "Delete / Logical Cancel Reservation (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Bold Payments (/api/payments/bold)",
+      "description": "Pasarela de pagos Bold (generación de firma SHA-256 y confirmación).",
+      "item": [
+        {
+          "name": "Create Bold Checkout (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"returnPath\": \"/reservations/1\"\n}"
+            },
+            "url": "{{baseUrl}}/api/payments/bold/checkout/1"
+          }
+        },
+        {
+          "name": "Confirm Bold Payment (ADMIN / OPERATOR / Dueño)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": 1,\n  \"orderId\": \"MONTCLAIR-1-TEST\",\n  \"txStatus\": \"APPROVED\"\n}"
+            },
+            "url": "{{baseUrl}}/api/payments/bold/confirm"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. AI Concierge (/api/ai)",
+      "description": "Endpoints públicos del asistente virtual de IA y contexto en vivo.",
+      "item": [
+        {
+          "name": "Chat with AI Concierge (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"¿Qué habitaciones tienen disponibles y qué servicios ofrece el hotel?\",\n  \"sessionId\": \"postman_demo_session\"\n}"
+            },
+            "url": "{{baseUrl}}/api/ai/chat"
+          }
+        },
+        {
+          "name": "Get Hotel Context JSON (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/context"
+          }
+        },
+        {
+          "name": "Get Prompt Context Text (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/prompt-context"
+          }
+        },
+        {
+          "name": "Get Available Rooms for AI (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/rooms/available"
+          }
+        },
+        {
+          "name": "Get Active Services for AI (Público)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/services"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Pruebas Rápidas de Seguridad (401 / 403)",
+      "description": "Carpetita para demostrar en clase la restricción por roles: sin JWT devuelve 401 y con rol insuficiente devuelve 403.",
+      "item": [
+        {
+          "name": "[SIN JWT -> 401] Get All Reservations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Debe responder 401 Unauthorized sin token', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations"
+          }
+        },
+        {
+          "name": "[Con {{token}} CLIENT -> 403] Get All Clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Si el token es CLIENT u OPERATOR debe responder 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients"
+          }
+        },
+        {
+          "name": "[Con {{token}} CLIENT -> 403] Get Reservations Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Si el token es CLIENT debe responder 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reservations/summary"
+          }
+        },
+        {
+          "name": "[Con {{token}} OPERATOR -> 403] Create Room Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Si el token es OPERATOR o CLIENT debe responder 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"No Autorizada\",\n  \"description\": \"Prueba de rol\",\n  \"pricePerNight\": 100.0\n}"
+            },
+            "url": "{{baseUrl}}/api/room-types"
+          }
+        }
+      ]
+    }
+  ]
+}

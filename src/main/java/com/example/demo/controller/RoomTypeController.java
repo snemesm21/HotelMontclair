@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.RoomTypeDTO;
 import com.example.demo.entities.RoomType;
+import com.example.demo.mapper.RoomTypeMapper;
 import com.example.demo.service.RoomTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,39 +25,41 @@ public class RoomTypeController {
     //Lista todos los tipos de habitación (GET /api/room-types).
     @Operation(summary = "Obtiene todos los tipos de cuarto")
     @GetMapping
-    public List<RoomType> getAllRoomTypes() {
-        return roomTypeService.findAll();
+    public List<RoomTypeDTO> getAllRoomTypes() {
+        return roomTypeService.findAll().stream()
+                .map(RoomTypeMapper.INSTANCE::convert)
+                .toList();
     }
 
     //Busca un tipo por id (GET /api/room-types/{id}).
     @Operation(summary = "Obtiene un tipo de cuarto por su ID")
     @GetMapping("/{id}")
-    public ResponseEntity<RoomType> getRoomTypeById(@PathVariable Long id) {
+    public ResponseEntity<RoomTypeDTO> getRoomTypeById(@PathVariable Long id) {
         RoomType rt = roomTypeService.findById(id);
         if (rt == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(rt);
+        return ResponseEntity.ok(RoomTypeMapper.INSTANCE.convert(rt));
     }
 
     //Crea un tipo de habitación (POST /api/room-types). Se pone el id en null para que la base de datos genere uno nuevo.
     @Operation(summary = "Crea un nuevo tipo de cuarto")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RoomType> createRoomType(@RequestBody RoomType roomType) {
+    public ResponseEntity<RoomTypeDTO> createRoomType(@RequestBody RoomType roomType) {
         roomType.setId(null);
         RoomType saved = roomTypeService.save(roomType);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(RoomTypeMapper.INSTANCE.convert(saved));
     }
 
     //Actualiza un tipo (PUT /api/room-types/{id}). El id de la URL manda sobre el del cuerpo.
     @Operation(summary = "Actualiza un tipo de cuarto existente por su ID")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RoomType> updateRoomType(@PathVariable Long id, @RequestBody RoomType roomType) {
+    public ResponseEntity<RoomTypeDTO> updateRoomType(@PathVariable Long id, @RequestBody RoomType roomType) {
         roomType.setId(id);
         RoomType updated = roomTypeService.save(roomType);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(RoomTypeMapper.INSTANCE.convert(updated));
     }
 
     //Elimina un tipo (DELETE /api/room-types/{id}).

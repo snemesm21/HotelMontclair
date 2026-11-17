@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.entities.Client;
 import com.example.demo.events.HotelNotificationListener.ClientRegisteredEvent;
 import com.example.demo.repository.ClientRepository;
+import com.example.demo.security.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -13,15 +14,23 @@ public class GoogleAccountService {
 
     private final ClientRepository clientRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final CustomUserDetailsService userDetailsService;
 
     public GoogleAccountService(ClientRepository clientRepository) {
-        this(clientRepository, null);
+        this(clientRepository, null, null);
+    }
+
+    public GoogleAccountService(ClientRepository clientRepository, ApplicationEventPublisher eventPublisher) {
+        this(clientRepository, eventPublisher, null);
     }
 
     @Autowired
-    public GoogleAccountService(ClientRepository clientRepository, ApplicationEventPublisher eventPublisher) {
+    public GoogleAccountService(ClientRepository clientRepository,
+                                ApplicationEventPublisher eventPublisher,
+                                CustomUserDetailsService userDetailsService) {
         this.clientRepository = clientRepository;
         this.eventPublisher = eventPublisher;
+        this.userDetailsService = userDetailsService;
     }
 
     @Transactional
@@ -35,6 +44,10 @@ public class GoogleAccountService {
             Client client = linked.get();
             if (!"CLIENT".equalsIgnoreCase(client.getRole())) {
                 throw new IllegalArgumentException("Esta cuenta Google no tiene permisos de cliente.");
+            }
+            if (client.getUser() == null && userDetailsService != null) {
+                client.setUser(userDetailsService.clientToUser(client));
+                client = clientRepository.save(client);
             }
             return client;
         }
@@ -67,6 +80,9 @@ public class GoogleAccountService {
                 .googleSubject(googleUser.subject())
                 .authProvider("GOOGLE")
                 .build();
+        if (userDetailsService != null) {
+            client.setUser(userDetailsService.clientToUser(client));
+        }
         Client saved = clientRepository.save(client);
         if (eventPublisher != null) {
             eventPublisher.publishEvent(new ClientRegisteredEvent(saved));

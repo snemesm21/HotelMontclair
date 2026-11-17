@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -25,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ReservationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ReservationControllerTest {
 
     @Autowired
@@ -32,6 +34,9 @@ class ReservationControllerTest {
 
     @MockitoBean
     private ReservationManagerService reservationService;
+
+    @MockitoBean
+    private com.example.demo.service.JwtService jwtService;
 
     private Reservation reservation;
     private ReservationDTO summary;

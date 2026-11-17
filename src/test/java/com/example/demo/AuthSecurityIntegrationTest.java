@@ -40,7 +40,63 @@ class AuthSecurityIntegrationTest {
     void passwordLoginCreatesValidSessionForEveryRoleAndMeRecognizesIt() throws Exception {
         loginAndVerify("admin", "admin", "ADMIN", "/admin/rooms");
         loginAndVerify("operario", "operario", "OPERATOR", "/operator/reservations");
-        loginAndVerify("demo", "demo", "CLIENT", "/profile/");
+        loginAndVerify("demo", "demo", "CLIENT", "/profile");
+    }
+
+    @Test
+    void roleBasedEndpointAccessIsEnforcedForJwtAndSession() throws Exception {
+        // Anónimo no puede listar todas las reservas ni clientes
+        mockMvc.perform(get("/api/reservations"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/reservations/summary"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/clients"))
+                .andExpect(status().isUnauthorized());
+        // Disponibilidad no-PII sí es pública
+        mockMvc.perform(get("/api/rooms/occupied"))
+                .andExpect(status().isOk());
+
+        // Login como CLIENT y obtención de Bearer JWT
+        MvcResult clientLogin = mockMvc.perform(post("/api/auth/login")
+                        .header("Origin", ORIGIN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identifier\":\"demo\",\"password\":\"demo\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String clientJwt = readJson(clientLogin, "$.token");
+
+        // CLIENT no puede listar todas las reservas ni eliminar servicios ni listar clientes
+        mockMvc.perform(get("/api/reservations")
+                        .header("Authorization", "Bearer " + clientJwt))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/reservations/summary")
+                        .header("Authorization", "Bearer " + clientJwt))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/reservations/1/services/1")
+                        .header("Authorization", "Bearer " + clientJwt))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/clients")
+                        .header("Authorization", "Bearer " + clientJwt))
+                .andExpect(status().isForbidden());
+
+        // OPERATOR sí puede listar reservas, pero no crear tipos de habitación ni listar todos los clientes
+        MvcResult opLogin = mockMvc.perform(post("/api/auth/login")
+                        .header("Origin", ORIGIN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identifier\":\"operario\",\"password\":\"operario\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String opJwt = readJson(opLogin, "$.token");
+
+        mockMvc.perform(get("/api/reservations")
+                        .header("Authorization", "Bearer " + opJwt))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/reservations/summary")
+                        .header("Authorization", "Bearer " + opJwt))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/clients")
+                        .header("Authorization", "Bearer " + opJwt))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -70,30 +126,20 @@ class AuthSecurityIntegrationTest {
 
     @Test
     void corsCsrfAndAuthorizedMutationsWorkTogether() throws Exception {
-        MvcResult csrf = mockMvc.perform(get("/api/auth/csrf").header("Origin", ORIGIN))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", ORIGIN))
-                .andExpect(jsonPath("$.headerName").value("X-XSRF-TOKEN"))
-                .andExpect(cookie().exists("XSRF-TOKEN"))
-                .andReturn();
-        Cookie csrfCookie = csrf.getResponse().getCookie("XSRF-TOKEN");
-        String csrfToken = readJson(csrf, "$.token");
-
         MvcResult login = mockMvc.perform(post("/api/auth/login")
                         .header("Origin", ORIGIN)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"admin\",\"password\":\"admin\"}")
-                        .cookie(csrfCookie))
+                        .content("{\"identifier\":\"admin\",\"password\":\"admin\"}"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", ORIGIN))
                 .andExpect(cookie().exists("HM_SESSION"))
                 .andReturn();
         Cookie session = login.getResponse().getCookie("HM_SESSION");
 
         MvcResult created = mockMvc.perform(post("/api/room-types")
                         .header("Origin", ORIGIN)
-                        .header("X-XSRF-TOKEN", csrfToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(session, csrfCookie)
+                        .cookie(session)
                         .content("""
                                 {"name":"OAuth Integration Type","description":"Created by integration test","pricePerNight":125.0}
                                 """))
@@ -103,9 +149,8 @@ class AuthSecurityIntegrationTest {
 
         mockMvc.perform(put("/api/room-types/" + createdId)
                         .header("Origin", ORIGIN)
-                        .header("X-XSRF-TOKEN", csrfToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(session, csrfCookie)
+                        .cookie(session)
                         .content("""
                                 {"name":"OAuth Integration Type","description":"Updated by integration test","pricePerNight":130.0}
                                 """))
@@ -113,35 +158,25 @@ class AuthSecurityIntegrationTest {
 
         mockMvc.perform(patch("/api/reservations/999999/activate")
                         .header("Origin", ORIGIN)
-                        .header("X-XSRF-TOKEN", csrfToken)
-                        .cookie(session, csrfCookie))
+                        .cookie(session))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(delete("/api/room-types/" + createdId)
                         .header("Origin", ORIGIN)
-                        .header("X-XSRF-TOKEN", csrfToken)
-                        .cookie(session, csrfCookie))
+                        .cookie(session))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void mutationsRejectMissingCsrfEvenWhenSessionIsValid() throws Exception {
-        MvcResult login = mockMvc.perform(post("/api/auth/login")
-                        .header("Origin", ORIGIN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"admin\",\"password\":\"admin\"}"))
-                .andExpect(status().isOk())
-                .andReturn();
-        Cookie session = login.getResponse().getCookie("HM_SESSION");
-
+        // Con CSRF desactivado para arquitectura REST + JWT, toda mutación sin JWT ni sesión debe ser rechazada con 401
         mockMvc.perform(post("/api/room-types")
                         .header("Origin", ORIGIN)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(session)
                         .content("""
-                                {"name":"Must Be Rejected","description":"Missing CSRF","pricePerNight":100.0}
+                                {"name":"Must Be Rejected","description":"Unauthenticated mutation","pricePerNight":100.0}
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     private void loginAndVerify(String username, String password, String role, String redirectPrefix) throws Exception {

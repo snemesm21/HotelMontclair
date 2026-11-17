@@ -18,9 +18,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
-@Service 
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
@@ -48,7 +48,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserEntity clientToUser(Client client) {
         UserEntity user = new UserEntity();
         user.setUsername(client.getUsername().trim());
-        user.setPassword(passwordEncoder.encode(client.getPassword().trim()));
+        String rawPassword = (client.getPassword() != null && !client.getPassword().isBlank())
+                ? client.getPassword().trim()
+                : UUID.randomUUID().toString();
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRoles(rolesFor(client));
         return user;
     }

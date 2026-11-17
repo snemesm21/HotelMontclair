@@ -19,7 +19,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -58,18 +57,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers(
-                                "/api/auth/**",
-                                "/api/clients/**",
-                                "/api/reservations/**",
-                                "/api/payments/**",
-                                "/api/rooms/**",
-                                "/api/room-types/**",
-                                "/api/services/**",
-                                "/api/ai/**",
-                                "/login/**"))
+                // Arquitectura cliente-servidor separada (Angular + Spring Security JWT): CSRF desactivado
+                .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPoint))
                 // Primero el JWT por header (video); si no hay, el filtro de cookie de la sesión propia
                 .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -81,20 +70,26 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/ai/**",
                                 "/login/**",
+                                "/h2-console/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**")
                         .permitAll()
-                        .requestMatchers("/h2-console", "/h2-console/**").denyAll()
 
-                        // Restricción por roles (JWT del video)
+                        // Restricción por roles (JWT del video y sesión HM_SESSION)
+                        .requestMatchers(HttpMethod.GET, "/api/clients").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/clients/*").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/reservations",
+                                "/api/reservations/summary").hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PATCH,
                                 "/api/reservations/*/activate",
                                 "/api/reservations/*/finish").hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.POST,
                                 "/api/reservations/rooms/*/services",
                                 "/api/rooms/*/services").hasAnyAuthority("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/reservations/*/services/*").hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.GET, "/api/reservations/room/*/active")
                         .hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.POST,
@@ -112,13 +107,11 @@ public class SecurityConfig {
                                 "/api/room-types",
                                 "/api/room-types/**",
                                 "/api/services",
-                                "/api/services/**",
-                                "/api/reservations",
-                                "/api/reservations/summary")
+                                "/api/services/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/clients").permitAll()
                         .anyRequest().authenticated())
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()));
         return http.build();
     }
 

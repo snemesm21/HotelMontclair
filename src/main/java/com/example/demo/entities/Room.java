@@ -1,6 +1,7 @@
 
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -118,6 +119,7 @@ public class Room {
                 : (roomType != null ? roomType.getId() : null);
     }
 
+    @JsonIgnore
     public RoomType getType() {
         return roomType;
     }

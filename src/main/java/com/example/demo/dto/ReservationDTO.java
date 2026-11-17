@@ -70,11 +70,6 @@ public class ReservationDTO {
     @Builder.Default
     private List<ServiceDetail> services = new ArrayList<>();
 
-    // Sub-estructuras livianas para compatibilidad con vistas detalladas
-    private ClientSummary client;
-    @Builder.Default
-    private List<ReservationRoomSummary> reservationRooms = new ArrayList<>();
-
     @Getter
     @Setter
     @Builder
@@ -82,80 +77,10 @@ public class ReservationDTO {
     @AllArgsConstructor
     public static class ServiceDetail {
         private Long id;
+        private Long serviceId;
         private String name;
         private int quantity;
         private double unitPrice;
         private double subtotal;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ClientSummary {
-        private Long id;
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String phone;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RoomSummary {
-        private Long id;
-        private String number;
-        private String name;
-        private double pricePerNight;
-        private RoomTypeSummary roomType;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RoomTypeSummary {
-        private Long id;
-        private String name;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ReservationRoomSummary {
-        private Long id;
-        private double pricePerNight;
-        private RoomSummary room;
-        @Builder.Default
-        private List<AcquiredServiceSummary> acquiredServices = new ArrayList<>();
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AcquiredServiceSummary {
-        private Long id;
-        private int quantity;
-        private double unitPrice;
-        private ServiceItemSummary service;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ServiceItemSummary {
-        private Long id;
-        private String name;
     }
 }

@@ -141,7 +141,6 @@ public class ReservationManagerServiceImpl
         double servicesSubtotal = 0;
 
         List<ReservationDTO.ServiceDetail> services = new ArrayList<>();
-        List<ReservationDTO.AcquiredServiceSummary> acquiredSummaries = new ArrayList<>();
 
         if (reservationRoom != null) {
             pricePerNight = reservationRoom.getPricePerNight();
@@ -173,21 +172,11 @@ public class ReservationManagerServiceImpl
                     services.add(
                             ReservationDTO.ServiceDetail.builder()
                                     .id(acquired.getId())
+                                    .serviceId(sId)
                                     .name(serviceName)
                                     .quantity(acquired.getQuantity())
                                     .unitPrice(acquired.getUnitPrice())
                                     .subtotal(subtotal)
-                                    .build());
-
-                    acquiredSummaries.add(
-                            ReservationDTO.AcquiredServiceSummary.builder()
-                                    .id(acquired.getId())
-                                    .quantity(acquired.getQuantity())
-                                    .unitPrice(acquired.getUnitPrice())
-                                    .service(ReservationDTO.ServiceItemSummary.builder()
-                                            .id(sId)
-                                            .name(serviceName)
-                                            .build())
                                     .build());
                 }
             }
@@ -228,36 +217,6 @@ public class ReservationManagerServiceImpl
             pendingBalance = 0.0;
         }
 
-        ReservationDTO.ClientSummary clientSummary = ReservationDTO.ClientSummary.builder()
-                .id(clientId)
-                .firstName(clientFirstName)
-                .lastName(clientLastName)
-                .email(clientEmail)
-                .phone(clientPhone)
-                .build();
-
-        List<ReservationDTO.ReservationRoomSummary> resRoomSummaries = new ArrayList<>();
-        if (reservationRoom != null) {
-            ReservationDTO.RoomSummary rSummary = ReservationDTO.RoomSummary.builder()
-                    .id(roomId)
-                    .number(roomNumber)
-                    .name(roomName)
-                    .pricePerNight(pricePerNight)
-                    .roomType(ReservationDTO.RoomTypeSummary.builder()
-                            .id(roomTypeId)
-                            .name(roomTypeName)
-                            .build())
-                    .build();
-
-            resRoomSummaries.add(
-                    ReservationDTO.ReservationRoomSummary.builder()
-                            .id(reservationRoom.getId())
-                            .pricePerNight(pricePerNight)
-                            .room(rSummary)
-                            .acquiredServices(acquiredSummaries)
-                            .build());
-        }
-
         return ReservationDTO.builder()
                 .id(reservation.getId())
                 .clientId(clientId)
@@ -283,8 +242,6 @@ public class ReservationManagerServiceImpl
                 .servicesSubtotal(servicesSubtotal)
                 .totalPrice(totalPrice)
                 .services(services)
-                .client(clientSummary)
-                .reservationRooms(resRoomSummaries)
                 .build();
     }
 

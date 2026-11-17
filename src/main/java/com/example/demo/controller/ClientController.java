@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ClientDTO;
 import com.example.demo.entities.Client;
+import com.example.demo.mapper.ClientMapper;
 import com.example.demo.service.ClientService;
 import com.example.demo.service.JwtService;
 
@@ -41,8 +43,10 @@ public class ClientController {
     @Operation(summary = "Obtiene todos los clientes")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Client> getAllClients() {
-        return clientService.findAll();
+    public List<ClientDTO> getAllClients() {
+        return clientService.findAll().stream()
+                .map(ClientMapper.INSTANCE::convert)
+                .toList();
     }
 
     // Misma URL para todos: el cliente se identifica por el JWT, no por un id en la URL
@@ -51,17 +55,25 @@ public class ClientController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getMyDetails() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof JwtService.JwtClaims claims)) {
+        if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "No autenticado"));
         }
-        Client client = clientService.findById(claims.clientId());
-        return ResponseEntity.ok(client);
+        Client client = null;
+        if (auth.getPrincipal() instanceof JwtService.JwtClaims claims) {
+            client = clientService.findById(claims.clientId());
+        } else if (auth.getName() != null) {
+            client = clientService.findByUsername(auth.getName());
+        }
+        if (client == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Cliente no encontrado"));
+        }
+        return ResponseEntity.ok(ClientMapper.INSTANCE.convert(client));
     }
 
     @Operation(summary = "Obtiene un cliente por su ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
-    public ResponseEntity<Client> getClientById(@PathVariable Long id) {
+    public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         if (!canAccessClient(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -69,12 +81,12 @@ public class ClientController {
         if (client == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(client);
+        return ResponseEntity.ok(ClientMapper.INSTANCE.convert(client));
     }
 
     @Operation(summary = "Crea un nuevo cliente")
     @PostMapping
-    public ResponseEntity<Client> createClient(@RequestBody Client client) {
+    public ResponseEntity<ClientDTO> createClient(@RequestBody Client client) {
         client.setId(null);
         Client saved = clientService.save(client);
 
@@ -93,19 +105,19 @@ public class ClientController {
             }
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ClientMapper.INSTANCE.convert(saved));
     }
 
     @Operation(summary = "Actualiza un cliente existente por su ID")
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR','CLIENT')")
-    public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
+    public ResponseEntity<ClientDTO> updateClient(@PathVariable Long id, @RequestBody Client client) {
         if (!canAccessClient(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         client.setId(id);
         Client updated = clientService.save(client);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(ClientMapper.INSTANCE.convert(updated));
     }
 
     @Operation(summary = "Elimina un cliente por su ID")
