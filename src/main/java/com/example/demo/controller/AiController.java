@@ -203,7 +203,8 @@ public class AiController {
             @RequestParam(required = false) Long reservationId,
             @RequestParam(required = false, defaultValue = "Huésped") String guestName,
             @RequestParam(required = false, defaultValue = "Grand Suite") String roomType,
-            @RequestParam(required = false, defaultValue = "2") long nights) {
+            @RequestParam(required = false, defaultValue = "2") long nights,
+            @RequestParam(required = false, defaultValue = "255.0") double total) {
 
         ReservationDTO reservation = (reservationId != null && reservationService != null)
                 ? reservationService.findSummaryById(reservationId)
@@ -213,13 +214,13 @@ public class AiController {
                 ? voiceCallService.buildFirstSentence(reservation)
                 : "¡Hola " + guestName + "! Te habla Sofía, conserje virtual de MontClair Grand Hotel. "
                   + "Te llamo para confirmar con alegría tu reserva en nuestra " + roomType + " por " + nights + " noches. "
-                  + "¿Tienes alguna pregunta sobre tu estancia, horarios de check-in o nuestros servicios exclusivos?";
+                  + "¿Tienes alguna pregunta sobre tu estancia, horarios de check-in o deseas agregar algún servicio como nuestro Spa?";
 
-        String respondUrl = "/api/ai/voice/twilio/respond"
-                + (reservationId != null ? "?reservationId=" + reservationId : "");
+        String respondUrl = buildTwilioRespondUrl(reservationId, guestName, roomType, nights, total);
+        String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, incluir, cancelar, gracias, nada más, eso es todo, hasta luego";
 
         String xml = "<Response>"
-                + "<Gather input=\"speech\" language=\"es-CO\" speechTimeout=\"auto\" timeout=\"6\" action=\"" + respondUrl + "\" method=\"POST\">"
+                + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"6\" hints=\"" + hints + "\" action=\"" + escapeXml(respondUrl) + "\" method=\"POST\">"
                 + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">" + escapeXml(greeting) + "</Say>"
                 + "</Gather>"
                 + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">Fue un placer saludarte desde MontClair Grand Hotel. ¡Te esperamos pronto! Hasta luego.</Say>"
@@ -230,7 +231,8 @@ public class AiController {
 
     /**
      * Webhook TwiML que procesa cada turno de voz del huésped (SpeechResult de Twilio),
-     * consulta el motor de IA conectado en vivo a la base de datos y responde con voz neural.
+     * consulta el motor de voz de ultra-baja latencia conectado en vivo a la BD
+     * (permitiendo incluso agregar servicios a la reserva por voz) y responde con voz neural.
      */
     @Operation(summary = "Webhook TwiML de respuesta conversacional en tiempo real para Twilio")
     @PostMapping(
@@ -238,6 +240,10 @@ public class AiController {
             produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> twilioConversationRespond(
             @RequestParam(required = false) Long reservationId,
+            @RequestParam(required = false, defaultValue = "Huésped") String guestName,
+            @RequestParam(required = false, defaultValue = "Grand Suite") String roomType,
+            @RequestParam(required = false, defaultValue = "2") long nights,
+            @RequestParam(required = false, defaultValue = "255.0") double total,
             @RequestParam(value = "SpeechResult", required = false) String speechResult,
             @RequestParam(value = "CallSid", required = false, defaultValue = "twilio_call") String callSid) {
 
@@ -251,28 +257,40 @@ public class AiController {
         String lower = speechResult.toLowerCase();
         if (lower.contains("nada más") || lower.contains("nada mas") || lower.contains("eso es todo")
                 || lower.contains("hasta luego") || lower.contains("adiós") || lower.contains("adios")
-                || lower.contains("no gracias") || lower.contains("no, gracias") || lower.contains("chao")) {
+                || lower.contains("no gracias") || lower.contains("no, gracias") || lower.contains("chao")
+                || lower.equals("no") || lower.equals("todo claro") || lower.contains("muchas gracias")) {
             String farewell = "<Response>"
-                    + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">¡Perfecto! Ha sido un gusto atenderte desde la conserjería de MontClair Grand Hotel. ¡Te deseamos un excelente viaje y te esperamos con los brazos abiertos! Hasta pronto.</Say>"
+                    + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">¡Perfecto, " + escapeXml(guestName) + "! Ha sido un gusto atenderte desde la conserjería de MontClair Grand Hotel. ¡Te deseamos un excelente viaje y te esperamos con los brazos abiertos! Hasta pronto.</Say>"
                     + "<Hangup/>"
                     + "</Response>";
             return ResponseEntity.ok(farewell);
         }
 
-        String rawReply = aiAssistantService.generateResponse(speechResult, callSid);
-        String cleanSpokenReply = cleanForSpeech(rawReply);
+        String spokenReply = voiceCallService.generateVoiceConversationReply(
+                reservationId, guestName, roomType, nights, total, speechResult);
+        String cleanSpokenReply = cleanForSpeech(spokenReply);
 
-        String respondUrl = "/api/ai/voice/twilio/respond"
-                + (reservationId != null ? "?reservationId=" + reservationId : "");
+        String respondUrl = buildTwilioRespondUrl(reservationId, guestName, roomType, nights, total);
+        String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, incluir, cancelar, gracias, nada más, eso es todo, hasta luego";
 
         String xml = "<Response>"
-                + "<Gather input=\"speech\" language=\"es-CO\" speechTimeout=\"auto\" timeout=\"6\" action=\"" + respondUrl + "\" method=\"POST\">"
-                + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">" + escapeXml(cleanSpokenReply) + " ¿Deseas consultar algo más sobre tu reserva o nuestros servicios?</Say>"
+                + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"6\" hints=\"" + hints + "\" action=\"" + escapeXml(respondUrl) + "\" method=\"POST\">"
+                + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">" + escapeXml(cleanSpokenReply) + " ¿Hay algo más en lo que pueda ayudarte?</Say>"
                 + "</Gather>"
                 + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">Gracias por comunicarte con MontClair Grand Hotel. ¡Te esperamos pronto!</Say>"
                 + "</Response>";
 
         return ResponseEntity.ok(xml);
+    }
+
+    private String buildTwilioRespondUrl(Long reservationId, String guestName, String roomType, long nights, double total) {
+        String encGuest = java.net.URLEncoder.encode(guestName != null ? guestName : "Huésped", java.nio.charset.StandardCharsets.UTF_8);
+        String encRoom = java.net.URLEncoder.encode(roomType != null ? roomType : "Grand Suite", java.nio.charset.StandardCharsets.UTF_8);
+        return "/api/ai/voice/twilio/respond?reservationId=" + (reservationId != null ? reservationId : 1001L)
+                + "&guestName=" + encGuest
+                + "&roomType=" + encRoom
+                + "&nights=" + nights
+                + "&total=" + total;
     }
 
     private String cleanForSpeech(String text) {

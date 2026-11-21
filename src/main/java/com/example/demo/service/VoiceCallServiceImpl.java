@@ -1,6 +1,13 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.ReservationDTO;
+import com.example.demo.entities.AcquiredService;
+import com.example.demo.entities.Reservation;
+import com.example.demo.entities.ReservationRoom;
+import com.example.demo.entities.RoomType;
+import com.example.demo.repository.ReservationRepository;
+import com.example.demo.repository.RoomTypeRepository;
+import com.example.demo.repository.ServiceRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -8,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -79,6 +87,18 @@ public class VoiceCallServiceImpl implements VoiceCallService {
     private final AiAssistantService aiAssistantService;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+
+    @Autowired(required = false)
+    private ReservationManagerService reservationManagerService;
+
+    @Autowired(required = false)
+    private ReservationRepository reservationRepository;
+
+    @Autowired(required = false)
+    private ServiceRepository serviceRepository;
+
+    @Autowired(required = false)
+    private RoomTypeRepository roomTypeRepository;
 
     @Value("${hotelmontclair.voice.fallback-phone:${VOICE_FALLBACK_PHONE:}}")
     public void setFallbackPhone(String fallbackPhone) {
@@ -385,8 +405,9 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         String safeText = escapeXml(spokenMessage);
         if (actionUrl != null && !actionUrl.isBlank()) {
             String safeAction = escapeXml(actionUrl);
+            String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, incluir, cancelar, gracias, nada más, eso es todo, hasta luego";
             return "<Response>"
-                    + "<Gather input=\"speech\" language=\"es-CO\" speechTimeout=\"auto\" timeout=\"6\" action=\"" + safeAction + "\" method=\"POST\">"
+                    + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"6\" hints=\"" + hints + "\" action=\"" + safeAction + "\" method=\"POST\">"
                     + "<Say voice=\"" + escapeXml(twilioVoice) + "\" language=\"es-US\">" + safeText + "</Say>"
                     + "</Gather>"
                     + "<Say voice=\"" + escapeXml(twilioVoice) + "\" language=\"es-US\">Fue un placer atenderte desde MontClair Grand Hotel. ¡Te esperamos pronto! Hasta luego.</Say>"
@@ -791,6 +812,253 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         }
         String digits = rawPhone.replaceAll("[^0-9]", "");
         return digits.startsWith("346123456") || digits.startsWith("349100000");
+    }
+
+    @Override
+    @Transactional
+    public String generateVoiceConversationReply(
+            Long reservationId,
+            String fallbackGuestName,
+            String fallbackRoomType,
+            long fallbackNights,
+            double fallbackTotal,
+            String userSpeech) {
+
+        String q = userSpeech != null ? userSpeech.toLowerCase(Locale.ROOT).trim() : "";
+        ReservationDTO res = resolveReservationForCall(reservationId);
+
+        String guest = (res != null && res.getClientFirstName() != null && !res.getClientFirstName().isBlank())
+                ? res.getClientFirstName()
+                : ((fallbackGuestName != null && !fallbackGuestName.isBlank()) ? fallbackGuestName : "estimado huésped");
+        String suite = (res != null && res.getRoomTypeName() != null && !res.getRoomTypeName().isBlank())
+                ? res.getRoomTypeName()
+                : ((fallbackRoomType != null && !fallbackRoomType.isBlank()) ? fallbackRoomType : "Grand Suite");
+        long nights = (res != null && res.getNights() > 0) ? res.getNights() : (fallbackNights > 0 ? fallbackNights : 2);
+        double total = (res != null && res.getTotalPrice() > 0) ? res.getTotalPrice() : (fallbackTotal > 0 ? fallbackTotal : 255.0);
+        Long activeResId = (res != null && res.getId() != null) ? res.getId() : (reservationId != null ? reservationId : 1001L);
+
+        // 1. Intención: Agregar un servicio a la reserva por voz durante la llamada
+        if (q.contains("agrega") || q.contains("añad") || q.contains("inclu") || q.contains("contratar") || q.contains("ponme") || q.contains("quiero el spa") || q.contains("quiero spa") || q.contains("quiero restaurante")) {
+            String targetServiceKeyword = null;
+            if (q.contains("spa") || q.contains("masaje") || q.contains("bienestar")) {
+                targetServiceKeyword = "spa";
+            } else if (q.contains("restaurante") || q.contains("cena") || q.contains("desayuno") || q.contains("comida") || q.contains("gastronom")) {
+                targetServiceKeyword = "restaurante";
+            } else if (q.contains("lavander") || q.contains("ropa") || q.contains("planchado")) {
+                targetServiceKeyword = "lavander";
+            } else if (q.contains("traslado") || q.contains("aeropuerto") || q.contains("chofer")) {
+                targetServiceKeyword = "traslado";
+            }
+
+            if (targetServiceKeyword != null) {
+                String addedReply = tryAddServiceToReservationByVoice(activeResId, targetServiceKeyword, guest);
+                if (addedReply != null) {
+                    return addedReply;
+                }
+            }
+        }
+
+        // 2. Intención: Consultar detalles de SU propia reserva (fechas, habitación, resumen, personas)
+        if (q.contains("mi reserva") || q.contains("mis fechas") || q.contains("cuando entro") || q.contains("cuándo entro")
+                || q.contains("mi habitacion") || q.contains("mi habitación") || q.contains("mi suite") || q.contains("que habitacion")
+                || q.contains("qué habitación") || q.contains("resumen") || q.contains("detalles") || q.contains("confirmar datos")) {
+            if (res != null) {
+                String roomNum = (res.getRoomNumber() != null && !res.getRoomNumber().isBlank())
+                        ? ", habitación número " + res.getRoomNumber()
+                        : "";
+                return String.format(
+                        "Claro que sí, %s. Tu reserva número %d está confirmada en nuestra %s%s, para %d personas, " +
+                        "con llegada el %s y salida el %s por %d %s, con un valor total de %s dólares.",
+                        guest, res.getId(), suite, roomNum, res.getNumberOfPeople(),
+                        res.getCheckInDate(), res.getCheckOutDate(), nights,
+                        nights == 1 ? "noche" : "noches", formatSpokenPrice(total));
+            }
+            return String.format(
+                    "Claro, %s. Tu reserva número %d está confirmada en nuestra %s por %d %s, por un total de %s dólares.",
+                    guest, activeResId, suite, nights, nights == 1 ? "noche" : "noches", formatSpokenPrice(total));
+        }
+
+        // 3. Intención: Consultar precio, saldo pendiente o estado de pago de su reserva
+        if (q.contains("cuanto debo") || q.contains("cuánto debo") || q.contains("cuanto es") || q.contains("cuánto es")
+                || q.contains("total") || q.contains("saldo") || q.contains("pagar") || q.contains("pago")
+                || q.contains("pagada") || q.contains("bold") || q.contains("costo de mi reserva")) {
+            if (res != null) {
+                if (res.isPaid()) {
+                    return String.format(
+                            "Tu reserva número %d por %s dólares ya se encuentra completamente pagada, %s. No tienes ningún saldo pendiente.",
+                            res.getId(), formatSpokenPrice(res.getTotalPrice()), guest);
+                }
+                return String.format(
+                        "El valor total de tu reserva número %d es de %s dólares, y tienes un saldo pendiente de %s dólares. " +
+                        "Puedes pagarlo en línea con el botón de Bold desde tu perfil en nuestra web, o directamente al llegar al hotel.",
+                        res.getId(), formatSpokenPrice(res.getTotalPrice()), formatSpokenPrice(res.getPendingBalance()));
+            }
+            return String.format(
+                    "El total de tu estancia es de %s dólares. Puedes realizar el pago desde tu perfil en la página web con Bold o al momento de tu llegada al hotel.",
+                    formatSpokenPrice(total));
+        }
+
+        // 4. Intención: Consultar horarios de Check-in / Check-out
+        if (q.contains("check-in") || q.contains("check in") || q.contains("checkin") || q.contains("check-out")
+                || q.contains("check out") || q.contains("horario") || q.contains("hora de llegada")
+                || q.contains("hora de entrada") || q.contains("hora de salida") || q.contains("a que hora") || q.contains("a qué hora")) {
+            return "Nuestro horario de check-in es a partir de las 3 de la tarde, y el check-out es hasta las 12 del mediodía. " +
+                   "Si necesitas ingresar antes o salir más tarde, nuestra recepción con gusto te ayudará a coordinarlo sin problema.";
+        }
+
+        // 5. Intención: Consultar por el Spa o masajes
+        if (q.contains("spa") || q.contains("masaje") || q.contains("hidroterapia") || q.contains("sauna") || q.contains("relaj")) {
+            return "Nuestro Spa y Centro de Bienestar abre todos los días de 8 de la mañana a 10 de la noche, con circuito de hidroterapia y masajes de autor por 100 dólares por persona. " +
+                   "Si deseas, dime «agrégale el Spa a mi reserva» y te lo dejo incluido ahora mismo.";
+        }
+
+        // 6. Intención: Consultar por Restaurante, desayuno o gastronomía
+        if (q.contains("restaurante") || q.contains("desayuno") || q.contains("cena") || q.contains("almuerzo")
+                || q.contains("comida") || q.contains("comer") || q.contains("gastronom") || q.contains("menu") || q.contains("menú")) {
+            return "Nuestro restaurante de alta cocina mediterránea atiende de 6 y 30 de la mañana a 11 y 30 de la noche con platos a la carta y menú degustación desde 40 dólares, además de Room Service las 24 horas. " +
+                   "¿Te gustaría que agregue una reserva de restaurante a tu estancia?";
+        }
+
+        // 7. Intención: Consultar por Piscina o Gimnasio
+        if (q.contains("piscina") || q.contains("gimnasio") || q.contains("gym") || q.contains("nadar") || q.contains("entrenar")) {
+            return "Tanto nuestra piscina infinita climatizada con vista al Mediterráneo como el gimnasio Technogym están completamente incluidos sin costo adicional en tu reserva. " +
+                   "El gimnasio abre de 6 de la mañana a 10 de la noche y la piscina de 7 de la mañana a 9 de la noche.";
+        }
+
+        // 8. Intención: Consultar por Traslados, Aeropuerto o Ubicación
+        if (q.contains("traslado") || q.contains("aeropuerto") || q.contains("transporte") || q.contains("chofer")
+                || q.contains("ubicacion") || q.contains("ubicación") || q.contains("donde estan") || q.contains("dónde están") || q.contains("llegar")) {
+            return "Estamos ubicados frente a la costa de Mónaco y contamos con servicio privado de traslados las 24 horas en vehículos Mercedes-Benz Clase S y Maybach desde el aeropuerto de Niza o el helipuerto.";
+        }
+
+        // 9. Intención: Consultar todos los servicios disponibles
+        if (q.contains("servicio") || q.contains("que incluye") || q.contains("qué incluye") || q.contains("que ofrecen") || q.contains("qué ofrecen")) {
+            String contracted = "";
+            if (res != null && res.getServices() != null && !res.getServices().isEmpty()) {
+                String names = res.getServices().stream().map(ReservationDTO.ServiceDetail::getName).collect(Collectors.joining(" y "));
+                contracted = "En tu reserva ya tienes contratado " + names + ". ";
+            }
+            return contracted + "En el hotel tienes acceso incluido a la piscina infinita, gimnasio Technogym y Room Service 24 horas, " +
+                   "además de nuestro Spa por 100 dólares, restaurante gourmet desde 40 dólares, lavandería exprés por 30 dólares y traslados privados.";
+        }
+
+        // 10. Intención: Consultar otras habitaciones o precios de suites
+        if (q.contains("habitaciones") || q.contains("suites") || q.contains("tarifas") || q.contains("precios") || q.contains("cambiar de habitacion")) {
+            if (roomTypeRepository != null) {
+                List<RoomType> types = roomTypeRepository.findAll();
+                if (!types.isEmpty()) {
+                    String summary = types.stream()
+                            .map(t -> t.getName() + " por " + formatSpokenPrice(t.getPricePerNight()) + " dólares")
+                            .collect(Collectors.joining(", "));
+                    return "Actualmente nuestras tarifas por noche son: " + summary + ". Tu reserva actual está en la categoría " + suite + ".";
+                }
+            }
+            return "Contamos con habitaciones Simple desde 80 dólares, Deluxe por 116 dólares, Suite por 200 dólares, Premium Suite por 280 dólares y nuestra Suite Royale por 350 dólares la noche.";
+        }
+
+        // 11. Intención: Cancelar o modificar fechas
+        if (q.contains("cancelar") || q.contains("cambiar fecha") || q.contains("modificar")) {
+            return "Puedes modificar tus fechas o cancelar tu reserva sin costo adicional hasta antes del día de check-in directamente desde la sección Mi Perfil en nuestra página web.";
+        }
+
+        // Respuesta conversacional inteligente por defecto para cualquier otra consulta
+        return String.format(
+                "Con mucho gusto, %s. Recuerda que tu reserva número %d en nuestra %s por %d %s está totalmente garantizada. " +
+                "Puedes preguntarme por horarios de check-in, el saldo de tu cuenta, o pedirme que agregue servicios como el Spa o el restaurante.",
+                guest, activeResId, suite, nights, nights == 1 ? "noche" : "noches");
+    }
+
+    private ReservationDTO resolveReservationForCall(Long reservationId) {
+        if (reservationManagerService == null) {
+            return null;
+        }
+        try {
+            if (reservationId != null && reservationId != 1001L) {
+                ReservationDTO found = reservationManagerService.findSummaryById(reservationId);
+                if (found != null) {
+                    return found;
+                }
+            }
+            List<ReservationDTO> all = reservationManagerService.getReservationSummaries();
+            if (all != null && !all.isEmpty()) {
+                return all.get(all.size() - 1);
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo recuperar la reserva para el turno de voz: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    private String tryAddServiceToReservationByVoice(Long reservationId, String serviceKeyword, String guestName) {
+        if (reservationRepository == null || serviceRepository == null || reservationManagerService == null) {
+            return null;
+        }
+        try {
+            Reservation reservation = (reservationId != null && reservationId != 1001L)
+                    ? reservationRepository.findById(reservationId).orElse(null)
+                    : null;
+            if (reservation == null) {
+                List<Reservation> all = reservationRepository.findAll();
+                if (!all.isEmpty()) {
+                    reservation = all.get(all.size() - 1);
+                }
+            }
+            if (reservation == null || reservation.getReservationRooms() == null || reservation.getReservationRooms().isEmpty()) {
+                return null;
+            }
+
+            List<com.example.demo.entities.Service> services = serviceRepository.findByHidden(false);
+            com.example.demo.entities.Service matched = services.stream()
+                    .filter(s -> s.getName() != null && s.getName().toLowerCase(Locale.ROOT).contains(serviceKeyword))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matched == null) {
+                return null;
+            }
+
+            ReservationRoom rr = reservation.getReservationRooms().get(0);
+            boolean alreadyHas = rr.getAcquiredServices() != null && rr.getAcquiredServices().stream()
+                    .anyMatch(acq -> acq.getService() != null && matched.getId().equals(acq.getService().getId()));
+
+            if (alreadyHas) {
+                ReservationDTO dto = reservationManagerService.findSummaryById(reservation.getId());
+                double currentTotal = dto != null ? dto.getTotalPrice() : 0.0;
+                return String.format(
+                        "¡Excelente noticia, %s! El servicio de %s ya se encuentra incluido en tu reserva número %d. Tu total actual es de %s dólares.",
+                        guestName, matched.getName(), reservation.getId(), formatSpokenPrice(currentTotal));
+            }
+
+            double price = matched.getPrice() != null ? matched.getPrice() : 0.0;
+            AcquiredService acquired = AcquiredService.builder()
+                    .service(matched)
+                    .date(reservation.getCheckInDate() != null ? reservation.getCheckInDate() : LocalDate.now())
+                    .quantity(1)
+                    .unitPrice(price)
+                    .build();
+            rr.addAcquiredService(acquired);
+            reservation.setPaid(false);
+            reservationRepository.save(reservation);
+
+            ReservationDTO updated = reservationManagerService.findSummaryById(reservation.getId());
+            double newTotal = updated != null ? updated.getTotalPrice() : price;
+
+            return String.format(
+                    "¡Listo, %s! Acabo de agregar el servicio de %s por %s dólares directamente a tu reserva número %d en nuestro sistema. " +
+                    "El nuevo valor total de tu estancia es de %s dólares.",
+                    guestName, matched.getName(), formatSpokenPrice(price), reservation.getId(), formatSpokenPrice(newTotal));
+        } catch (Exception e) {
+            log.warn("No se pudo agregar el servicio por voz a la reserva #{}: {}", reservationId, e.getMessage());
+            return null;
+        }
+    }
+
+    private String formatSpokenPrice(double amount) {
+        long whole = Math.round(amount);
+        if (Math.abs(amount - whole) < 0.05) {
+            return String.valueOf(whole);
+        }
+        return String.format(Locale.US, "%.2f", amount);
     }
 
     private String buildGuestFullName(ReservationDTO reservation) {

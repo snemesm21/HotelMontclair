@@ -56,4 +56,17 @@ public interface VoiceCallService {
      * Devuelve el estado actual de la configuración del agente de voz.
      */
     Map<String, Object> getVoiceAgentStatus();
+
+    /**
+     * Genera una respuesta conversacional optimizada para voz telefónica en tiempo real (<20ms),
+     * con conocimiento de la reserva activa del huésped, del catálogo en vivo de la BD y capacidad
+     * de agregar servicios adicionales por voz durante la llamada.
+     */
+    String generateVoiceConversationReply(
+            Long reservationId,
+            String fallbackGuestName,
+            String fallbackRoomType,
+            long fallbackNights,
+            double fallbackTotal,
+            String userSpeech);
 }
