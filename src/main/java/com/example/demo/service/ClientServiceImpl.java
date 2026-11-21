@@ -36,6 +36,9 @@ public class ClientServiceImpl implements ClientService {
     @Autowired(required = false)
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired(required = false)
+    private LoyaltyService loyaltyService;
+
     @Override
     public List<Client> findAll() {
         return repository.findAll();
@@ -60,6 +63,10 @@ public class ClientServiceImpl implements ClientService {
         if (isNewClient) {
             // Solo un admin autenticado puede crear usuarios con otro rol; el registro público siempre es CLIENT
             client.setRole(admin && isValidRole(client.getRole()) ? normalizeRole(client.getRole()) : "CLIENT");
+            // Los puntos y la categoría siempre inician limpios y solo se modifican mediante LoyaltyService
+            client.setPoints(0);
+            client.setLifetimePoints(0);
+            client.setLoyaltyTier(com.example.demo.entities.LoyaltyTier.CLASSIC);
         } else {
             current = findById(client.getId());
 
@@ -96,6 +103,10 @@ public class ClientServiceImpl implements ClientService {
             if (client.getAuthProvider() == null || client.getAuthProvider().isBlank()) {
                 client.setAuthProvider(current.getAuthProvider());
             }
+            // Preservar siempre el saldo de puntos y categoría de fidelidad en actualizaciones de perfil
+            client.setPoints(current.getPoints());
+            client.setLifetimePoints(current.getLifetimePoints());
+            client.setLoyaltyTier(current.getLoyaltyTier());
         }
 
         // Validar campos obligatorios
@@ -149,8 +160,14 @@ public class ClientServiceImpl implements ClientService {
         }
 
         Client saved = repository.save(client);
-        if (isNewClient && eventPublisher != null && "CLIENT".equalsIgnoreCase(saved.getRole())) {
-            eventPublisher.publishEvent(new ClientRegisteredEvent(saved));
+        if (isNewClient && "CLIENT".equalsIgnoreCase(saved.getRole())) {
+            if (loyaltyService != null) {
+                loyaltyService.grantWelcomeBonus(saved.getId());
+                saved = repository.findById(saved.getId()).orElse(saved);
+            }
+            if (eventPublisher != null) {
+                eventPublisher.publishEvent(new ClientRegisteredEvent(saved));
+            }
         }
         return saved;
     }

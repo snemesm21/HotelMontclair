@@ -93,12 +93,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reservations/room/*/active")
                         .hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.POST,
-                                "/api/rooms", "/api/room-types", "/api/services").hasAuthority("ADMIN")
+                                "/api/rooms", "/api/room-types", "/api/services", "/api/rewards").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/rooms/*", "/api/room-types/*", "/api/services/*", "/api/services")
+                                "/api/rooms/*", "/api/room-types/*", "/api/services/*", "/api/services", "/api/rewards/*")
                         .hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/rooms/*", "/api/room-types/*", "/api/services/*").hasAuthority("ADMIN")
+                                "/api/rooms/*", "/api/room-types/*", "/api/services/*", "/api/rewards/*").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/rewards/admin").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/loyalty/clients/*/adjust").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/loyalty/redeemed").hasAnyAuthority("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/loyalty/redeemed/*/use").hasAnyAuthority("ADMIN", "OPERATOR")
 
                         // Catálogo público y registro
                         .requestMatchers(HttpMethod.GET,
@@ -107,7 +111,9 @@ public class SecurityConfig {
                                 "/api/room-types",
                                 "/api/room-types/**",
                                 "/api/services",
-                                "/api/services/**")
+                                "/api/services/**",
+                                "/api/rewards",
+                                "/api/rewards/*")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/clients").permitAll()
                         .anyRequest().authenticated())

@@ -1,20 +1,19 @@
 package com.example.demo;
 
+import com.example.demo.dto.PointAdjustmentRequestDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repository.*;
 import com.example.demo.security.CustomUserDetailsService;
+import com.example.demo.service.LoyaltyService;
 import com.example.demo.service.ReservationManagerService;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
-
-
 
 @Component
 @Profile({"dev", "default", "test"})
@@ -29,12 +28,16 @@ public class DataInitializer implements CommandLineRunner {
     private final ReservationManagerService reservationService;
     private final RoleRepository roleRepository;
     private final CustomUserDetailsService userDetailsService;
+    private final RewardRepository rewardRepository;
+    private final LoyaltyService loyaltyService;
 
     public DataInitializer(ClientRepository clientRepository, RoomTypeRepository roomTypeRepository,
             RoomRepository roomRepository, ServiceRepository serviceRepository,
             ReservationRepository reservationRepository,
             ReservationRoomRepository reservationRoomRepository, AcquiredServiceRepository acquiredServiceRepository,
-            ReservationManagerService reservationService, RoleRepository roleRepository, CustomUserDetailsService userDetailsService) {
+            ReservationManagerService reservationService, RoleRepository roleRepository,
+            CustomUserDetailsService userDetailsService, RewardRepository rewardRepository,
+            LoyaltyService loyaltyService) {
         this.clientRepository = clientRepository;
         this.roomTypeRepository = roomTypeRepository;
         this.roomRepository = roomRepository;
@@ -45,6 +48,8 @@ public class DataInitializer implements CommandLineRunner {
         this.reservationService = reservationService;
         this.roleRepository = roleRepository;
         this.userDetailsService = userDetailsService;
+        this.rewardRepository = rewardRepository;
+        this.loyaltyService = loyaltyService;
     }
 
     @Override
@@ -155,6 +160,101 @@ public class DataInitializer implements CommandLineRunner {
                 reservationService.save(reservation);
             }
         }
+
+        seedRewardsCatalog();
+        seedDemoLoyaltyData();
+    }
+
+    private void seedRewardsCatalog() {
+        if (rewardRepository.count() > 0) {
+            return;
+        }
+        rewardRepository.saveAll(List.of(
+                Reward.builder()
+                        .name("Cóctel Artesanal de Bienvenida")
+                        .description("Un cóctel de autor preparado por nuestro mixólogo en el Lounge Bar MontClair.")
+                        .category("GASTRONOMIA")
+                        .pointsCost(400)
+                        .minimumTier(LoyaltyTier.CLASSIC)
+                        .imageUrl("https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=800&q=80")
+                        .stock(null)
+                        .active(true)
+                        .build(),
+                Reward.builder()
+                        .name("Desayuno Gourmet para Dos")
+                        .description("Buffet internacional y carta caliente en el restaurante Le Jardin para dos huéspedes.")
+                        .category("GASTRONOMIA")
+                        .pointsCost(800)
+                        .minimumTier(LoyaltyTier.CLASSIC)
+                        .imageUrl("https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=800&q=80")
+                        .stock(null)
+                        .active(true)
+                        .build(),
+                Reward.builder()
+                        .name("Late Check-Out Extendido (15:00)")
+                        .description("Extienda su estancia sin prisa hasta las 3:00 PM sujeto a disponibilidad.")
+                        .category("ESTANCIA")
+                        .pointsCost(1000)
+                        .minimumTier(LoyaltyTier.CLASSIC)
+                        .imageUrl("https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80")
+                        .stock(25)
+                        .active(true)
+                        .build(),
+                Reward.builder()
+                        .name("Masaje Relajante Spa (60 min)")
+                        .description("Sesión de aromaterapia y masaje sueco de cuerpo completo en MontClair Spa.")
+                        .category("SPA")
+                        .pointsCost(2000)
+                        .minimumTier(LoyaltyTier.CLASSIC)
+                        .imageUrl("https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80")
+                        .stock(15)
+                        .active(true)
+                        .build(),
+                Reward.builder()
+                        .name("Cena Degustación de 4 Tiempos")
+                        .description("Experiencia gastronómica privada con maridaje seleccionado por nuestro sommelier.")
+                        .category("GASTRONOMIA")
+                        .pointsCost(3200)
+                        .minimumTier(LoyaltyTier.PRIVILEGE)
+                        .imageUrl("https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80")
+                        .stock(10)
+                        .active(true)
+                        .build(),
+                Reward.builder()
+                        .name("Ascenso a Suite Deluxe")
+                        .description("Upgrade garantizado a categoría Suite Deluxe para su próxima reservación.")
+                        .category("ESTANCIA")
+                        .pointsCost(4500)
+                        .minimumTier(LoyaltyTier.PRIVILEGE)
+                        .imageUrl("https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80")
+                        .stock(8)
+                        .active(true)
+                        .build(),
+                Reward.builder()
+                        .name("Noche de Cortesía en Suite Royale")
+                        .description("Una noche inolvidable en nuestra Suite Royale con acceso privado al Lounge Imperial.")
+                        .category("ESTANCIA")
+                        .pointsCost(9000)
+                        .minimumTier(LoyaltyTier.IMPERIAL)
+                        .imageUrl("https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80")
+                        .stock(5)
+                        .active(true)
+                        .build()
+        ));
+    }
+
+    private void seedDemoLoyaltyData() {
+        clientRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("demo", "demo@example.com")
+                .ifPresent(demo -> {
+                    if (loyaltyService.getTransactionsByClient(demo.getId(), null).isEmpty()) {
+                        loyaltyService.grantWelcomeBonus(demo.getId());
+                        loyaltyService.adjustPoints(demo.getId(), PointAdjustmentRequestDTO.builder()
+                                .points(2750)
+                                .operation("ADD")
+                                .description("Bonificación por historial de estancias previas en MontClair")
+                                .build());
+                    }
+                });
     }
 
     private void saveClient(Client client) {

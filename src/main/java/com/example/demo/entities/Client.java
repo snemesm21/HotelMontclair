@@ -12,6 +12,8 @@ import lombok.ToString;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -75,6 +77,22 @@ public class Client {
     @Builder.Default
     private String authProvider = "LOCAL";
 
+    /** Saldo actual de puntos disponibles para canje. */
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer points = 0;
+
+    /** Puntos históricos acumulados para determinar la categoría de fidelidad. */
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer lifetimePoints = 0;
+
+    /** Categoría asignada en el programa MontClair Privilège. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private LoyaltyTier loyaltyTier = LoyaltyTier.CLASSIC;
+
     public Client(Long id, String username, String password, String email, String firstName,
                   String lastName, String avatarUrl, String phone, String role) {
         this.id = id;
@@ -87,6 +105,9 @@ public class Client {
         this.phone = phone;
         this.role = role;
         this.authProvider = "LOCAL";
+        this.points = 0;
+        this.lifetimePoints = 0;
+        this.loyaltyTier = LoyaltyTier.CLASSIC;
     }
 
     @PrePersist
@@ -94,6 +115,15 @@ public class Client {
     public void applyAuthProviderDefault() {
         if (authProvider == null || authProvider.isBlank()) {
             authProvider = googleSubject != null && !googleSubject.isBlank() ? "GOOGLE" : "LOCAL";
+        }
+        if (points == null || points < 0) {
+            points = 0;
+        }
+        if (lifetimePoints == null || lifetimePoints < 0) {
+            lifetimePoints = 0;
+        }
+        if (loyaltyTier == null) {
+            loyaltyTier = LoyaltyTier.fromLifetimePoints(lifetimePoints);
         }
     }
 

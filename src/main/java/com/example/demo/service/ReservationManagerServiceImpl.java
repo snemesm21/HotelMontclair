@@ -67,6 +67,9 @@ public class ReservationManagerServiceImpl
     @Autowired(required = false)
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired(required = false)
+    private LoyaltyService loyaltyService;
+
     private void publishReservationEvent(ReservationEventType type, Reservation reservation) {
         if (eventPublisher != null && reservation != null) {
             eventPublisher.publishEvent(new ReservationLifecycleEvent(type, toDTO(reservation)));
@@ -840,6 +843,9 @@ public class ReservationManagerServiceImpl
         reservation.setPaidAmount(currentTotal);
         reservation.setPaid(true);
         Reservation saved = reservationRepository.save(reservation);
+        if (loyaltyService != null) {
+            loyaltyService.awardPointsForReservation(saved, currentTotal);
+        }
         ReservationDTO dto = toDTO(saved);
         if (eventPublisher != null) {
             eventPublisher.publishEvent(new ReservationLifecycleEvent(ReservationEventType.PAID, dto));
