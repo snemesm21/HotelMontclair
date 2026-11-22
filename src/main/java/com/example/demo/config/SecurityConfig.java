@@ -94,6 +94,7 @@ public class SecurityConfig {
                         .hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.POST,
                                 "/api/rooms", "/api/room-types", "/api/services", "/api/rewards").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/tourism/places").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/rooms/*", "/api/room-types/*", "/api/services/*", "/api/services", "/api/rewards/*")
                         .hasAuthority("ADMIN")
@@ -104,6 +105,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/loyalty/redeemed").hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/loyalty/redeemed/*/use").hasAnyAuthority("ADMIN", "OPERATOR")
 
+                        // Catálogo público de lugares turísticos: solo lectura
+                        .requestMatchers(HttpMethod.GET, "/api/tourist-places", "/api/tourist-places/*")
+                        .permitAll()
+
                         // Catálogo público y registro
                         .requestMatchers(HttpMethod.GET,
                                 "/api/rooms",
@@ -113,7 +118,9 @@ public class SecurityConfig {
                                 "/api/services",
                                 "/api/services/**",
                                 "/api/rewards",
-                                "/api/rewards/*")
+                                "/api/rewards/*",
+                                "/api/tourism/places",
+                                "/api/tourism/places/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/clients").permitAll()
                         .anyRequest().authenticated())

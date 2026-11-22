@@ -109,6 +109,32 @@ El diagrama entidad-relación se encuentra en [docs/diagrama-entidad-relacion.md
 
 Los detalles de servicios y habitaciones incluyen imágenes, descripciones, características y galerías.
 
+### Descubre Mónaco y Mi itinerario (API)
+
+El catálogo público de solo lectura ofrece `GET /api/tourist-places` y
+`GET /api/tourist-places/{id}`. Ambos devuelven únicamente destinos activos; el
+listado acepta el filtro opcional `category` y respeta `displayOrder`. Las
+respuestas incluyen descripciones corta y larga, coordenadas y créditos/licencias
+de las imágenes. Las coordenadas de los destinos se contrastaron con
+[OpenStreetMap](https://www.openstreetmap.org/copyright); las ubicaciones de las
+imágenes y sus licencias se documentan en `imageAttributions`.
+
+| Método | Ruta | Acceso | Descripción |
+| --- | --- | --- | --- |
+| `GET` | `/api/tourist-places` | Público | Lista destinos activos; filtro `category` opcional |
+| `GET` | `/api/tourist-places/{id}` | Público | Consulta un destino activo por ID |
+| `GET` | `/api/tourism/places?category=CULTURA` | Público | Lista destinos; filtro de categoría opcional |
+| `GET` | `/api/tourism/places/{slug}` | Público | Consulta el detalle de un destino |
+| `POST` | `/api/tourism/places` | ADMIN | Amplía el catálogo |
+| `GET` | `/api/tourism/itinerary` | Autenticado | Consulta el itinerario propio |
+| `POST` | `/api/tourism/itinerary/{placeId}` | Autenticado | Agrega un destino (sin duplicados) |
+| `DELETE` | `/api/tourism/itinerary/{placeId}` | Autenticado | Elimina un destino propio |
+| `POST` | `/api/tourism/itinerary/optimize` | Autenticado | Optimiza la ruta vial del itinerario |
+
+El catálogo inicial incluye lugares reales de Mónaco y se agrega sin sobrescribir destinos existentes. Para calcular rutas, enviar `{"mode":"WALKING","returnToHotel":false}` o `{"mode":"DRIVING","returnToHotel":true}`. El resultado contiene el orden aproximado, distancia y duración de carretera, geometría GeoJSON y enlaces de Google Maps. El algoritmo vecino más cercano + 2-opt es heurístico y no garantiza un óptimo global.
+
+La ubicación exacta del hotel no está predefinida. Antes de optimizar recorridos, configurar las coordenadas verificadas con `HOTEL_TOURISM_LATITUDE` y `HOTEL_TOURISM_LONGITUDE`. Opcionalmente se pueden establecer `TOURISM_HOTEL_ADDRESS`, `TOURISM_OSRM_DRIVING_URL` y `TOURISM_OSRM_WALKING_URL`. Sin coordenadas válidas del hotel, el endpoint devuelve un error de configuración en vez de asumir una ubicación.
+
 ### Administración
 
 | Ruta | Descripción |
