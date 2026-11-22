@@ -94,6 +94,7 @@ public class SecurityConfig {
                         .hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.POST,
                                 "/api/rooms", "/api/room-types", "/api/services", "/api/rewards").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/tourism/places").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/rooms/*", "/api/room-types/*", "/api/services/*", "/api/services", "/api/rewards/*")
                         .hasAuthority("ADMIN")
@@ -113,7 +114,9 @@ public class SecurityConfig {
                                 "/api/services",
                                 "/api/services/**",
                                 "/api/rewards",
-                                "/api/rewards/*")
+                                "/api/rewards/*",
+                                "/api/tourism/places",
+                                "/api/tourism/places/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/clients").permitAll()
                         .anyRequest().authenticated())
