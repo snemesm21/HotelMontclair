@@ -10,7 +10,15 @@ public interface TouristPlaceRepository extends JpaRepository<TouristPlace, Long
 
     List<TouristPlace> findByActiveTrueAndCategoryIgnoreCaseOrderByNameAsc(String category);
 
+    List<TouristPlace> findByActiveTrueOrderByDisplayOrderAscIdAsc();
+
+    List<TouristPlace> findByActiveTrueAndCategoryIgnoreCaseOrderByDisplayOrderAscIdAsc(String category);
+
     Optional<TouristPlace> findBySlugAndActiveTrue(String slug);
+
+    Optional<TouristPlace> findByIdAndActiveTrue(Long id);
+
+    Optional<TouristPlace> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
 }

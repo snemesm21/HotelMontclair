@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 import java.util.ArrayList;
@@ -38,8 +39,11 @@ public class TouristPlace {
     @Column(nullable = false, length = 160)
     private String name;
 
-    @Column(nullable = false, length = 3000)
-    private String description;
+    @Column(name = "description", nullable = false, length = 3000)
+    private String longDescription;
+
+    @Column(nullable = false, length = 500)
+    private String shortDescription;
 
     @Column(nullable = false, length = 80)
     private String category;
@@ -48,6 +52,11 @@ public class TouristPlace {
     @CollectionTable(name = "tourist_place_images", joinColumns = @JoinColumn(name = "place_id"))
     @Column(name = "image_url", nullable = false, length = 1000)
     private List<String> imageUrls = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "tourist_place_image_attributions", joinColumns = @JoinColumn(name = "place_id"))
+    @Column(name = "attribution", nullable = false, length = 2000)
+    private List<String> imageAttributions = new ArrayList<>();
 
     @Column(nullable = false, length = 300)
     private String address;
@@ -62,5 +71,18 @@ public class TouristPlace {
     private int suggestedDurationMinutes;
 
     @Column(nullable = false)
+    private int displayOrder;
+
+    @Column(nullable = false)
     private boolean active = true;
+
+    @Transient
+    public String getDescription() {
+        return longDescription;
+    }
+
+    @Transient
+    public void setDescription(String description) {
+        this.longDescription = description;
+    }
 }

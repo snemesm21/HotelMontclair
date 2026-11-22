@@ -78,7 +78,7 @@ public class TourismRoutingService {
                 roadRoute.geometry(),
                 "LineString",
                 googleMapsUrl(visits, mode, returnToHotel),
-                "Orden aproximado por vecino más cercano y mejora 2-opt; no garantiza un óptimo global.");
+                "Recorrido optimizado partiendo desde MontClair Grand Hotel.");
     }
 
     private RoutingProvider.Coordinate configuredHotelCoordinate() {
@@ -223,7 +223,7 @@ public class TourismRoutingService {
     }
 
     private String hotelMapsUrl() {
-        return "https://www.google.com/maps/search/?api=1&query=" + encode(hotelAddress);
+        return "https://maps.app.goo.gl/hGMqVYHjjAP1ZwFLA";
     }
 
     private String encode(String value) {

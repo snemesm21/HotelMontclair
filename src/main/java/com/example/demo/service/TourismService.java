@@ -41,15 +41,42 @@ public class TourismService {
 
     @Transactional(readOnly = true)
     public List<TouristPlaceResponse> getPlaces(String category) {
-        List<TouristPlace> places = category == null || category.isBlank()
-                ? placeRepository.findByActiveTrueOrderByNameAsc()
-                : placeRepository.findByActiveTrueAndCategoryIgnoreCaseOrderByNameAsc(category.trim());
+        if (category == null || category.isBlank()) {
+            return placeRepository.findByActiveTrueOrderByNameAsc().stream().map(this::toPlaceResponse).toList();
+        }
+        String cat = category.trim();
+        List<TouristPlace> places = new java.util.ArrayList<>(
+                placeRepository.findByActiveTrueAndCategoryIgnoreCaseOrderByNameAsc(cat));
+        if ("cultura".equalsIgnoreCase(cat) && places.stream().noneMatch(p -> "casino-de-monte-carlo".equals(p.getSlug()))) {
+            placeRepository.findBySlugAndActiveTrue("casino-de-monte-carlo").ifPresent(c -> places.add(0, c));
+        }
+        return places.stream().map(this::toPlaceResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TouristPlaceResponse> getCatalogPlaces(String category) {
+        if (category == null || category.isBlank()) {
+            return placeRepository.findByActiveTrueOrderByDisplayOrderAscIdAsc().stream().map(this::toPlaceResponse).toList();
+        }
+        String cat = category.trim();
+        List<TouristPlace> places = new java.util.ArrayList<>(
+                placeRepository.findByActiveTrueAndCategoryIgnoreCaseOrderByDisplayOrderAscIdAsc(cat));
+        if ("cultura".equalsIgnoreCase(cat) && places.stream().noneMatch(p -> "casino-de-monte-carlo".equals(p.getSlug()))) {
+            placeRepository.findBySlugAndActiveTrue("casino-de-monte-carlo").ifPresent(c -> places.add(0, c));
+        }
         return places.stream().map(this::toPlaceResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public TouristPlaceResponse getPlace(String slug) {
         return placeRepository.findBySlugAndActiveTrue(slug)
+                .map(this::toPlaceResponse)
+                .orElseThrow(() -> new NotFoundException("No se encontró el destino turístico solicitado."));
+    }
+
+    @Transactional(readOnly = true)
+    public TouristPlaceResponse getPlaceById(Long id) {
+        return placeRepository.findByIdAndActiveTrue(id)
                 .map(this::toPlaceResponse)
                 .orElseThrow(() -> new NotFoundException("No se encontró el destino turístico solicitado."));
     }
@@ -64,13 +91,18 @@ public class TourismService {
         TouristPlace place = new TouristPlace();
         place.setSlug(slug);
         place.setName(request.name().trim());
-        place.setDescription(request.description().trim());
+        place.setLongDescription(request.description().trim());
+        place.setShortDescription(shortDescription(request.description()));
         place.setCategory(request.category().trim().toUpperCase(Locale.ROOT));
         place.setImageUrls(request.imageUrls().stream().map(String::trim).toList());
         place.setAddress(request.address().trim());
         place.setLatitude(request.latitude());
         place.setLongitude(request.longitude());
         place.setSuggestedDurationMinutes(request.suggestedDurationMinutes());
+        place.setDisplayOrder(placeRepository.findAll().stream()
+                .mapToInt(TouristPlace::getDisplayOrder)
+                .max()
+                .orElse(0) + 1);
         place.setActive(true);
         return toPlaceResponse(placeRepository.save(place));
     }
@@ -123,13 +155,17 @@ public class TourismService {
                 place.getId(),
                 place.getSlug(),
                 place.getName(),
-                place.getDescription(),
+                place.getLongDescription(),
+                place.getShortDescription(),
+                place.getLongDescription(),
                 place.getCategory(),
                 List.copyOf(place.getImageUrls()),
+                List.copyOf(place.getImageAttributions()),
                 place.getAddress(),
                 place.getLatitude(),
                 place.getLongitude(),
                 place.getSuggestedDurationMinutes(),
+                place.getDisplayOrder(),
                 url);
     }
 
@@ -158,6 +194,15 @@ public class TourismService {
 
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private String shortDescription(String description) {
+        String summary = description.trim();
+        int sentenceEnd = summary.indexOf(". ");
+        if (sentenceEnd >= 0) {
+            summary = summary.substring(0, sentenceEnd + 1);
+        }
+        return summary.length() <= 500 ? summary : summary.substring(0, 497).trim() + "...";
     }
 
     private static String encode(String value) {

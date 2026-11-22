@@ -105,6 +105,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/loyalty/redeemed").hasAnyAuthority("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/loyalty/redeemed/*/use").hasAnyAuthority("ADMIN", "OPERATOR")
 
+                        // Catálogo público de lugares turísticos: solo lectura
+                        .requestMatchers(HttpMethod.GET, "/api/tourist-places", "/api/tourist-places/*")
+                        .permitAll()
+
                         // Catálogo público y registro
                         .requestMatchers(HttpMethod.GET,
                                 "/api/rooms",
