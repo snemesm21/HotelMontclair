@@ -34,12 +34,9 @@ public class RoomController {
     public List<Room> getAllRooms(
             @RequestParam(required = false) Long typeId,
             @RequestParam(required = false) RoomStatus status) {
-        //Con los dos filtros: se busca por tipo y el estado se filtra en memoria.
+        //Con los dos filtros: se consulta directamente en repositorio por tipo y estado.
         if (typeId != null && status != null) {
-            return roomService.findByTypeId(typeId)
-                    .stream()
-                    .filter(room -> room.getStatus() == status)
-                    .toList();
+            return roomService.findByTypeIdAndStatus(typeId, status);
         }
 
         if (typeId != null) {

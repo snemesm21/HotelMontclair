@@ -16,6 +16,8 @@ public interface RoomService {
 
     List<Room> findByStatus(RoomStatus status);
 
+    List<Room> findByTypeIdAndStatus(Long typeId, RoomStatus status);
+
     Room save(Room room);
 
     void delete(Long id);

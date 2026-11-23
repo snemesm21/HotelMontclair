@@ -20,6 +20,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByStatus(RoomStatus status);
 
+    List<Room> findByRoomType_IdAndStatus(Long roomTypeId, RoomStatus status);
+
     // Consulta de habitaciones que cumplen los requisitos básicos de tipo, estado y capacidad
     List<Room> findByRoomType_IdAndStatusAndCapacityGreaterThanEqualOrderByIdAsc(
             Long roomTypeId,

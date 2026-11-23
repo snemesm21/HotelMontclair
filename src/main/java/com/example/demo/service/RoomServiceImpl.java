@@ -53,6 +53,14 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    public List<Room> findByTypeIdAndStatus(Long typeId, RoomStatus status) {
+        if (typeId == null || status == null) {
+            return List.of();
+        }
+        return roomRepo.findByRoomType_IdAndStatus(typeId, status);
+    }
+
+    @Override
     @Transactional
     public Room save(Room room) {
 
