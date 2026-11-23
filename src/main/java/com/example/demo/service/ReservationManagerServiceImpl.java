@@ -77,11 +77,13 @@ public class ReservationManagerServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Reservation> searchAll() {
         return reservationRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservationDTO> getReservationSummaries() {
         return reservationRepository.findAll()
                 .stream()
@@ -90,11 +92,13 @@ public class ReservationManagerServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Reservation searchById(Long id) {
         return reservationRepository.findById(id).orElse(null);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReservationDTO findSummaryById(Long id) {
         if (id == null) {
             return null;
@@ -104,6 +108,7 @@ public class ReservationManagerServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Reservation> searchByClientId(Long clientId) {
         if (clientId == null) {
             return List.of();
@@ -112,6 +117,7 @@ public class ReservationManagerServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ReservationDTO> getSummariesByClientId(Long clientId) {
         if (clientId == null) {
             return List.of();

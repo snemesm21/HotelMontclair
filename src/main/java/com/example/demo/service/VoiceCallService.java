@@ -58,9 +58,9 @@ public interface VoiceCallService {
     Map<String, Object> getVoiceAgentStatus();
 
     /**
-     * Genera una respuesta conversacional optimizada para voz telefónica en tiempo real (<20ms),
+     * Genera una respuesta conversacional optimizada para voz telefónica en tiempo real,
      * con conocimiento de la reserva activa del huésped, del catálogo en vivo de la BD y capacidad
-     * de agregar servicios adicionales por voz durante la llamada.
+     * de agregar o quitar servicios adicionales por voz durante la llamada.
      */
     String generateVoiceConversationReply(
             Long reservationId,
@@ -68,5 +68,11 @@ public interface VoiceCallService {
             String fallbackRoomType,
             long fallbackNights,
             double fallbackTotal,
-            String userSpeech);
+            String userSpeech,
+            String callSid);
+
+    /**
+     * Devuelve la voz configurada para Twilio (<Say voice="...">).
+     */
+    String getConfiguredTwilioVoice();
 }

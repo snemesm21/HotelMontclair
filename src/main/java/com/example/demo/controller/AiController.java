@@ -217,13 +217,15 @@ public class AiController {
                   + "¿Tienes alguna pregunta sobre tu estancia, horarios de check-in o deseas agregar algún servicio como nuestro Spa?";
 
         String respondUrl = buildTwilioRespondUrl(reservationId, guestName, roomType, nights, total);
-        String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, incluir, cancelar, gracias, nada más, eso es todo, hasta luego";
+        String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, adicionar, incluir, quitar, eliminar, cancelar, gracias, nada más, eso es todo, hasta luego";
+        String voice = voiceCallService != null ? voiceCallService.getConfiguredTwilioVoice() : "Google.es-US-Neural2-A";
 
         String xml = "<Response>"
-                + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"6\" hints=\"" + hints + "\" action=\"" + escapeXml(respondUrl) + "\" method=\"POST\">"
-                + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">" + escapeXml(greeting) + "</Say>"
+                + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"7\" hints=\"" + hints + "\" action=\"" + escapeXml(respondUrl) + "\" method=\"POST\">"
+                + "<Say voice=\"" + escapeXml(voice) + "\" language=\"es-US\">" + escapeXml(greeting) + "</Say>"
                 + "</Gather>"
-                + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">Fue un placer saludarte desde MontClair Grand Hotel. ¡Te esperamos pronto! Hasta luego.</Say>"
+                + "<Say voice=\"" + escapeXml(voice) + "\" language=\"es-US\">Fue un placer saludarte desde MontClair Grand Hotel. ¡Te esperamos pronto! Hasta luego.</Say>"
+                + "<Hangup/>"
                 + "</Response>";
 
         return ResponseEntity.ok(xml);
@@ -231,8 +233,8 @@ public class AiController {
 
     /**
      * Webhook TwiML que procesa cada turno de voz del huésped (SpeechResult de Twilio),
-     * consulta el motor de voz de ultra-baja latencia conectado en vivo a la BD
-     * (permitiendo incluso agregar servicios a la reserva por voz) y responde con voz neural.
+     * consulta el motor de voz conectado en vivo a la BD (permitiendo adicionar o quitar servicios
+     * a la reserva por voz durante tantos turnos como dure la conversación) y responde con voz neural de alta definición.
      */
     @Operation(summary = "Webhook TwiML de respuesta conversacional en tiempo real para Twilio")
     @PostMapping(
@@ -247,37 +249,44 @@ public class AiController {
             @RequestParam(value = "SpeechResult", required = false) String speechResult,
             @RequestParam(value = "CallSid", required = false, defaultValue = "twilio_call") String callSid) {
 
+        String voice = voiceCallService != null ? voiceCallService.getConfiguredTwilioVoice() : "Google.es-US-Neural2-A";
+
         if (speechResult == null || speechResult.isBlank()) {
             String xml = "<Response>"
-                    + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">No alcancé a escucharte bien. Si necesitas algo más, recuerda que nuestra recepción está disponible las 24 horas. ¡Feliz día!</Say>"
+                    + "<Say voice=\"" + escapeXml(voice) + "\" language=\"es-US\">No alcancé a escucharte bien. Si necesitas algo más, recuerda que nuestra recepción está disponible las 24 horas. ¡Feliz día!</Say>"
+                    + "<Hangup/>"
                     + "</Response>";
             return ResponseEntity.ok(xml);
         }
 
         String lower = speechResult.toLowerCase();
+        // Detectar despedidas o si contestó un buzón de voz de operador móvil
         if (lower.contains("nada más") || lower.contains("nada mas") || lower.contains("eso es todo")
                 || lower.contains("hasta luego") || lower.contains("adiós") || lower.contains("adios")
                 || lower.contains("no gracias") || lower.contains("no, gracias") || lower.contains("chao")
-                || lower.equals("no") || lower.equals("todo claro") || lower.contains("muchas gracias")) {
+                || lower.equals("no") || lower.equals("todo claro") || lower.contains("muchas gracias")
+                || lower.contains("buzón") || lower.contains("buzon") || lower.contains("después del tono")
+                || lower.contains("deje su mensaje") || lower.contains("no está disponible")) {
             String farewell = "<Response>"
-                    + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">¡Perfecto, " + escapeXml(guestName) + "! Ha sido un gusto atenderte desde la conserjería de MontClair Grand Hotel. ¡Te deseamos un excelente viaje y te esperamos con los brazos abiertos! Hasta pronto.</Say>"
+                    + "<Say voice=\"" + escapeXml(voice) + "\" language=\"es-US\">¡Perfecto, " + escapeXml(guestName) + "! Ha sido un gusto atenderte desde la conserjería de MontClair Grand Hotel. ¡Te deseamos un excelente viaje! Hasta pronto.</Say>"
                     + "<Hangup/>"
                     + "</Response>";
             return ResponseEntity.ok(farewell);
         }
 
         String spokenReply = voiceCallService.generateVoiceConversationReply(
-                reservationId, guestName, roomType, nights, total, speechResult);
+                reservationId, guestName, roomType, nights, total, speechResult, callSid);
         String cleanSpokenReply = cleanForSpeech(spokenReply);
 
         String respondUrl = buildTwilioRespondUrl(reservationId, guestName, roomType, nights, total);
-        String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, incluir, cancelar, gracias, nada más, eso es todo, hasta luego";
+        String hints = "MontClair, reserva, habitación, suite, spa, masaje, restaurante, desayuno, cena, piscina, gimnasio, lavandería, traslados, aeropuerto, check-in, check-out, horario, precio, tarifa, total, saldo, pagar, Bold, agregar, adicionar, incluir, quitar, eliminar, cancelar, gracias, nada más, eso es todo, hasta luego";
 
         String xml = "<Response>"
-                + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"6\" hints=\"" + hints + "\" action=\"" + escapeXml(respondUrl) + "\" method=\"POST\">"
-                + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">" + escapeXml(cleanSpokenReply) + " ¿Hay algo más en lo que pueda ayudarte?</Say>"
+                + "<Gather input=\"speech\" language=\"es-CO\" speechModel=\"phone_call\" enhanced=\"true\" speechTimeout=\"auto\" timeout=\"7\" hints=\"" + hints + "\" action=\"" + escapeXml(respondUrl) + "\" method=\"POST\">"
+                + "<Say voice=\"" + escapeXml(voice) + "\" language=\"es-US\">" + escapeXml(cleanSpokenReply) + " ¿En qué más puedo asistirte?</Say>"
                 + "</Gather>"
-                + "<Say voice=\"Polly.Lupe-Neural\" language=\"es-US\">Gracias por comunicarte con MontClair Grand Hotel. ¡Te esperamos pronto!</Say>"
+                + "<Say voice=\"" + escapeXml(voice) + "\" language=\"es-US\">Gracias por comunicarte con MontClair Grand Hotel. ¡Te esperamos pronto!</Say>"
+                + "<Hangup/>"
                 + "</Response>";
 
         return ResponseEntity.ok(xml);

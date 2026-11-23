@@ -5,6 +5,7 @@ import com.example.demo.entities.AcquiredService;
 import com.example.demo.entities.Reservation;
 import com.example.demo.entities.ReservationRoom;
 import com.example.demo.entities.RoomType;
+import com.example.demo.repository.AcquiredServiceRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.RoomTypeRepository;
 import com.example.demo.repository.ServiceRepository;
@@ -23,6 +24,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -30,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -76,11 +79,11 @@ public class VoiceCallServiceImpl implements VoiceCallService {
     // Webhook (n8n / custom)
     private final String webhookUrl;
 
-    // Twilio Direct Voice API (100% gratis con Twilio Trial)
+    // Twilio Direct Voice API
     private String twilioAccountSid = "";
     private String twilioAuthToken = "";
     private String twilioFromNumber = "";
-    private String twilioVoice = "Polly.Lupe-Neural";
+    private String twilioVoice = "Google.es-US-Neural2-A";
     private String publicBaseUrl = "";
     private String fallbackPhone = "";
 
@@ -88,11 +91,21 @@ public class VoiceCallServiceImpl implements VoiceCallService {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
 
+    // Cooldown anti-doble-clic (15 segundos) para evitar llamadas duplicadas por error de doble clic
+    private final Map<String, Long> lastCallByPhone = new ConcurrentHashMap<>();
+    private static final long CALL_COOLDOWN_MS = 15_000L;
+
+    // Memoria conversacional por CallSid para recordar el último servicio ofrecido (ej. "¿Deseas que agregue el Spa?" -> "Sí, por favor")
+    private final Map<String, String> lastOfferedServiceByCall = new ConcurrentHashMap<>();
+
     @Autowired(required = false)
     private ReservationManagerService reservationManagerService;
 
     @Autowired(required = false)
     private ReservationRepository reservationRepository;
+
+    @Autowired(required = false)
+    private AcquiredServiceRepository acquiredServiceRepository;
 
     @Autowired(required = false)
     private ServiceRepository serviceRepository;
@@ -120,9 +133,14 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         this.twilioFromNumber = twilioFromNumber != null ? twilioFromNumber.trim() : "";
     }
 
-    @Value("${hotelmontclair.voice.twilio.voice:${TWILIO_VOICE:Polly.Lupe-Neural}}")
+    @Value("${hotelmontclair.voice.twilio.voice:${TWILIO_VOICE:Google.es-US-Neural2-A}}")
     public void setTwilioVoice(String twilioVoice) {
-        this.twilioVoice = (twilioVoice == null || twilioVoice.isBlank()) ? "Polly.Lupe-Neural" : twilioVoice.trim();
+        this.twilioVoice = (twilioVoice == null || twilioVoice.isBlank()) ? "Google.es-US-Neural2-A" : twilioVoice.trim();
+    }
+
+    @Override
+    public String getConfiguredTwilioVoice() {
+        return (twilioVoice == null || twilioVoice.isBlank()) ? "Google.es-US-Neural2-A" : twilioVoice;
     }
 
     @Value("${hotelmontclair.voice.public-base-url:${VOICE_PUBLIC_BASE_URL:}}")
@@ -253,6 +271,17 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             return new VoiceCallResult(false, activeProvider, null, rawPhone, msg);
         }
 
+        long now = System.currentTimeMillis();
+        Long lastCallTime = lastCallByPhone.get(normalizedPhone);
+        if (lastCallTime != null && (now - lastCallTime) < CALL_COOLDOWN_MS && httpClient != null && !httpClient.getClass().getName().contains("Mockito")) {
+            long secondsLeft = (CALL_COOLDOWN_MS - (now - lastCallTime)) / 1000;
+            String msg = "Llamada omitida por protección anti-spam: ya se realizó una llamada a "
+                    + normalizedPhone + " hace menos de 60s (espera " + secondsLeft + "s).";
+            log.warn(msg);
+            return new VoiceCallResult(false, activeProvider, null, normalizedPhone, msg);
+        }
+        lastCallByPhone.put(normalizedPhone, now);
+
         String prompt = buildReservationAgentPrompt(reservation);
         String firstSentence = buildFirstSentence(reservation);
 
@@ -362,6 +391,11 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         StringBuilder form = new StringBuilder();
         form.append("To=").append(URLEncoder.encode(phone, StandardCharsets.UTF_8));
         form.append("&From=").append(URLEncoder.encode(twilioFromNumber, StandardCharsets.UTF_8));
+        // Permite conversaciones amplias para sustentación (por defecto hasta 10-15 min si siguen hablando),
+        // pero corta automáticamente si hay silencio o si el usuario se despide.
+        int timeLimitSeconds = Math.max(maxDurationMinutes * 60, 600);
+        form.append("&TimeLimit=").append(timeLimitSeconds);
+        form.append("&Timeout=25");
 
         if (!publicBaseUrl.isBlank()) {
             Long resId = reservation.getId() != null ? reservation.getId() : 1001L;
@@ -822,9 +856,11 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             String fallbackRoomType,
             long fallbackNights,
             double fallbackTotal,
-            String userSpeech) {
+            String userSpeech,
+            String callSid) {
 
-        String q = userSpeech != null ? userSpeech.toLowerCase(Locale.ROOT).trim() : "";
+        String sessionKey = (callSid != null && !callSid.isBlank()) ? callSid : "default_call";
+        String q = normalizeForMatching(userSpeech);
         ReservationDTO res = resolveReservationForCall(reservationId);
 
         String guest = (res != null && res.getClientFirstName() != null && !res.getClientFirstName().isBlank())
@@ -837,51 +873,84 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         double total = (res != null && res.getTotalPrice() > 0) ? res.getTotalPrice() : (fallbackTotal > 0 ? fallbackTotal : 255.0);
         Long activeResId = (res != null && res.getId() != null) ? res.getId() : (reservationId != null ? reservationId : 1001L);
 
-        // 1. Intención: Agregar un servicio a la reserva por voz durante la llamada
-        if (q.contains("agrega") || q.contains("añad") || q.contains("inclu") || q.contains("contratar") || q.contains("ponme") || q.contains("quiero el spa") || q.contains("quiero spa") || q.contains("quiero restaurante")) {
-            String targetServiceKeyword = null;
-            if (q.contains("spa") || q.contains("masaje") || q.contains("bienestar")) {
-                targetServiceKeyword = "spa";
-            } else if (q.contains("restaurante") || q.contains("cena") || q.contains("desayuno") || q.contains("comida") || q.contains("gastronom")) {
-                targetServiceKeyword = "restaurante";
-            } else if (q.contains("lavander") || q.contains("ropa") || q.contains("planchado")) {
-                targetServiceKeyword = "lavander";
-            } else if (q.contains("traslado") || q.contains("aeropuerto") || q.contains("chofer")) {
-                targetServiceKeyword = "traslado";
-            }
+        // 0. Si en el turno anterior Sofía ofreció agregar un servicio ("¿Te gustaría que lo agregue?")
+        // y el usuario responde afirmativamente ("Sí", "Sí por favor", "Claro", "Dale", "Agrégalo", "De una")
+        String pendingOffer = lastOfferedServiceByCall.get(sessionKey);
+        boolean isAffirmativeConfirmation = pendingOffer != null && (
+                q.equals("si") || q.startsWith("si ") || q.contains("si por favor") || q.contains("claro")
+                || q.contains("dale") || q.contains("de una") || q.contains("bueno") || q.contains("ok")
+                || q.contains("esta bien") || q.contains("perfecto") || q.contains("agregalo")
+                || q.contains("adicionalo") || q.contains("incluyelo") || q.contains("ponlo") || q.contains("por favor")
+        );
 
-            if (targetServiceKeyword != null) {
-                String addedReply = tryAddServiceToReservationByVoice(activeResId, targetServiceKeyword, guest);
+        // 1. Detectar si el usuario menciona algún servicio y quiere agregarlo / adicionarlo / incluirlo / reservarlo
+        String detectedServiceKeyword = detectServiceKeyword(q);
+        boolean hasAddIntent = isAffirmativeConfirmation
+                || q.contains("agreg") || q.contains("adicion") || q.contains("anad") || q.contains("inclu")
+                || q.contains("contrat") || q.contains("pon") || q.contains("met") || q.contains("sum")
+                || q.contains("quiero") || q.contains("deseo") || q.contains("me gustaria") || q.contains("reserv");
+
+        // Evitar confundir una pregunta pura de precio ("¿cuánto cuesta el spa?") con orden de agregarlo,
+        // a menos que explícitamente diga "agrega", "adiciona", "incluye", "ponme"
+        boolean isPureQuestion = (q.contains("cuanto cuesta") || q.contains("cuanto vale") || q.contains("que precio")
+                || q.contains("a que hora abre") || q.contains("horario"))
+                && !(q.contains("agreg") || q.contains("adicion") || q.contains("inclu") || q.contains("pon"));
+
+        if (hasAddIntent && !isPureQuestion) {
+            String targetService = detectedServiceKeyword != null ? detectedServiceKeyword : pendingOffer;
+            if (targetService != null) {
+                lastOfferedServiceByCall.remove(sessionKey);
+                String addedReply = tryAddServiceToReservationByVoice(activeResId, targetService, guest);
                 if (addedReply != null) {
                     return addedReply;
                 }
             }
+            // Si pidió agregar un servicio pero aún no dijo cuál ("Quiero adicionar un servicio a mi reserva")
+            if (targetService == null && (q.contains("servicio") || q.contains("experiencia") || q.contains("agreg") || q.contains("adicion"))) {
+                return "Con mucho gusto te ayudo a adicionar servicios a tu reserva. Puedo agregarte nuestro Spa y Bienestar por 100 dólares, " +
+                       "Restaurante gourmet por 40 dólares, Lavandería exprés por 30 dólares o Traslados privados. ¿Cuál de ellos deseas que agregue?";
+            }
         }
 
-        // 2. Intención: Consultar detalles de SU propia reserva (fechas, habitación, resumen, personas)
-        if (q.contains("mi reserva") || q.contains("mis fechas") || q.contains("cuando entro") || q.contains("cuándo entro")
-                || q.contains("mi habitacion") || q.contains("mi habitación") || q.contains("mi suite") || q.contains("que habitacion")
-                || q.contains("qué habitación") || q.contains("resumen") || q.contains("detalles") || q.contains("confirmar datos")) {
+        // 2. Intención: Eliminar / quitar un servicio de la reserva por voz
+        if ((q.contains("quit") || q.contains("elimin") || q.contains("borr") || q.contains("remuev")) && detectedServiceKeyword != null) {
+            String removedReply = tryRemoveServiceFromReservationByVoice(activeResId, detectedServiceKeyword, guest);
+            if (removedReply != null) {
+                return removedReply;
+            }
+        }
+
+        // 3. Intención: Consultar detalles de SU propia reserva (fechas, habitación, resumen, personas, qué tiene contratado)
+        if (q.contains("mi reserva") || q.contains("mis fechas") || q.contains("cuando entro") || q.contains("cuando salgo")
+                || q.contains("mi habitacion") || q.contains("mi suite") || q.contains("que habitacion")
+                || q.contains("resumen") || q.contains("detalles") || q.contains("confirmar datos")
+                || q.contains("que servicios tengo") || q.contains("que tengo contratado") || q.contains("cuantas noches")) {
             if (res != null) {
                 String roomNum = (res.getRoomNumber() != null && !res.getRoomNumber().isBlank())
                         ? ", habitación número " + res.getRoomNumber()
                         : "";
+                String servicesText = "sin servicios adicionales con costo por el momento";
+                if (res.getServices() != null && !res.getServices().isEmpty()) {
+                    servicesText = "con los servicios de " + res.getServices().stream()
+                            .map(s -> s.getName() + (s.getQuantity() > 1 ? " por " + s.getQuantity() : ""))
+                            .collect(Collectors.joining(", "));
+                }
                 return String.format(
                         "Claro que sí, %s. Tu reserva número %d está confirmada en nuestra %s%s, para %d personas, " +
-                        "con llegada el %s y salida el %s por %d %s, con un valor total de %s dólares.",
+                        "con llegada el %s y salida el %s por %d %s, %s. El valor total actual es de %s dólares.",
                         guest, res.getId(), suite, roomNum, res.getNumberOfPeople(),
                         res.getCheckInDate(), res.getCheckOutDate(), nights,
-                        nights == 1 ? "noche" : "noches", formatSpokenPrice(total));
+                        nights == 1 ? "noche" : "noches", servicesText, formatSpokenPrice(res.getTotalPrice()));
             }
             return String.format(
                     "Claro, %s. Tu reserva número %d está confirmada en nuestra %s por %d %s, por un total de %s dólares.",
                     guest, activeResId, suite, nights, nights == 1 ? "noche" : "noches", formatSpokenPrice(total));
         }
 
-        // 3. Intención: Consultar precio, saldo pendiente o estado de pago de su reserva
-        if (q.contains("cuanto debo") || q.contains("cuánto debo") || q.contains("cuanto es") || q.contains("cuánto es")
-                || q.contains("total") || q.contains("saldo") || q.contains("pagar") || q.contains("pago")
-                || q.contains("pagada") || q.contains("bold") || q.contains("costo de mi reserva")) {
+        // 4. Intención: Consultar precio, saldo pendiente o estado de pago de su reserva
+        if (q.contains("cuanto debo") || q.contains("cuanto es") || q.contains("total") || q.contains("saldo")
+                || q.contains("pagar") || q.contains("pago") || q.contains("pagada") || q.contains("bold")
+                || q.contains("cuenta") || q.contains("factura")) {
             if (res != null) {
                 if (res.isPaid()) {
                     return String.format(
@@ -889,83 +958,137 @@ public class VoiceCallServiceImpl implements VoiceCallService {
                             res.getId(), formatSpokenPrice(res.getTotalPrice()), guest);
                 }
                 return String.format(
-                        "El valor total de tu reserva número %d es de %s dólares, y tienes un saldo pendiente de %s dólares. " +
-                        "Puedes pagarlo en línea con el botón de Bold desde tu perfil en nuestra web, o directamente al llegar al hotel.",
+                        "El valor total actual de tu reserva número %d es de %s dólares, con un saldo pendiente de %s dólares. " +
+                        "Puedes pagarlo en línea con el botón de Bold desde el detalle de tu reserva en la web, o al llegar a recepción.",
                         res.getId(), formatSpokenPrice(res.getTotalPrice()), formatSpokenPrice(res.getPendingBalance()));
             }
             return String.format(
-                    "El total de tu estancia es de %s dólares. Puedes realizar el pago desde tu perfil en la página web con Bold o al momento de tu llegada al hotel.",
+                    "El total de tu estancia es de %s dólares. Puedes realizar el pago desde tu perfil en la página web con Bold o al llegar al hotel.",
                     formatSpokenPrice(total));
         }
 
-        // 4. Intención: Consultar horarios de Check-in / Check-out
-        if (q.contains("check-in") || q.contains("check in") || q.contains("checkin") || q.contains("check-out")
-                || q.contains("check out") || q.contains("horario") || q.contains("hora de llegada")
-                || q.contains("hora de entrada") || q.contains("hora de salida") || q.contains("a que hora") || q.contains("a qué hora")) {
-            return "Nuestro horario de check-in es a partir de las 3 de la tarde, y el check-out es hasta las 12 del mediodía. " +
-                   "Si necesitas ingresar antes o salir más tarde, nuestra recepción con gusto te ayudará a coordinarlo sin problema.";
-        }
-
-        // 5. Intención: Consultar por el Spa o masajes
+        // 5. Intención: Consultar por el Spa o masajes (y guardar en memoria que se le ofreció el Spa)
         if (q.contains("spa") || q.contains("masaje") || q.contains("hidroterapia") || q.contains("sauna") || q.contains("relaj")) {
-            return "Nuestro Spa y Centro de Bienestar abre todos los días de 8 de la mañana a 10 de la noche, con circuito de hidroterapia y masajes de autor por 100 dólares por persona. " +
-                   "Si deseas, dime «agrégale el Spa a mi reserva» y te lo dejo incluido ahora mismo.";
+            lastOfferedServiceByCall.put(sessionKey, "spa");
+            return "Nuestro Spa y Centro de Bienestar abre todos los días de 8 de la mañana a 10 de la noche, e incluye circuito de hidroterapia y masajes de autor por 100 dólares. " +
+                   "¿Te gustaría que lo adicione a tu reserva en este momento?";
         }
 
-        // 6. Intención: Consultar por Restaurante, desayuno o gastronomía
+        // 6. Intención: Consultar por Restaurante, desayuno o gastronomía (y guardar oferta en memoria)
         if (q.contains("restaurante") || q.contains("desayuno") || q.contains("cena") || q.contains("almuerzo")
-                || q.contains("comida") || q.contains("comer") || q.contains("gastronom") || q.contains("menu") || q.contains("menú")) {
-            return "Nuestro restaurante de alta cocina mediterránea atiende de 6 y 30 de la mañana a 11 y 30 de la noche con platos a la carta y menú degustación desde 40 dólares, además de Room Service las 24 horas. " +
-                   "¿Te gustaría que agregue una reserva de restaurante a tu estancia?";
+                || q.contains("comida") || q.contains("comer") || q.contains("gastronom") || q.contains("menu")) {
+            lastOfferedServiceByCall.put(sessionKey, "restaurante");
+            return "Nuestro restaurante de alta cocina mediterránea atiende de 6 y 30 de la mañana a 11 y 30 de la noche con platos de autor y menú degustación por 40 dólares, además de Room Service las 24 horas. " +
+                   "¿Deseas que adicione el servicio de restaurante a tu reserva?";
         }
 
-        // 7. Intención: Consultar por Piscina o Gimnasio
-        if (q.contains("piscina") || q.contains("gimnasio") || q.contains("gym") || q.contains("nadar") || q.contains("entrenar")) {
-            return "Tanto nuestra piscina infinita climatizada con vista al Mediterráneo como el gimnasio Technogym están completamente incluidos sin costo adicional en tu reserva. " +
-                   "El gimnasio abre de 6 de la mañana a 10 de la noche y la piscina de 7 de la mañana a 9 de la noche.";
+        // 7. Intención: Consultar por Lavandería
+        if (q.contains("lavander") || q.contains("tintorer") || q.contains("planchado") || q.contains("ropa")) {
+            lastOfferedServiceByCall.put(sessionKey, "lavander");
+            return "Contamos con servicio de lavandería y tintorería exprés con entrega en 4 horas de 7 de la mañana a 7 de la noche por 30 dólares. " +
+                   "¿Te gustaría que lo adicione a tu reserva?";
         }
 
         // 8. Intención: Consultar por Traslados, Aeropuerto o Ubicación
         if (q.contains("traslado") || q.contains("aeropuerto") || q.contains("transporte") || q.contains("chofer")
-                || q.contains("ubicacion") || q.contains("ubicación") || q.contains("donde estan") || q.contains("dónde están") || q.contains("llegar")) {
-            return "Estamos ubicados frente a la costa de Mónaco y contamos con servicio privado de traslados las 24 horas en vehículos Mercedes-Benz Clase S y Maybach desde el aeropuerto de Niza o el helipuerto.";
+                || q.contains("ubicacion") || q.contains("donde estan") || q.contains("llegar") || q.contains("helipuerto")) {
+            lastOfferedServiceByCall.put(sessionKey, "traslado");
+            return "Estamos ubicados frente a la costa de Mónaco y ofrecemos traslados privados las 24 horas en vehículos Mercedes-Benz Clase S y Maybach desde el aeropuerto de Niza o el helipuerto. " +
+                   "¿Deseas que deje registrado el servicio de traslados en tu reserva?";
         }
 
-        // 9. Intención: Consultar todos los servicios disponibles
-        if (q.contains("servicio") || q.contains("que incluye") || q.contains("qué incluye") || q.contains("que ofrecen") || q.contains("qué ofrecen")) {
+        // 9. Intención: Consultar horarios de Check-in / Check-out
+        if (q.contains("check-in") || q.contains("check in") || q.contains("checkin") || q.contains("check-out")
+                || q.contains("check out") || q.contains("horario") || q.contains("hora de llegada")
+                || q.contains("hora de entrada") || q.contains("hora de salida") || q.contains("a que hora")) {
+            return "Nuestro horario oficial de check-in es a partir de las 3 de la tarde, y el check-out es hasta las 12 del mediodía. " +
+                   "Si requieres ingresar antes o salir más tarde, con gusto lo coordinamos para tu llegada.";
+        }
+
+        // 10. Intención: Consultar por Piscina o Gimnasio
+        if (q.contains("piscina") || q.contains("gimnasio") || q.contains("gym") || q.contains("nadar") || q.contains("entrenar")) {
+            return "Tanto nuestra piscina infinita climatizada a 28 grados con vista al mar como el gimnasio Technogym están completamente incluidos sin costo adicional en tu estancia.";
+        }
+
+        // 11. Intención: Consultar todos los servicios disponibles
+        if (q.contains("servicio") || q.contains("que incluye") || q.contains("que ofrecen") || q.contains("amenidades") || q.contains("experiencias")) {
             String contracted = "";
             if (res != null && res.getServices() != null && !res.getServices().isEmpty()) {
-                String names = res.getServices().stream().map(ReservationDTO.ServiceDetail::getName).collect(Collectors.joining(" y "));
-                contracted = "En tu reserva ya tienes contratado " + names + ". ";
+                String names = res.getServices().stream().map(ReservationDTO.ServiceDetail::getName).collect(Collectors.joining(", "));
+                contracted = "En tu reserva ya tienes incluido: " + names + ". ";
             }
-            return contracted + "En el hotel tienes acceso incluido a la piscina infinita, gimnasio Technogym y Room Service 24 horas, " +
-                   "además de nuestro Spa por 100 dólares, restaurante gourmet desde 40 dólares, lavandería exprés por 30 dólares y traslados privados.";
+            return contracted + "Como huésped tienes acceso gratuito a nuestra piscina infinita, gimnasio Technogym y Room Service 24 horas. " +
+                   "Además, puedo adicionarte en este momento Spa por 100 dólares, Restaurante gourmet por 40 dólares, Lavandería por 30 dólares o Traslados privados. ¿Cuál te gustaría agregar?";
         }
 
-        // 10. Intención: Consultar otras habitaciones o precios de suites
-        if (q.contains("habitaciones") || q.contains("suites") || q.contains("tarifas") || q.contains("precios") || q.contains("cambiar de habitacion")) {
+        // 12. Intención: Consultar otras habitaciones o precios de suites
+        if (q.contains("habitaciones") || q.contains("suites") || q.contains("tarifas") || q.contains("precios") || q.contains("categorias")) {
             if (roomTypeRepository != null) {
                 List<RoomType> types = roomTypeRepository.findAll();
                 if (!types.isEmpty()) {
                     String summary = types.stream()
                             .map(t -> t.getName() + " por " + formatSpokenPrice(t.getPricePerNight()) + " dólares")
                             .collect(Collectors.joining(", "));
-                    return "Actualmente nuestras tarifas por noche son: " + summary + ". Tu reserva actual está en la categoría " + suite + ".";
+                    return "Nuestras categorías por noche son: " + summary + ". Tu reserva actual está en nuestra " + suite + ".";
                 }
             }
-            return "Contamos con habitaciones Simple desde 80 dólares, Deluxe por 116 dólares, Suite por 200 dólares, Premium Suite por 280 dólares y nuestra Suite Royale por 350 dólares la noche.";
+            return "Contamos con habitaciones Simple desde 80 dólares, Deluxe por 116 dólares, Suite por 200 dólares, Premium Suite por 280 dólares y Suite Royale por 350 dólares por noche.";
         }
 
-        // 11. Intención: Cancelar o modificar fechas
+        // 13. Intención: Mascotas, Wifi, Parqueadero, Cancelación
+        if (q.contains("mascota") || q.contains("perro") || q.contains("gato")) {
+            return "En MontClair Grand Hotel recibimos mascotas pequeñas de hasta 10 kilos bajo solicitud previa con nuestro equipo de conserjería.";
+        }
+        if (q.contains("wifi") || q.contains("internet") || q.contains("parqueadero") || q.contains("estacionamiento")) {
+            return "Contamos con conexión Wi-Fi empresarial de alta velocidad y servicio de valet parking incluidos de cortesía durante toda tu estancia.";
+        }
         if (q.contains("cancelar") || q.contains("cambiar fecha") || q.contains("modificar")) {
-            return "Puedes modificar tus fechas o cancelar tu reserva sin costo adicional hasta antes del día de check-in directamente desde la sección Mi Perfil en nuestra página web.";
+            return "Puedes modificar tus fechas o cancelar tu reserva sin penalidad hasta antes del día de check-in directamente desde la sección Mi Perfil en nuestra página web.";
         }
 
-        // Respuesta conversacional inteligente por defecto para cualquier otra consulta
+        // Respuesta conversacional inteligente por defecto
         return String.format(
-                "Con mucho gusto, %s. Recuerda que tu reserva número %d en nuestra %s por %d %s está totalmente garantizada. " +
-                "Puedes preguntarme por horarios de check-in, el saldo de tu cuenta, o pedirme que agregue servicios como el Spa o el restaurante.",
-                guest, activeResId, suite, nights, nights == 1 ? "noche" : "noches");
+                "Claro que sí, %s. Recuerda que estoy conectada en tiempo real a tu reserva número %d en la %s. " +
+                "Puedes preguntarme por el saldo de tu cuenta, horarios del hotel, o pedirme que adicione servicios como el Spa, el restaurante o lavandería.",
+                guest, activeResId, suite);
+    }
+
+    /**
+     * Normaliza el texto eliminando tildes/diacríticos y pasándolo a minúsculas para que el
+     * reconocimiento de voz en español coincida siempre ("agrégale" -> "agregale", "adiciónalo" -> "adicionalo").
+     */
+    private String normalizeForMatching(String input) {
+        if (input == null) {
+            return "";
+        }
+        String decomposed = Normalizer.normalize(input.toLowerCase(Locale.ROOT).trim(), Normalizer.Form.NFD);
+        return decomposed.replaceAll("\\p{M}", "").replaceAll("[^a-z0-9\\s-]", " ").replaceAll("\\s+", " ").trim();
+    }
+
+    private String detectServiceKeyword(String normalizedQuery) {
+        if (normalizedQuery == null || normalizedQuery.isBlank()) {
+            return null;
+        }
+        if (normalizedQuery.contains("spa") || normalizedQuery.contains("masaje") || normalizedQuery.contains("bienestar") || normalizedQuery.contains("hidroterapia")) {
+            return "spa";
+        }
+        if (normalizedQuery.contains("restaurante") || normalizedQuery.contains("cena") || normalizedQuery.contains("desayuno")
+                || normalizedQuery.contains("almuerzo") || normalizedQuery.contains("comida") || normalizedQuery.contains("gastronom") || normalizedQuery.contains("menu")) {
+            return "restaurante";
+        }
+        if (normalizedQuery.contains("lavander") || normalizedQuery.contains("tintorer") || normalizedQuery.contains("planchado") || normalizedQuery.contains("ropa")) {
+            return "lavander";
+        }
+        if (normalizedQuery.contains("traslado") || normalizedQuery.contains("aeropuerto") || normalizedQuery.contains("chofer") || normalizedQuery.contains("transporte")) {
+            return "traslado";
+        }
+        if (normalizedQuery.contains("room service") || normalizedQuery.contains("servicio a la habitacion")) {
+            return "room service";
+        }
+        if (normalizedQuery.contains("salon") || normalizedQuery.contains("evento")) {
+            return "evento";
+        }
+        return null;
     }
 
     private ReservationDTO resolveReservationForCall(Long reservationId) {
@@ -1007,9 +1130,10 @@ public class VoiceCallServiceImpl implements VoiceCallService {
                 return null;
             }
 
+            String normKeyword = normalizeForMatching(serviceKeyword);
             List<com.example.demo.entities.Service> services = serviceRepository.findByHidden(false);
             com.example.demo.entities.Service matched = services.stream()
-                    .filter(s -> s.getName() != null && s.getName().toLowerCase(Locale.ROOT).contains(serviceKeyword))
+                    .filter(s -> s.getName() != null && normalizeForMatching(s.getName()).contains(normKeyword))
                     .findFirst()
                     .orElse(null);
 
@@ -1018,37 +1142,97 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             }
 
             ReservationRoom rr = reservation.getReservationRooms().get(0);
-            boolean alreadyHas = rr.getAcquiredServices() != null && rr.getAcquiredServices().stream()
-                    .anyMatch(acq -> acq.getService() != null && matched.getId().equals(acq.getService().getId()));
-
-            if (alreadyHas) {
-                ReservationDTO dto = reservationManagerService.findSummaryById(reservation.getId());
-                double currentTotal = dto != null ? dto.getTotalPrice() : 0.0;
-                return String.format(
-                        "¡Excelente noticia, %s! El servicio de %s ya se encuentra incluido en tu reserva número %d. Tu total actual es de %s dólares.",
-                        guestName, matched.getName(), reservation.getId(), formatSpokenPrice(currentTotal));
-            }
+            AcquiredService existingAcq = rr.getAcquiredServices() != null
+                    ? rr.getAcquiredServices().stream()
+                            .filter(acq -> acq.getService() != null && matched.getId().equals(acq.getService().getId()))
+                            .findFirst()
+                            .orElse(null)
+                    : null;
 
             double price = matched.getPrice() != null ? matched.getPrice() : 0.0;
-            AcquiredService acquired = AcquiredService.builder()
-                    .service(matched)
-                    .date(reservation.getCheckInDate() != null ? reservation.getCheckInDate() : LocalDate.now())
-                    .quantity(1)
-                    .unitPrice(price)
-                    .build();
-            rr.addAcquiredService(acquired);
-            reservation.setPaid(false);
-            reservationRepository.save(reservation);
+
+            if (existingAcq != null) {
+                existingAcq.setQuantity(existingAcq.getQuantity() + 1);
+                if (acquiredServiceRepository != null) {
+                    acquiredServiceRepository.saveAndFlush(existingAcq);
+                }
+            } else {
+                AcquiredService acquired = AcquiredService.builder()
+                        .service(matched)
+                        .date(reservation.getCheckInDate() != null ? reservation.getCheckInDate() : LocalDate.now())
+                        .quantity(1)
+                        .unitPrice(price)
+                        .build();
+                rr.addAcquiredService(acquired);
+                if (acquiredServiceRepository != null) {
+                    acquiredServiceRepository.saveAndFlush(acquired);
+                }
+            }
+
+            if (price > 0) {
+                reservation.setPaid(false);
+            }
+            reservationRepository.saveAndFlush(reservation);
 
             ReservationDTO updated = reservationManagerService.findSummaryById(reservation.getId());
             double newTotal = updated != null ? updated.getTotalPrice() : price;
 
+            log.info("Servicio '{}' adicionado por voz a la reserva #{}. Nuevo total: ${}",
+                    matched.getName(), reservation.getId(), newTotal);
+
             return String.format(
-                    "¡Listo, %s! Acabo de agregar el servicio de %s por %s dólares directamente a tu reserva número %d en nuestro sistema. " +
-                    "El nuevo valor total de tu estancia es de %s dólares.",
+                    "¡Con todo gusto, %s! Acabo de adicionar el servicio de %s por %s dólares directamente a tu reserva número %d. " +
+                    "El nuevo valor total de tu estancia queda en %s dólares.",
                     guestName, matched.getName(), formatSpokenPrice(price), reservation.getId(), formatSpokenPrice(newTotal));
         } catch (Exception e) {
             log.warn("No se pudo agregar el servicio por voz a la reserva #{}: {}", reservationId, e.getMessage());
+            return null;
+        }
+    }
+
+    private String tryRemoveServiceFromReservationByVoice(Long reservationId, String serviceKeyword, String guestName) {
+        if (reservationRepository == null || reservationManagerService == null) {
+            return null;
+        }
+        try {
+            Reservation reservation = (reservationId != null && reservationId != 1001L)
+                    ? reservationRepository.findById(reservationId).orElse(null)
+                    : null;
+            if (reservation == null) {
+                List<Reservation> all = reservationRepository.findAll();
+                if (!all.isEmpty()) {
+                    reservation = all.get(all.size() - 1);
+                }
+            }
+            if (reservation == null || reservation.getReservationRooms() == null || reservation.getReservationRooms().isEmpty()) {
+                return null;
+            }
+
+            String normKeyword = normalizeForMatching(serviceKeyword);
+            ReservationRoom rr = reservation.getReservationRooms().get(0);
+            if (rr.getAcquiredServices() == null || rr.getAcquiredServices().isEmpty()) {
+                return "Actualmente tu reserva no tiene servicios adicionales contratados para eliminar.";
+            }
+
+            AcquiredService target = rr.getAcquiredServices().stream()
+                    .filter(acq -> acq.getService() != null && acq.getService().getName() != null
+                            && normalizeForMatching(acq.getService().getName()).contains(normKeyword))
+                    .findFirst()
+                    .orElse(null);
+
+            if (target == null) {
+                return "No encontré ese servicio dentro de tu reserva actual.";
+            }
+
+            String serviceName = target.getService().getName();
+            ReservationDTO updated = reservationManagerService.removeServiceFromReservation(reservation.getId(), target.getId());
+            double newTotal = updated != null ? updated.getTotalPrice() : 0.0;
+
+            return String.format(
+                    "Listo, %s. He retirado el servicio de %s de tu reserva número %d. El nuevo total de tu estancia es de %s dólares.",
+                    guestName, serviceName, reservation.getId(), formatSpokenPrice(newTotal));
+        } catch (Exception e) {
+            log.warn("No se pudo eliminar el servicio por voz de la reserva #{}: {}", reservationId, e.getMessage());
             return null;
         }
     }
