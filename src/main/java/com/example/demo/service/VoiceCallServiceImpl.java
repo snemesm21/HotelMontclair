@@ -456,9 +456,12 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         StringBuilder form = new StringBuilder();
         form.append("To=").append(URLEncoder.encode(phone, StandardCharsets.UTF_8));
         form.append("&From=").append(URLEncoder.encode(twilioFromNumber, StandardCharsets.UTF_8));
-        // Tope estricto en el switch de Twilio: máximo 240 segundos (4 minutos) por llamada.
-        // NOTA: No usamos MachineDetection síncrono porque añade 4-5 segundos de silencio al contestar;
-        // la detección de buzón se hace instantáneamente por texto y límite de 2 turnos en el webhook.
+        // Tope estricto en el switch de Twilio: máximo 240 segundos (4 minutos) por
+        // llamada.
+        // NOTA: No usamos MachineDetection síncrono porque añade 4-5 segundos de
+        // silencio al contestar;
+        // la detección de buzón se hace instantáneamente por texto y límite de 2 turnos
+        // en el webhook.
         int timeLimitSeconds = Math.min(Math.max(maxDurationMinutes * 60, 120), 240);
         form.append("&TimeLimit=").append(timeLimitSeconds);
         form.append("&Timeout=20");
@@ -974,7 +977,8 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         boolean hasAddIntent = isAffirmativeConfirmation
                 || q.contains("agreg") || q.contains("adicion") || q.contains("anad") || q.contains("inclu")
                 || q.contains("contrat") || q.contains("pon") || q.contains("met") || q.contains("sum")
-                || q.contains("quiero") || q.contains("deseo") || q.contains("me gustaria") || q.contains("reserv");
+                || q.contains("quiero") || q.contains("deseo") || q.contains("me gustaria") || q.contains("reserv")
+                || (detectedServiceKeyword != null && (q.startsWith("el de ") || q.startsWith("el ") || q.startsWith("la ") || q.startsWith("servicio de ")));
 
         // Evitar confundir una pregunta pura de precio ("¿cuánto cuesta el spa?") con
         // orden de agregarlo,
@@ -1398,7 +1402,8 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             return "Sof\u00EDa";
         }
         String trimmed = rawName.trim();
-        // Si el archivo .properties se leyó con ISO-8859-1 y corrompió la 'í' ("Sofa", "Sofa", "SofÃa"), se corrige a "Sofía"
+        // Si el archivo .properties se leyó con ISO-8859-1 y corrompió la 'í' ("Sofa",
+        // "Sofa", "SofÃa"), se corrige a "Sofía"
         String lower = trimmed.toLowerCase(Locale.ROOT);
         if (lower.startsWith("sof") || trimmed.contains("\uFFFD") || trimmed.contains("Ã")) {
             return "Sof\u00EDa";
