@@ -16,6 +16,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     boolean existsByClientId(Long clientId);
 
+    Optional<Reservation> findTopByOrderByIdDesc();
+
     @Query("SELECT r FROM Reservation r WHERE r.client.id = :clientId")
     List<Reservation> findByClientId(@Param("clientId") Long clientId);
 
