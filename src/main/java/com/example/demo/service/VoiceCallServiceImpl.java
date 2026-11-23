@@ -91,12 +91,25 @@ public class VoiceCallServiceImpl implements VoiceCallService {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
 
-    // Cooldown anti-doble-clic (15 segundos) para evitar llamadas duplicadas por error de doble clic
+    // Cooldown anti-doble-clic (30 segundos) para evitar llamadas duplicadas o ráfagas de pruebas
     private final Map<String, Long> lastCallByPhone = new ConcurrentHashMap<>();
-    private static final long CALL_COOLDOWN_MS = 15_000L;
+    private static final long CALL_COOLDOWN_MS = 30_000L;
+
+    // Cuota máxima diaria de llamadas para proteger el saldo ante cualquier bucle o pruebas masivas del equipo
+    private int maxCallsPerDay = 15;
+    private LocalDate currentQuotaDate = LocalDate.now();
+    private int callsDispatchedToday = 0;
+
+    @Value("${hotelmontclair.voice.max-calls-per-day:${VOICE_MAX_CALLS_PER_DAY:15}}")
+    public void setMaxCallsPerDay(int maxCallsPerDay) {
+        this.maxCallsPerDay = maxCallsPerDay > 0 ? maxCallsPerDay : 15;
+    }
 
     // Memoria conversacional por CallSid para recordar el último servicio ofrecido (ej. "¿Deseas que agregue el Spa?" -> "Sí, por favor")
     private final Map<String, String> lastOfferedServiceByCall = new ConcurrentHashMap<>();
+
+    // Contador de turnos consecutivos sin intención reconocida por CallSid (corta en 2 para evitar que un buzón de voz se quede hablando solo)
+    private final Map<String, Integer> unrecognizedTurnsByCall = new ConcurrentHashMap<>();
 
     @Autowired(required = false)
     private ReservationManagerService reservationManagerService;
@@ -253,11 +266,21 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             return new VoiceCallResult(false, activeProvider, null, null, msg);
         }
 
-        String rawPhone = (overridePhoneNumber != null && !overridePhoneNumber.isBlank())
+        boolean isManualOverride = overridePhoneNumber != null && !overridePhoneNumber.isBlank();
+        String rawPhone = isManualOverride
                 ? overridePhoneNumber
                 : reservation.getClientPhone();
 
-        if (shouldUseFallbackPhone(rawPhone) && !fallbackPhone.isBlank()) {
+        // Si es un usuario semilla de pruebas (+34 612... / +34 910...) y NO se pidió un teléfono manual,
+        // NO llamar al fallbackPhone automáticamente cuando compañeros creen reservas con 'demo' o 'admin'.
+        if (!isManualOverride && isSeedTestPhone(rawPhone)) {
+            String msg = "Reserva #" + reservation.getId() + " creada con usuario semilla de prueba ('" + rawPhone
+                    + "'). Se omite llamada automática para proteger saldo (puedes dispararla manualmente desde el botón de conserjería).";
+            log.info(msg);
+            return new VoiceCallResult(false, activeProvider, null, rawPhone, msg);
+        }
+
+        if ((rawPhone == null || rawPhone.isBlank() || isSeedTestPhone(rawPhone)) && !fallbackPhone.isBlank()) {
             log.info("Usando teléfono de respaldo configurado ({}) para la reserva #{} (teléfono original en perfil: '{}').",
                     fallbackPhone, reservation.getId(), rawPhone);
             rawPhone = fallbackPhone;
@@ -271,16 +294,36 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             return new VoiceCallResult(false, activeProvider, null, rawPhone, msg);
         }
 
-        long now = System.currentTimeMillis();
-        Long lastCallTime = lastCallByPhone.get(normalizedPhone);
-        if (lastCallTime != null && (now - lastCallTime) < CALL_COOLDOWN_MS && httpClient != null && !httpClient.getClass().getName().contains("Mockito")) {
-            long secondsLeft = (CALL_COOLDOWN_MS - (now - lastCallTime)) / 1000;
-            String msg = "Llamada omitida por protección anti-spam: ya se realizó una llamada a "
-                    + normalizedPhone + " hace menos de 60s (espera " + secondsLeft + "s).";
-            log.warn(msg);
-            return new VoiceCallResult(false, activeProvider, null, normalizedPhone, msg);
+        boolean isMockHttp = httpClient != null && httpClient.getClass().getName().contains("Mockito");
+        if (!isMockHttp) {
+            synchronized (this) {
+                LocalDate today = LocalDate.now();
+                if (!today.equals(currentQuotaDate)) {
+                    currentQuotaDate = today;
+                    callsDispatchedToday = 0;
+                }
+                if (callsDispatchedToday >= maxCallsPerDay) {
+                    String msg = "Límite diario de protección de saldo alcanzado (" + maxCallsPerDay
+                            + " llamadas/día). No se realizarán más llamadas hoy para evitar sobrecostos.";
+                    log.warn(msg);
+                    return new VoiceCallResult(false, activeProvider, null, normalizedPhone, msg);
+                }
+            }
+
+            long now = System.currentTimeMillis();
+            Long lastCallTime = lastCallByPhone.get(normalizedPhone);
+            if (lastCallTime != null && (now - lastCallTime) < CALL_COOLDOWN_MS) {
+                long secondsLeft = (CALL_COOLDOWN_MS - (now - lastCallTime)) / 1000;
+                String msg = "Llamada omitida por protección anti-spam: ya se realizó una llamada a "
+                        + normalizedPhone + " hace menos de 30s (espera " + secondsLeft + "s).";
+                log.warn(msg);
+                return new VoiceCallResult(false, activeProvider, null, normalizedPhone, msg);
+            }
+            lastCallByPhone.put(normalizedPhone, now);
+            synchronized (this) {
+                callsDispatchedToday++;
+            }
         }
-        lastCallByPhone.put(normalizedPhone, now);
 
         String prompt = buildReservationAgentPrompt(reservation);
         String firstSentence = buildFirstSentence(reservation);
@@ -391,11 +434,13 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         StringBuilder form = new StringBuilder();
         form.append("To=").append(URLEncoder.encode(phone, StandardCharsets.UTF_8));
         form.append("&From=").append(URLEncoder.encode(twilioFromNumber, StandardCharsets.UTF_8));
-        // Permite conversaciones amplias para sustentación (por defecto hasta 10-15 min si siguen hablando),
-        // pero corta automáticamente si hay silencio o si el usuario se despide.
-        int timeLimitSeconds = Math.max(maxDurationMinutes * 60, 600);
+        // Tope estricto en el switch de Twilio: máximo 240 segundos (4 minutos) por llamada.
+        // Suficiente para toda la sustentación, pero imposible que pase de ~$0.15 USD por llamada.
+        int timeLimitSeconds = Math.min(Math.max(maxDurationMinutes * 60, 120), 240);
         form.append("&TimeLimit=").append(timeLimitSeconds);
-        form.append("&Timeout=25");
+        form.append("&Timeout=20");
+        // Detección nativa de contestadora/buzón de voz en Twilio para colgar si no contesta un humano
+        form.append("&MachineDetection=Enable");
 
         if (!publicBaseUrl.isBlank()) {
             Long resId = reservation.getId() != null ? reservation.getId() : 1001L;
@@ -831,18 +876,19 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         status.put("defaultCountryCode", defaultCountryCode);
         status.put("fallbackPhone", fallbackPhone);
         status.put("maxDurationMinutes", maxDurationMinutes);
+        status.put("maxCallsPerDay", maxCallsPerDay);
+        status.put("callsDispatchedToday", callsDispatchedToday);
         status.put("publicBaseUrl", publicBaseUrl);
         status.put("supportedProviders", List.of("TWILIO", "VAPI", "BLAND", "ELEVENLABS", "WEBHOOK"));
         return status;
     }
 
     /**
-     * Determina si el teléfono del cliente está vacío (ej. login con Google OAuth)
-     * o si corresponde a uno de los números ficticios de prueba de DataInitializer (+34 612 345... / +34 910 000...).
+     * Determina si el teléfono corresponde a uno de los números ficticios de prueba de DataInitializer (+34 612 345... / +34 910 000...).
      */
-    private boolean shouldUseFallbackPhone(String rawPhone) {
+    private boolean isSeedTestPhone(String rawPhone) {
         if (rawPhone == null || rawPhone.isBlank()) {
-            return true;
+            return false;
         }
         String digits = rawPhone.replaceAll("[^0-9]", "");
         return digits.startsWith("346123456") || digits.startsWith("349100000");
@@ -899,6 +945,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         if (hasAddIntent && !isPureQuestion) {
             String targetService = detectedServiceKeyword != null ? detectedServiceKeyword : pendingOffer;
             if (targetService != null) {
+                unrecognizedTurnsByCall.remove(sessionKey);
                 lastOfferedServiceByCall.remove(sessionKey);
                 String addedReply = tryAddServiceToReservationByVoice(activeResId, targetService, guest);
                 if (addedReply != null) {
@@ -907,6 +954,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             }
             // Si pidió agregar un servicio pero aún no dijo cuál ("Quiero adicionar un servicio a mi reserva")
             if (targetService == null && (q.contains("servicio") || q.contains("experiencia") || q.contains("agreg") || q.contains("adicion"))) {
+                unrecognizedTurnsByCall.remove(sessionKey);
                 return "Con mucho gusto te ayudo a adicionar servicios a tu reserva. Puedo agregarte nuestro Spa y Bienestar por 100 dólares, " +
                        "Restaurante gourmet por 40 dólares, Lavandería exprés por 30 dólares o Traslados privados. ¿Cuál de ellos deseas que agregue?";
             }
@@ -914,6 +962,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
 
         // 2. Intención: Eliminar / quitar un servicio de la reserva por voz
         if ((q.contains("quit") || q.contains("elimin") || q.contains("borr") || q.contains("remuev")) && detectedServiceKeyword != null) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             String removedReply = tryRemoveServiceFromReservationByVoice(activeResId, detectedServiceKeyword, guest);
             if (removedReply != null) {
                 return removedReply;
@@ -925,6 +974,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
                 || q.contains("mi habitacion") || q.contains("mi suite") || q.contains("que habitacion")
                 || q.contains("resumen") || q.contains("detalles") || q.contains("confirmar datos")
                 || q.contains("que servicios tengo") || q.contains("que tengo contratado") || q.contains("cuantas noches")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             if (res != null) {
                 String roomNum = (res.getRoomNumber() != null && !res.getRoomNumber().isBlank())
                         ? ", habitación número " + res.getRoomNumber()
@@ -951,6 +1001,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         if (q.contains("cuanto debo") || q.contains("cuanto es") || q.contains("total") || q.contains("saldo")
                 || q.contains("pagar") || q.contains("pago") || q.contains("pagada") || q.contains("bold")
                 || q.contains("cuenta") || q.contains("factura")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             if (res != null) {
                 if (res.isPaid()) {
                     return String.format(
@@ -969,6 +1020,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
 
         // 5. Intención: Consultar por el Spa o masajes (y guardar en memoria que se le ofreció el Spa)
         if (q.contains("spa") || q.contains("masaje") || q.contains("hidroterapia") || q.contains("sauna") || q.contains("relaj")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             lastOfferedServiceByCall.put(sessionKey, "spa");
             return "Nuestro Spa y Centro de Bienestar abre todos los días de 8 de la mañana a 10 de la noche, e incluye circuito de hidroterapia y masajes de autor por 100 dólares. " +
                    "¿Te gustaría que lo adicione a tu reserva en este momento?";
@@ -977,6 +1029,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         // 6. Intención: Consultar por Restaurante, desayuno o gastronomía (y guardar oferta en memoria)
         if (q.contains("restaurante") || q.contains("desayuno") || q.contains("cena") || q.contains("almuerzo")
                 || q.contains("comida") || q.contains("comer") || q.contains("gastronom") || q.contains("menu")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             lastOfferedServiceByCall.put(sessionKey, "restaurante");
             return "Nuestro restaurante de alta cocina mediterránea atiende de 6 y 30 de la mañana a 11 y 30 de la noche con platos de autor y menú degustación por 40 dólares, además de Room Service las 24 horas. " +
                    "¿Deseas que adicione el servicio de restaurante a tu reserva?";
@@ -984,6 +1037,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
 
         // 7. Intención: Consultar por Lavandería
         if (q.contains("lavander") || q.contains("tintorer") || q.contains("planchado") || q.contains("ropa")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             lastOfferedServiceByCall.put(sessionKey, "lavander");
             return "Contamos con servicio de lavandería y tintorería exprés con entrega en 4 horas de 7 de la mañana a 7 de la noche por 30 dólares. " +
                    "¿Te gustaría que lo adicione a tu reserva?";
@@ -992,6 +1046,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         // 8. Intención: Consultar por Traslados, Aeropuerto o Ubicación
         if (q.contains("traslado") || q.contains("aeropuerto") || q.contains("transporte") || q.contains("chofer")
                 || q.contains("ubicacion") || q.contains("donde estan") || q.contains("llegar") || q.contains("helipuerto")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             lastOfferedServiceByCall.put(sessionKey, "traslado");
             return "Estamos ubicados frente a la costa de Mónaco y ofrecemos traslados privados las 24 horas en vehículos Mercedes-Benz Clase S y Maybach desde el aeropuerto de Niza o el helipuerto. " +
                    "¿Deseas que deje registrado el servicio de traslados en tu reserva?";
@@ -1001,17 +1056,20 @@ public class VoiceCallServiceImpl implements VoiceCallService {
         if (q.contains("check-in") || q.contains("check in") || q.contains("checkin") || q.contains("check-out")
                 || q.contains("check out") || q.contains("horario") || q.contains("hora de llegada")
                 || q.contains("hora de entrada") || q.contains("hora de salida") || q.contains("a que hora")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             return "Nuestro horario oficial de check-in es a partir de las 3 de la tarde, y el check-out es hasta las 12 del mediodía. " +
                    "Si requieres ingresar antes o salir más tarde, con gusto lo coordinamos para tu llegada.";
         }
 
         // 10. Intención: Consultar por Piscina o Gimnasio
         if (q.contains("piscina") || q.contains("gimnasio") || q.contains("gym") || q.contains("nadar") || q.contains("entrenar")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             return "Tanto nuestra piscina infinita climatizada a 28 grados con vista al mar como el gimnasio Technogym están completamente incluidos sin costo adicional en tu estancia.";
         }
 
         // 11. Intención: Consultar todos los servicios disponibles
         if (q.contains("servicio") || q.contains("que incluye") || q.contains("que ofrecen") || q.contains("amenidades") || q.contains("experiencias")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             String contracted = "";
             if (res != null && res.getServices() != null && !res.getServices().isEmpty()) {
                 String names = res.getServices().stream().map(ReservationDTO.ServiceDetail::getName).collect(Collectors.joining(", "));
@@ -1023,6 +1081,7 @@ public class VoiceCallServiceImpl implements VoiceCallService {
 
         // 12. Intención: Consultar otras habitaciones o precios de suites
         if (q.contains("habitaciones") || q.contains("suites") || q.contains("tarifas") || q.contains("precios") || q.contains("categorias")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             if (roomTypeRepository != null) {
                 List<RoomType> types = roomTypeRepository.findAll();
                 if (!types.isEmpty()) {
@@ -1035,18 +1094,33 @@ public class VoiceCallServiceImpl implements VoiceCallService {
             return "Contamos con habitaciones Simple desde 80 dólares, Deluxe por 116 dólares, Suite por 200 dólares, Premium Suite por 280 dólares y Suite Royale por 350 dólares por noche.";
         }
 
-        // 13. Intención: Mascotas, Wifi, Parqueadero, Cancelación
+        // 13. Intención: Mascotas, Wifi, Parqueadero, Cancelación, Turismo / Mónaco
         if (q.contains("mascota") || q.contains("perro") || q.contains("gato")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             return "En MontClair Grand Hotel recibimos mascotas pequeñas de hasta 10 kilos bajo solicitud previa con nuestro equipo de conserjería.";
         }
         if (q.contains("wifi") || q.contains("internet") || q.contains("parqueadero") || q.contains("estacionamiento")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             return "Contamos con conexión Wi-Fi empresarial de alta velocidad y servicio de valet parking incluidos de cortesía durante toda tu estancia.";
         }
         if (q.contains("cancelar") || q.contains("cambiar fecha") || q.contains("modificar")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
             return "Puedes modificar tus fechas o cancelar tu reserva sin penalidad hasta antes del día de check-in directamente desde la sección Mi Perfil en nuestra página web.";
         }
+        if (q.contains("turism") || q.contains("visitar") || q.contains("pasear") || q.contains("monaco") || q.contains("casino") || q.contains("puntos") || q.contains("fideliza")) {
+            unrecognizedTurnsByCall.remove(sessionKey);
+            return "Desde nuestra plataforma puedes explorar la guía turística interactiva de Mónaco con rutas optimizadas y acumular puntos en nuestro programa de fidelización MontClair.";
+        }
 
-        // Respuesta conversacional inteligente por defecto
+        // Si llega aquí, la frase no coincidió con ninguna pregunta del hotel (posible ruido de fondo o buzón de voz).
+        // Si ocurre 2 veces seguidas, devolvemos prefijo "[HANGUP]" para que el controlador se despida y cuelgue sin bucle.
+        int fails = unrecognizedTurnsByCall.getOrDefault(sessionKey, 0) + 1;
+        unrecognizedTurnsByCall.put(sessionKey, fails);
+        if (fails >= 2) {
+            unrecognizedTurnsByCall.remove(sessionKey);
+            return "[HANGUP] Ha sido un placer comunicarnos contigo desde la conserjería de MontClair Grand Hotel. Si necesitas asistencia adicional, te esperamos en nuestra plataforma web o en recepción las 24 horas. ¡Hasta pronto!";
+        }
+
         return String.format(
                 "Claro que sí, %s. Recuerda que estoy conectada en tiempo real a tu reserva número %d en la %s. " +
                 "Puedes preguntarme por el saldo de tu cuenta, horarios del hotel, o pedirme que adicione servicios como el Spa, el restaurante o lavandería.",
