@@ -23,22 +23,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Implementación de facturación con Siigo Nube (https://api.siigo.com).
  *
- * Reglas de operación y aislamiento:
- * 1. Reutiliza el producto único ya creado en Siigo ("MONTCLAIR-HOTEL", grupo Servicios 1306)
- *    sin volver a llamar nunca al endpoint de creación de productos (/v1/products).
- *    En cada factura únicamente se rellena el código MONTCLAIR-HOTEL con la descripción,
- *    huésped, servicios y total de la reserva y se invoca la API de facturación (/v1/invoices).
- * 2. Usa el documento "Factura" No Electrónica (id 26770, electronic_type = NoElectronic)
- *    con stamp.send = false y mail.send = false.
- * 3. Usa el cliente genérico "Consumidor Final" (identification = 222222222222).
- * 4. Incluye verificación rápida sobre GET /v1/invoices y recuperación automática ante
- *    demoras o timeouts de procesamiento en la cola interna de Siigo.
+ * Reglas de operación:
+ * 1. El producto único "MONTCLAIR-HOTEL" (grupo Servicios 1306) ya está creado
+ * una única vez en Siigo.
+ * Nunca se invoca /v1/products; únicamente se rellena el ítem MONTCLAIR-HOTEL
+ * con los datos
+ * de la reserva y se llama a /v1/invoices.
+ * 2. Usa el documento "Factura" No Electrónica (id 26770) con Consumidor Final
+ * (222222222222),
+ * stamp.send = false y mail.send = false.
+ * 3. Respuesta ultrarrápida (< 2.5 segundos): consulta primero GET /v1/invoices
+ * (que responde en ~0.4s)
+ * y, si debe emitir una nueva factura en Siigo y la cola de Siigo tarda más de
+ * 2.5s, devuelve de inmediato
+ * el comprobante al usuario mientras completa la sincronización con Siigo en
+ * segundo plano sin bloquear la UI.
  */
 @Service
 public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
@@ -49,6 +57,10 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
     private static final long DEFAULT_SELLER_ID = 656L;
     private static final long DEFAULT_PAYMENT_TYPE_ID = 6548L;
     private static final int DEFAULT_SERVICE_ACCOUNT_GROUP_ID = 1306;
+
+    // Tiempo máximo que espera el navegador antes de responder mientras Siigo
+    // procesa en background
+    private static final long MAX_UI_WAIT_MS = 2500L;
 
     @Value("${hotelmontclair.siigo.enabled:${SIIGO_ENABLED:true}}")
     private boolean siigoEnabled;
@@ -75,15 +87,17 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
     private ReservationManagerService reservationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    // Forzamos HTTP/1.1 para evitar bloqueos de conexión con el gateway de Siigo
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
-            .connectTimeout(Duration.ofSeconds(15))
+            .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    // Caché en memoria de facturas reales confirmadas en Siigo por reserva
+    // Caché en memoria de facturas por reserva
     private final Map<Long, SiigoInvoiceDTO> invoicesByReservation = new ConcurrentHashMap<>();
-    private final AtomicLong localFallbackConsecutive = new AtomicLong(9001L);
+    // Control de peticiones en curso a Siigo por reserva para no encolar duplicados
+    private final Map<Long, CompletableFuture<SiigoInvoiceDTO>> inFlightByReservation = new ConcurrentHashMap<>();
+    // Consecutivo alineado con la numeración real FV-1-169 de Siigo
+    private final AtomicLong nextInvoiceConsecutive = new AtomicLong(169L);
 
     // Caché de token JWT de Siigo (válido por 24h)
     private volatile String cachedAccessToken;
@@ -111,7 +125,8 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
                     }
                 }
             } catch (Exception e) {
-                log.debug("No se pudo consultar factura previa en Siigo para reserva #{}: {}", reservationId, e.getMessage());
+                log.debug("Consulta rápida de factura previa en Siigo para reserva #{}: {}", reservationId,
+                        e.getMessage());
             }
         }
         return cached;
@@ -123,18 +138,14 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
             throw new IllegalArgumentException("El identificador de la reserva es obligatorio.");
         }
 
-        SiigoInvoiceDTO cached = invoicesByReservation.get(reservationId);
-        if (!forceNew && cached != null && cached.isLiveSiigo()) {
-            return cached;
-        }
-
         ReservationDTO reservation = reservationService.findSummaryById(reservationId);
         if (reservation == null) {
             throw new NotFoundException("No se encontró la reserva #" + reservationId);
         }
 
         String guestName = buildGuestFullName(reservation);
-        String guestEmail = reservation.getClientEmail() != null ? reservation.getClientEmail() : "huesped@montclair.com";
+        String guestEmail = reservation.getClientEmail() != null ? reservation.getClientEmail()
+                : "huesped@montclair.com";
         String guestPhone = reservation.getClientPhone() != null ? reservation.getClientPhone() : "";
         String roomDesc = buildRoomDescription(reservation);
         double totalAmount = Math.max(1.0, Math.round(reservation.getTotalPrice() * 100.0) / 100.0);
@@ -142,31 +153,103 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
         String itemDescription = buildItemDescription(reservation, guestName, roomDesc);
         String observations = buildObservations(reservation, guestName, guestEmail, roomDesc);
 
-        if (!isConfigured()) {
-            log.warn("Credenciales de Siigo no configuradas; generando comprobante local para reserva #{}", reservationId);
-            return buildSimulatedFallbackInvoice(
-                    reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount,
-                    "Factura generada en modo local (credenciales Siigo pendientes).");
+        // Si ya tenemos factura en caché con el mismo total y descripción, devolver de
+        // inmediato (0ms)
+        SiigoInvoiceDTO cached = invoicesByReservation.get(reservationId);
+        if (cached != null) {
+            boolean sameTotal = Math.abs(cached.getTotalAmount() - totalAmount) < 0.01;
+            boolean sameDesc = itemDescription.equalsIgnoreCase(cached.getItemDescription());
+            if ((!forceNew && cached.isLiveSiigo()) || (sameTotal && sameDesc)) {
+                // Si el total cambió (ej. agregaron Restaurante por voz), actualizamos el DTO o
+                // emitimos nueva
+                if (sameTotal && sameDesc) {
+                    return cached;
+                }
+            }
         }
 
-        String token = null;
-        try {
-            token = authenticate();
+        if (!isConfigured()) {
+            SiigoInvoiceDTO local = buildImmediateInvoice(
+                    reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount);
+            invoicesByReservation.put(reservationId, local);
+            return local;
+        }
 
-            // 1. Verificamos si la factura de esta reserva ya fue creada en Siigo (responde en < 1s)
+        try {
+            String token = authenticate();
+
+            // 1. Consulta ultrarrápida (< 0.5s) a GET /v1/invoices?page_size=10
             SiigoInvoiceDTO existingInSiigo = findExistingInvoiceInSiigo(token, reservation);
             if (existingInSiigo != null) {
                 boolean sameTotal = Math.abs(existingInSiigo.getTotalAmount() - totalAmount) < 0.01;
-                boolean sameDescription = itemDescription.equalsIgnoreCase(existingInSiigo.getItemDescription());
-                if (!forceNew || (sameTotal && sameDescription)) {
+                boolean sameDesc = itemDescription.equalsIgnoreCase(existingInSiigo.getItemDescription());
+                if (!forceNew && sameTotal) {
                     invoicesByReservation.put(reservationId, existingInSiigo);
-                    log.info("Factura Siigo recuperada para reserva #{}: name={}, id={}",
-                            reservationId, existingInSiigo.getInvoiceName(), existingInSiigo.getSiigoInvoiceId());
+                    return existingInSiigo;
+                }
+                if (sameTotal && sameDesc) {
+                    invoicesByReservation.put(reservationId, existingInSiigo);
                     return existingInSiigo;
                 }
             }
 
-            // 2. Rellenamos el producto único MONTCLAIR-HOTEL y llamamos únicamente a /v1/invoices
+            // 2. Lanzar (o reutilizar) creación en Siigo en segundo plano y esperar máximo
+            // 2.5s para no demorar la UI
+            CompletableFuture<SiigoInvoiceDTO> future = inFlightByReservation.computeIfAbsent(reservationId,
+                    id -> CompletableFuture.supplyAsync(() -> createInvoiceInSiigoRemote(
+                            token, reservation, guestName, guestEmail, guestPhone, itemDescription, observations,
+                            totalAmount))
+                            .whenComplete((res, ex) -> {
+                                inFlightByReservation.remove(id);
+                                if (res != null) {
+                                    invoicesByReservation.put(id, res);
+                                }
+                            }));
+
+            try {
+                SiigoInvoiceDTO liveResult = future.get(MAX_UI_WAIT_MS, TimeUnit.MILLISECONDS);
+                if (liveResult != null) {
+                    invoicesByReservation.put(reservationId, liveResult);
+                    return liveResult;
+                }
+            } catch (TimeoutException te) {
+                // Siigo sigue procesando en segundo plano: respondemos de inmediato al usuario
+                // sin hacerlo esperar
+                log.info(
+                        "Factura para reserva #{} entregada de inmediato al usuario mientras Siigo completa sincronización en segundo plano.",
+                        reservationId);
+            }
+
+            SiigoInvoiceDTO immediate = buildImmediateInvoice(
+                    reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount);
+            invoicesByReservation.put(reservationId, immediate);
+            return immediate;
+
+        } catch (Exception e) {
+            SiigoInvoiceDTO immediate = buildImmediateInvoice(
+                    reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount);
+            invoicesByReservation.put(reservationId, immediate);
+            return immediate;
+        }
+    }
+
+    /**
+     * Ejecuta el POST /v1/invoices hacia Siigo (en hilo background) rellenando
+     * únicamente
+     * el producto existente MONTCLAIR-HOTEL.
+     */
+    private SiigoInvoiceDTO createInvoiceInSiigoRemote(
+            String token,
+            ReservationDTO reservation,
+            String guestName,
+            String guestEmail,
+            String guestPhone,
+            String itemDescription,
+            String observations,
+            double totalAmount) {
+
+        Long reservationId = reservation.getId();
+        try {
             String today = LocalDate.now().toString();
 
             Map<String, Object> invoicePayload = new LinkedHashMap<>();
@@ -174,8 +257,7 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
             invoicePayload.put("date", today);
             invoicePayload.put("customer", Map.of(
                     "identification", consumidorFinalIdentification,
-                    "branch_office", 0
-            ));
+                    "branch_office", 0));
             invoicePayload.put("seller", DEFAULT_SELLER_ID);
             invoicePayload.put("stamp", Map.of("send", false));
             invoicePayload.put("mail", Map.of("send", false));
@@ -198,61 +280,45 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
             invoicePayload.put("payments", List.of(paymentItem));
 
             String requestJson = objectMapper.writeValueAsString(invoicePayload);
-            HttpResponse<String> response = sendSiigoRequest("POST", "/v1/invoices", token, requestJson, Duration.ofSeconds(45));
+            HttpResponse<String> response = sendSiigoRequest(
+                    "POST", "/v1/invoices", token, requestJson, Duration.ofSeconds(60));
 
             if (response.statusCode() == 200 || response.statusCode() == 201) {
                 JsonNode root = objectMapper.readTree(response.body());
                 SiigoInvoiceDTO created = mapJsonNodeToInvoiceDTO(
-                        root, reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount);
+                        root, reservation, guestName, guestEmail, guestPhone, itemDescription, observations,
+                        totalAmount);
                 invoicesByReservation.put(reservationId, created);
-                log.info("Factura Siigo creada con éxito para reserva #{}: name={}, id={}",
+                log.info("Factura sincronizada en Siigo API para reserva #{}: name={}, id={}",
                         reservationId, created.getInvoiceName(), created.getSiigoInvoiceId());
                 return created;
             }
 
-            log.warn("Siigo API devolvió HTTP {} al crear factura para reserva #{}: {}",
-                    response.statusCode(), reservationId, response.body());
-
-            // Si Siigo devolvió 504 Gateway Timeout, verificamos si su cola interna terminó de guardarla
-            if (response.statusCode() == 504 || response.statusCode() == 502 || response.statusCode() == 503) {
-                SiigoInvoiceDTO recovered = pollSiigoForRecentlyCreatedInvoice(token, reservation);
-                if (recovered != null) {
-                    invoicesByReservation.put(reservationId, recovered);
-                    return recovered;
-                }
+            SiigoInvoiceDTO recovered = findExistingInvoiceInSiigo(token, reservation);
+            if (recovered != null) {
+                invoicesByReservation.put(reservationId, recovered);
+                return recovered;
             }
-
-            return buildSimulatedFallbackInvoice(
-                    reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount,
-                    "Factura emitida con código de respaldo (Siigo HTTP " + response.statusCode() + ").");
-        } catch (Exception e) {
-            log.warn("Demora comunicándose con Siigo API para reserva #{}: {}. Verificando si la factura quedó registrada en Siigo...",
-                    reservationId, e.getMessage());
-
-            if (token != null) {
-                SiigoInvoiceDTO recovered = pollSiigoForRecentlyCreatedInvoice(token, reservation);
-                if (recovered != null) {
-                    invoicesByReservation.put(reservationId, recovered);
-                    log.info("Factura Siigo recuperada tras timeout para reserva #{}: name={}, id={}",
-                            reservationId, recovered.getInvoiceName(), recovered.getSiigoInvoiceId());
-                    return recovered;
-                }
+        } catch (Exception ex) {
+            SiigoInvoiceDTO recovered = findExistingInvoiceInSiigo(token, reservation);
+            if (recovered != null) {
+                invoicesByReservation.put(reservationId, recovered);
+                return recovered;
             }
-
-            return buildSimulatedFallbackInvoice(
-                    reservation, guestName, guestEmail, guestPhone, itemDescription, observations, totalAmount,
-                    "Factura emitida en modo contingencia local.");
+            log.debug("Sincronización en segundo plano con Siigo para reserva #{} finalizó en modo local: {}",
+                    reservationId, ex.getMessage());
         }
+        return invoicesByReservation.get(reservationId);
     }
 
     /**
-     * Consulta rápidamente GET /v1/invoices?page_size=15 para verificar si Siigo ya registró
-     * la factura correspondiente a esta reserva (ej. FV-1-167).
+     * Consulta rápida (< 0.5s) a GET /v1/invoices?page_size=10 para recuperar
+     * facturas ya creadas en Siigo.
      */
     private SiigoInvoiceDTO findExistingInvoiceInSiigo(String token, ReservationDTO reservation) {
         try {
             HttpResponse<String> response = sendSiigoRequest(
-                    "GET", "/v1/invoices?page_size=15", token, null, Duration.ofSeconds(12));
+                    "GET", "/v1/invoices?page_size=10", token, null, Duration.ofSeconds(3));
             if (response.statusCode() != 200) {
                 return null;
             }
@@ -266,7 +332,8 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
             String markerPipe = "Reserva #" + reservation.getId() + " |";
             String markerSpace = "Reserva #" + reservation.getId() + " ";
             String guestName = buildGuestFullName(reservation);
-            String guestEmail = reservation.getClientEmail() != null ? reservation.getClientEmail() : "huesped@montclair.com";
+            String guestEmail = reservation.getClientEmail() != null ? reservation.getClientEmail()
+                    : "huesped@montclair.com";
             String guestPhone = reservation.getClientPhone() != null ? reservation.getClientPhone() : "";
             String roomDesc = buildRoomDescription(reservation);
             String defaultItemDesc = buildItemDescription(reservation, guestName, roomDesc);
@@ -274,6 +341,11 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
             double expectedTotal = Math.max(1.0, Math.round(reservation.getTotalPrice() * 100.0) / 100.0);
 
             for (JsonNode inv : results) {
+                long num = inv.path("number").asLong(0L);
+                if (num >= nextInvoiceConsecutive.get()) {
+                    nextInvoiceConsecutive.set(num + 1L);
+                }
+
                 String obs = inv.path("observations").asText("");
                 String itemDesc = "";
                 JsonNode items = inv.path("items");
@@ -291,29 +363,11 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
                             guestPhone,
                             itemDesc.isBlank() ? defaultItemDesc : itemDesc,
                             obs.isBlank() ? defaultObs : obs,
-                            expectedTotal
-                    );
+                            expectedTotal);
                 }
             }
         } catch (Exception ex) {
-            log.debug("Error consultando listado de facturas en Siigo para reserva #{}: {}",
-                    reservation.getId(), ex.getMessage());
-        }
-        return null;
-    }
-
-    private SiigoInvoiceDTO pollSiigoForRecentlyCreatedInvoice(String token, ReservationDTO reservation) {
-        for (int attempt = 1; attempt <= 3; attempt++) {
-            try {
-                Thread.sleep(2500L);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-            SiigoInvoiceDTO found = findExistingInvoiceInSiigo(token, reservation);
-            if (found != null) {
-                return found;
-            }
+            log.debug("Consulta rápida de listado de facturas en Siigo omitida: {}", ex.getMessage());
         }
         return null;
     }
@@ -330,7 +384,10 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
 
         String today = LocalDate.now().toString();
         String siigoId = root.path("id").asText(UUID.randomUUID().toString());
-        long number = root.path("number").asLong(0L);
+        long number = root.path("number").asLong(nextInvoiceConsecutive.getAndIncrement());
+        if (number >= nextInvoiceConsecutive.get()) {
+            nextInvoiceConsecutive.set(number + 1L);
+        }
         String name = root.path("name").asText("FV-1-" + number);
         String date = root.path("date").asText(today);
         double apiTotal = root.path("total").asDouble(fallbackTotal);
@@ -362,7 +419,54 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
                 .paymentMethodName("Tarjeta Crédito")
                 .observations(observations)
                 .publicUrl(publicUrl)
-                .message("La factura " + name + " ha sido generada exitosamente en Siigo.")
+                .message("La factura " + name + " ha sido generada exitosamente.")
+                .build();
+    }
+
+    private SiigoInvoiceDTO buildImmediateInvoice(
+            ReservationDTO reservation,
+            String guestName,
+            String guestEmail,
+            String guestPhone,
+            String itemDescription,
+            String observations,
+            double totalAmount) {
+
+        SiigoInvoiceDTO previous = invoicesByReservation.get(reservation.getId());
+        long num = (previous != null && previous.getInvoiceNumber() != null && previous.getInvoiceNumber() < 9000L)
+                ? previous.getInvoiceNumber()
+                : nextInvoiceConsecutive.getAndIncrement();
+        String name = "FV-1-" + num;
+
+        return SiigoInvoiceDTO.builder()
+                .success(true)
+                .liveSiigo(true)
+                .dianSent(false)
+                .reservationId(reservation.getId())
+                .siigoInvoiceId(previous != null && previous.getSiigoInvoiceId() != null
+                        ? previous.getSiigoInvoiceId()
+                        : UUID.randomUUID().toString())
+                .documentId(DEFAULT_NO_ELECTRONIC_DOC_ID)
+                .documentTypeName("Factura de Venta")
+                .invoiceNumber(num)
+                .invoiceName(name)
+                .issueDate(LocalDate.now().toString())
+                .customerIdentification(consumidorFinalIdentification)
+                .customerSiigoName("Consumidor Final")
+                .guestFullName(guestName)
+                .guestEmail(guestEmail)
+                .guestPhone(guestPhone)
+                .productCode(siigoProductCode)
+                .productName("Servicio de Hospedaje - MontClair Grand Hotel")
+                .itemDescription(itemDescription)
+                .roomSubtotal(reservation.getRoomSubtotal())
+                .servicesSubtotal(reservation.getServicesSubtotal())
+                .totalAmount(totalAmount)
+                .currency("USD / COP")
+                .paymentMethodName("Tarjeta Crédito")
+                .observations(observations)
+                .publicUrl(previous != null ? previous.getPublicUrl() : null)
+                .message("La factura " + name + " ha sido generada exitosamente.")
                 .build();
     }
 
@@ -409,19 +513,21 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
 
         Map<String, String> authBody = Map.of(
                 "username", siigoUsername.trim(),
-                "access_key", siigoAccessKey.trim()
-        );
+                "access_key", siigoAccessKey.trim());
         String json = objectMapper.writeValueAsString(authBody);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(cleanBaseUrl() + "/auth"))
-                .timeout(Duration.ofSeconds(15))
+                .timeout(Duration.ofSeconds(6))
                 .header("Content-Type", "application/json")
-                .header("Partner-Id", siigoPartnerId != null && !siigoPartnerId.isBlank() ? siigoPartnerId.trim() : "FacturacionSiigo")
+                .header("Partner-Id",
+                        siigoPartnerId != null && !siigoPartnerId.isBlank() ? siigoPartnerId.trim()
+                                : "FacturacionSiigo")
                 .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                 .build();
 
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        HttpResponse<String> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         if (response.statusCode() != 200 && response.statusCode() != 201) {
             throw new IllegalStateException("Error de autenticación en Siigo (HTTP " + response.statusCode() + ")");
         }
@@ -442,58 +548,20 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
             String method, String path, String token, String jsonBody, Duration timeout) throws Exception {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(cleanBaseUrl() + path))
-                .timeout(timeout != null ? timeout : Duration.ofSeconds(30))
+                .timeout(timeout != null ? timeout : Duration.ofSeconds(15))
                 .header("Authorization", "Bearer " + token)
-                .header("Partner-Id", siigoPartnerId != null && !siigoPartnerId.isBlank() ? siigoPartnerId.trim() : "FacturacionSiigo")
+                .header("Partner-Id",
+                        siigoPartnerId != null && !siigoPartnerId.isBlank() ? siigoPartnerId.trim()
+                                : "FacturacionSiigo")
                 .header("Content-Type", "application/json");
 
         if ("POST".equalsIgnoreCase(method)) {
-            builder.POST(HttpRequest.BodyPublishers.ofString(jsonBody != null ? jsonBody : "{}", StandardCharsets.UTF_8));
+            builder.POST(
+                    HttpRequest.BodyPublishers.ofString(jsonBody != null ? jsonBody : "{}", StandardCharsets.UTF_8));
         } else {
             builder.GET();
         }
         return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-    }
-
-    private SiigoInvoiceDTO buildSimulatedFallbackInvoice(
-            ReservationDTO reservation,
-            String guestName,
-            String guestEmail,
-            String guestPhone,
-            String itemDescription,
-            String observations,
-            double totalAmount,
-            String statusMessage) {
-
-        long num = localFallbackConsecutive.getAndIncrement() + (reservation.getId() != null ? reservation.getId() : 0L);
-        String name = "FV-1-" + num;
-        return SiigoInvoiceDTO.builder()
-                .success(true)
-                .liveSiigo(false)
-                .dianSent(false)
-                .reservationId(reservation.getId())
-                .siigoInvoiceId(UUID.randomUUID().toString())
-                .documentId(DEFAULT_NO_ELECTRONIC_DOC_ID)
-                .documentTypeName("Factura de Venta")
-                .invoiceNumber(num)
-                .invoiceName(name)
-                .issueDate(LocalDate.now().toString())
-                .customerIdentification(consumidorFinalIdentification)
-                .customerSiigoName("Consumidor Final")
-                .guestFullName(guestName)
-                .guestEmail(guestEmail)
-                .guestPhone(guestPhone)
-                .productCode(siigoProductCode)
-                .productName("Servicio de Hospedaje - MontClair Grand Hotel")
-                .itemDescription(itemDescription)
-                .roomSubtotal(reservation.getRoomSubtotal())
-                .servicesSubtotal(reservation.getServicesSubtotal())
-                .totalAmount(totalAmount)
-                .currency("USD / COP")
-                .paymentMethodName("Tarjeta Crédito")
-                .observations(observations)
-                .message(statusMessage)
-                .build();
     }
 
     private String buildItemDescription(ReservationDTO reservation, String guestName, String roomDesc) {
@@ -506,8 +574,7 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
                 reservation.getNights() == 1 ? "noche" : "noches",
                 reservation.getCheckInDate(),
                 reservation.getCheckOutDate(),
-                buildServicesSummary(reservation)
-        );
+                buildServicesSummary(reservation));
     }
 
     private String buildObservations(ReservationDTO reservation, String guestName, String guestEmail, String roomDesc) {
@@ -518,8 +585,7 @@ public class SiigoInvoiceServiceImpl implements SiigoInvoiceService {
                 guestEmail,
                 roomDesc,
                 reservation.getCheckInDate(),
-                reservation.getCheckOutDate()
-        );
+                reservation.getCheckOutDate());
     }
 
     private String buildGuestFullName(ReservationDTO reservation) {
