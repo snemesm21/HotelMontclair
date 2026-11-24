@@ -13,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,10 +36,17 @@ public class AiAssistantServiceImpl implements AiAssistantService {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    @Value("${ai.n8n.webhook-url:https://primary-production-4cb5.up.railway.app/webhook/chat-montclair}")
+    @Value("${ai.n8n.webhook-url:${N8N_WEBHOOK_URL:https://n8n-n8n.mmzlot.easypanel.host/webhook/chat-montclair}}")
     private String n8nWebhookUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = createRestTemplate();
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(4500);
+        return new RestTemplate(factory);
+    }
 
     @Override
     public String generateResponse(String userMessage, String sessionId) {
@@ -149,7 +157,10 @@ public class AiAssistantServiceImpl implements AiAssistantService {
 
             Map<String, Object> body = new HashMap<>();
             body.put("message", userMessage);
+            body.put("chatInput", userMessage);
             body.put("sessionId", sessionId);
+            body.put("source", "montclair_backend");
+            body.put("hotel", "MontClair Grand Hotel");
             body.put("hotelContext", getHotelLiveContext());
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
@@ -157,10 +168,14 @@ public class AiAssistantServiceImpl implements AiAssistantService {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map respMap = response.getBody();
+                if (Boolean.FALSE.equals(respMap.get("success"))) {
+                    return null;
+                }
                 Object reply = respMap.get("reply");
                 if (reply == null) reply = respMap.get("output");
                 if (reply == null) reply = respMap.get("response");
-                if (reply != null) {
+                if (reply == null) reply = respMap.get("text");
+                if (reply != null && !reply.toString().isBlank()) {
                     return reply.toString();
                 }
             }
